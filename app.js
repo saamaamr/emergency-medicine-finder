@@ -24,9 +24,12 @@ app.use(session({
   saveUninitialized: false,
 }))
 
+// Make localStorage globally available for both client and server
 if (typeof localStorage === "undefined" || localStorage === null) {
-  let LocalStorage = require('node-localstorage').LocalStorage;
-  localStorage = new LocalStorage('./scratch');
+   let LocalStorage = require('node-localstorage').LocalStorage;
+   global.localStorage = new LocalStorage('./scratch');
+} else {
+   global.localStorage = localStorage;
 }
 //??-->
 
