@@ -1,55 +1,43 @@
 <%- include("../template/lheader") -%>
 <div class="container mt-5">
   <div class="row justify-content-center">
-    <div class="col-md-10 col-lg-8">
+    <div class="col-lg-8">
       <div class="card shadow-sm border-0">
         <div class="card-body p-4">
           <div class="text-center mb-4">
-            <h3 class="contact_heading">User <span>Register</span></h3>
-            <p class="text-muted">Create your account to find medicines near you</p>
+            <h3 class="contact_heading">Shopkeeper <span>Register</span></h3>
+            <p class="text-muted">Register your pharmacy to receive medicine requests</p>
           </div>
-          <form action="/signup" method="post" enctype="multipart/form-data">
+          <form action="/shopkeepersignup" method="post" enctype="multipart/form-data">
             <div class="row g-3">
               <div class="col-md-6">
                 <div class="form-floating mb-3">
-                  <input type="text" class="form-control <%= typeof error !== 'undefined' && error.firstName ? 'is-invalid' : '' %>" 
-                    id="firstName" name="firstName" placeholder="First Name"
-                    value="<%= typeof value !== 'undefined' && value.firstName ? value.firstName : '' %>" required>
-                  <label for="firstName"><i class="ri-user-line me-1"></i>First Name</label>
-                  <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.firstName && error.firstName %></div>
+                  <input type="text" class="form-control" name="firstName" placeholder="First Name" required>
+                  <label><i class="ri-user-line me-1"></i>First Name</label>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-floating mb-3">
-                  <input type="text" class="form-control <%= typeof error !== 'undefined' && error.lastName ? 'is-invalid' : '' %>" 
-                    id="lastName" name="lastName" placeholder="Last Name"
-                    value="<%= typeof value !== 'undefined' && value.lastName ? value.lastName : '' %>" required>
-                  <label for="lastName"><i class="ri-user-line me-1"></i>Last Name</label>
-                  <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.lastName && error.lastName %></div>
+                  <input type="text" class="form-control" name="lastName" placeholder="Last Name" required>
+                  <label><i class="ri-user-line me-1"></i>Last Name</label>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-floating mb-3">
-                  <input type="email" class="form-control <%= typeof error !== 'undefined' && error.email ? 'is-invalid' : '' %>" 
-                    id="floatingInput" name="email" placeholder="name@example.com"
-                    value="<%= typeof value !== 'undefined' && value.email ? value.email : '' %>" required>
-                  <label for="floatingInput"><i class="ri-mail-line me-1"></i>Email address</label>
-                  <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.email && error.email %></div>
+                  <input type="text" class="form-control" name="shopname" placeholder="Shop Name" required>
+                  <label><i class="ri-store-2-line me-1"></i>Pharmacy Name</label>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-floating mb-3">
-                  <input type="password" class="form-control <%= typeof error !== 'undefined' && error.pass ? 'is-invalid' : '' %>" 
-                    id="floatingPassword" name="pass" placeholder="Password"
-                    value="<%= typeof value !== 'undefined' && value.pass ? value.pass : '' %>" required>
-                  <label for="floatingPassword"><i class="ri-lock-line me-1"></i>Password</label>
-                  <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.pass && error.pass %></div>
+                  <input type="email" class="form-control" name="email" placeholder="Shop Email" required>
+                  <label><i class="ri-mail-line me-1"></i>Shop Email</label>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-floating mb-3">
                   <input type="text" class="form-control" name="phone" placeholder="Phone" required>
-                  <label><i class="ri-phone-line me-1"></i>Phone Number</label>
+                  <label><i class="ri-phone-line me-1"></i>Phone</label>
                 </div>
               </div>
               <div class="col-md-6">
@@ -78,34 +66,48 @@
               <div class="col-md-4">
                 <div class="form-floating mb-3">
                   <input type="text" class="form-control" name="division" placeholder="Division" required>
-                  <label><i class="ri-map-pin-line me-1"></i>Division</label>
+                  <label><i class="ri-map-line me-1"></i>Division</label>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-floating mb-3">
                   <input type="text" class="form-control" name="zila" placeholder="Zila" required>
-                  <label><i class="ri-map-line me-1"></i>Zila</label>
+                  <label><i class="ri-map-pin-line me-1"></i>Zila</label>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-floating mb-3">
                   <input type="text" class="form-control" name="upazila" placeholder="Upazila" required>
-                  <label><i class="ri-map-line me-1"></i>Upazila</label>
+                  <label><i class="ri-map-pin-line me-1"></i>Upazila</label>
                 </div>
               </div>
-              <div class="col-12">
+            </div>
+            <div class="row g-3">
+              <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label"><i class="ri-image-line me-1"></i>Profile Picture</label>
                   <input type="file" class="form-control" name="propic" accept="image/*">
                 </div>
               </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label"><i class="ri-id-card-line me-1"></i>NID Page 1</label>
+                  <input type="file" class="form-control" name="nid1" accept="image/*">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label"><i class="ri-id-card-line me-1"></i>NID Page 2</label>
+                  <input type="file" class="form-control" name="nid2" accept="image/*">
+                </div>
+              </div>
             </div>
-            <div class="d-grid gap-3 mt-2">
+            <div class="d-grid gap-3 mt-3">
               <button type="submit" class="btn btn-primary btn-lg rounded-3 w-100">
-                <i class="ri-user-add-line me-1"></i>Register
+                <i class="ri-user-add-line me-1"></i>Register Pharmacy
               </button>
-              <a href="/login" class="btn btn-outline-secondary rounded-3">
-                <i class="ri-login-circle-line me-1"></i>Already have an account? Login
+              <a href="/shopkeeperlogin" class="btn btn-outline-secondary rounded-3">
+                <i class="ri-login-circle-line me-1"></i>Already registered? Login
               </a>
             </div>
           </form>
@@ -114,7 +116,8 @@
     </div>
   </div>
 </div>
-<%- include("../template/lfooter"); -%>
+<%- include("../template/lfooter") -%>
+
 <script>
   let registerFail = '<%= typeof registerFail !== "undefined" && registerFail ? registerFail : false %>';
   if (registerFail === "true") {

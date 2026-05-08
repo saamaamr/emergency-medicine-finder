@@ -1,0 +1,52 @@
+<%- include ('../template/header') %>
+<%- include ('../template/nav') -%>
+
+<section class="layout_padding">
+  <div class="container">
+    <div class="heading_container heading_center mb-5">
+      <h2>Contact <span>Us</span></h2>
+      <p class="text-muted">Get in touch with our team</p>
+    </div>
+
+    <div class="row g-5">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4">
+            <h4 class="mb-4"><i class="ri-map-pin-line text-primary me-2"></i>Our Location</h4>
+            <p class="text-muted mb-4">123, Medical Road, Dhaka, Bangladesh</p>
+            
+            <h4 class="mb-4"><i class="ri-phone-line text-primary me-2"></i>Phone</h4>
+            <p class="text-muted mb-4">+880 1234-567890</p>
+            
+            <h4 class="mb-4"><i class="ri-mail-line text-primary me-2"></i>Email</h4>
+            <p class="text-muted">support@emergencymedicinefinder.com</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4">
+            <h4 class="mb-4">Send us a Message</h4>
+            <form>
+              <div class="form-floating mb-3">
+                <input type="text" class="form-control" placeholder="Your Name">
+                <label><i class="ri-user-line me-1"></i>Full Name</label>
+              </div>
+              <div class="form-floating mb-3">
+                <input type="email" class="form-control" placeholder="Email">
+                <label><i class="ri-mail-line me-1"></i>Email Address</label>
+              </div>
+              <div class="form-floating mb-3">
+                <textarea class="form-control" placeholder="Message" style="height: 120px;"></textarea>
+                <label><i class="ri-message-2-line me-1"></i>Your Message</label>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Send Message</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include("../template/footer"); -%>

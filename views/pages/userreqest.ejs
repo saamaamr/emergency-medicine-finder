@@ -1,64 +1,76 @@
 <%- include ('../template/header') %>
-  <%- include ('../template/nav') -%>
-    <!-- about section -->
+<%- include ('../template/nav') -%>
 
-    <section class="about_section layout_padding">
-      <div class="container  ">
-        <div>
-          <table class="table table-bordered">
+<section class="layout_padding">
+  <div class="container">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-0">
+        <div class="p-3 border-bottom">
+          <h5 class="section--title mb-0"><i class="ri-file-list-3-line me-1"></i>My Medicine Requests</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
             <thead>
               <tr>
-                <th>Medicine Name</th>
-                <th>Shop Name</th>
-                <th>Shopkeeper Mobile No</th>
-                <th>Quantity</th>
-                <th>Prescription Picture</th>
+                <th>Medicine</th>
+                <th>Shop</th>
+                <th>Contact</th>
+                <th>Qty</th>
+                <th>Prescription</th>
                 <th>Status</th>
                 <th>Action</th>
-
               </tr>
             </thead>
             <tbody>
-              <% mediData.map(worker=>{ %>
-                <tr>
-
-                  <td>
-                    <%=worker.medi_name%>
-                  </td>
-                  <td>
-                    <%=worker.shopname%>
-                  </td>
-                  <td>
-                    <%=worker.phone%>
-                  </td>
-                  <td>
-                    <%=worker.quantity%>
-                  </td>
-
-                  <td>
-                    <img src="uploads/<%=worker.ppic%>" alt="Profile" style="height: 100px; width: 150px;">
-                  </td>
-
-                  <%if(worker.status==0){%>
-                    <td class="pending" style="color: brown;">Pending</td>
-
-                    <% }else if(worker.status==1){ %>
-                      <td class="confirmed" style="color: green;">Accept</td>
-                      <% }else{ %>
-                        <td class="pending" style="color:blanchedalmond;">Hold</td>
-                        <% } %>
-                          <td><a class="btn btn-primary"
-                              href="http://localhost:3802/delete-medicine-request/<%=worker.req_id%>">DELETE</a>
-                          </td>
-                </tr>
-
+              <% if(mediData && mediData.length > 0) { %>
+                <% mediData.forEach(item => { %>
+                  <tr>
+                    <td class="fw-500"><%= item.medi_name %></td>
+                    <td>
+                      <div class="fw-500"><%= item.shopname %></div>
+                      <div class="text-muted small"><%= item.email %></div>
+                    </td>
+                    <td class="text-muted small"><%= item.phone %></td>
+                    <td><span class="badge bg-info"><%= item.quantity %> pcs</span></td>
+                    <td>
+                      <img src="uploads/<%= item.ppic %>" alt="Prescription" 
+                           style="width: 50px; height: 50px; object-fit: cover;" class="rounded">
+                    </td>
+                    <td>
+                      <% if(item.status == 0) { %>
+                        <span class="badge bg-warning">Pending</span>
+                      <% } else if(item.status == 1) { %>
+                        <span class="badge bg-success">Approved</span>
+                      <% } else { %>
+                        <span class="badge bg-danger">On Hold</span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if(item.status == 0 || item.status == 2) { %>
+                        <a class="btn btn-sm btn-outline-danger" 
+                           href="/delete-medicine-request/<%= item.req_id %>">
+                          <i class="ri-delete-bin-line"></i> Cancel
+                        </a>
+                      <% } else { %>
+                        <span class="text-muted">—</span>
+                      <% } %>
+                    </td>
+                  </tr>
                 <% }) %>
-
+              <% } else { %>
+                <tr>
+                  <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="ri-inbox-line fs-1 d-block mb-2"></i>
+                    No requests yet. <a href="/service" class="text-decoration-none">Browse medicines</a>
+                  </td>
+                </tr>
+              <% } %>
             </tbody>
           </table>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <!-- end about section -->
-    <%- include("../template/footer"); -%>
+<%- include("../template/footer"); -%>

@@ -1,183 +1,139 @@
 <%- include("../template/header"); -%>
-  <div class="hero_area">
-    <div class="hero_bg_box">
-      <img src="images/hero-bg.jpg" alt="">
-    </div>
-    <!-- header section strats -->
-    <header class="header_section">
-      <div class="header_bottom">
-        <div class="container">
-          <div class="row">
-            <div class="col-md-12">
-              <div class="full">
-                <nav class="navbar navbar-expand-lg custom_nav-container">
-                  <a class="navbar-brand " href="/home"><img width="120" src="images/logo_main.png" alt="#" /></a>
+<%- include ('../template/nav') -%>
 
-                  <button class="navbar-toggler" type="button" data-toggle="collapse"
-                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                    <span class=""> </span>
-                  </button>
-
-                  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav">
-                      <li class="nav-item active">
-                        <a class="nav-link" href="/home">Home <span class="sr-only">(current)</span></a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link" href="/about">About</a>
-                      </li>
-
-                      <% if(uId) { %>
-                        <li class="nav-item">
-                          <a class="nav-link" href="/profile">
-                            <%= user[0].first_name %>
-                              <%= user[0].last_name %>
-                          </a>
-                        </li>
-                        <li class="nav-item">
-                          <a class="nav-link" href="/logout">Logout</a>
-                        </li>
-                        <% } else{ %>
-                          <li class="nav-item">
-                            <a class="nav-link" aria-current="page" href="/login" value="user" id="user">User
-                              Login</a>
-                          </li>
-                          <li class="nav-item">
-                            <a class="nav-link" aria-current="page" href="/workerlogin" value="worker"
-                              id="worker">Shopkeeper Login</a>
-                          </li>
-                          <% } %>
-                            
-                    </ul>
-                  </div>
-                </nav>
-              </div>
+<section class="layout_padding">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4">
+            <div class="text-center mb-4">
+              <h3 class="contact_heading">Update <span>Profile</span></h3>
+              <p class="text-muted small">Update your account information</p>
             </div>
+            <form action="/userupdate" method="post" enctype="multipart/form-data">
+              <input type="hidden" name="userId" value="<%= user[0].u_id %>">
+              
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control <%= typeof error !== 'undefined' && error.firstName ? 'is-invalid' : '' %>" 
+                      id="firstName" name="firstName" placeholder="First Name"
+                      value="<%= typeof value !== 'undefined' && value.firstName ? value.firstName : user[0].first_name %>" required>
+                    <label for="firstName"><i class="ri-user-line me-1"></i>First Name</label>
+                    <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.firstName && error.firstName %></div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control <%= typeof error !== 'undefined' && error.lastName ? 'is-invalid' : '' %>" 
+                      id="lastName" name="lastName" placeholder="Last Name"
+                      value="<%= typeof value !== 'undefined' && value.lastName ? value.lastName : user[0].last_name %>" required>
+                    <label for="lastName"><i class="ri-user-line me-1"></i>Last Name</label>
+                    <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.lastName && error.lastName %></div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input type="email" class="form-control" id="email" name="email" 
+                      value="<%= user[0].email %>" readonly>
+                    <label for="email"><i class="ri-mail-line me-1"></i>Email (read-only)</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="phone" name="phone" 
+                      value="<%= user[0].phone %>" placeholder="Phone">
+                    <label for="phone"><i class="ri-phone-line me-1"></i>Phone</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-floating mb-3">
+                    <select class="form-select" name="gender" id="gender">
+                      <option value="Male" <%= user[0].gender === 'Male' ? 'selected' : '' %>>Male</option>
+                      <option value="Female" <%= user[0].gender === 'Female' ? 'selected' : '' %>>Female</option>
+                      <option value="Other" <%= user[0].gender === 'Other' ? 'selected' : '' %>>Other</option>
+                    </select>
+                    <label for="gender"><i class="ri-user-settings-line me-1"></i>Gender</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="house" placeholder="House" 
+                      value="<%= user[0].house %>">
+                    <label><i class="ri-home-line me-1"></i>House No</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="road" placeholder="Road" 
+                      value="<%= user[0].road %>">
+                    <label><i class="ri-road-map-line me-1"></i>Road No</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="division" placeholder="Division" 
+                      value="<%= user[0].division %>">
+                    <label><i class="ri-map-line me-1"></i>Division</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="zila" placeholder="Zila" 
+                      value="<%= user[0].zila %>">
+                    <label><i class="ri-map-pin-line me-1"></i>Zila</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="upazila" placeholder="Upazila" 
+                      value="<%= user[0].upazila %>">
+                    <label><i class="ri-map-pin-line me-1"></i>Upazila</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input type="password" class="form-control <%= typeof error !== 'undefined' && error.pass ? 'is-invalid' : '' %>" 
+                      id="pass" name="pass" placeholder="New Password" 
+                      value="<%= typeof value !== 'undefined' && value.pass ? value.pass : '' %>">
+                    <label for="pass"><i class="ri-lock-line me-1"></i>New Password (leave blank to keep current)</label>
+                    <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.pass && error.pass %></div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="mb-3">
+                    <label class="form-label"><i class="ri-image-line me-1"></i>Profile Picture</label>
+                    <input type="file" class="form-control" name="propic" accept="image/*">
+                    <div class="form-text">Current: <img src="uploads/<%= user[0].propic %>" height="40" class="rounded"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="d-grid gap-3 mt-3">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <i class="ri-save-line me-1"></i>Update Profile
+                </button>
+                <a href="/profile" class="btn btn-outline-secondary">
+                  <i class="ri-arrow-left-line me-1"></i>Back to Profile
+                </a>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-    </header>
-    <!-- end header section -->
+    </div>
   </div>
+</section>
 
-  <!-- from section -->
-  <section class="contact_section layout_padding">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-11 col-lg-9 mx-auto">
-          <div class="map_form_container">
-            <div class="form_container">
-              <div class="heading_container heading_center">
-                <h2 class="contact_heading">
-                  User <span>Update</span> Form
-                </h2>
-              </div>
-              <form action="/userupdate" method="post" enctype="multipart/form-data">
-                <div class="form-row">
-                  <div class="form-group col-md-6" hidden>
-                    <input type="text" class="form-control" name="userId" value="<%= user[0].u_id %>" />
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" name="firstName" placeholder="First Name"
-                      value="<%= user[0].first_name %>" />
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" name="lastName" placeholder="Last Name"
-                      value="<%= user[0].last_name %>" />
-                  </div>
-                </div>
+<%- include("../template/footer"); -%>
 
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <label for="gender">Gender</label>
-
-                    <select class="form-select" name="gender" id="gender" aria-label="Default select example">
-                      <option selected value="<%= user[0].gender %>">
-                        <%= user[0].gender %>
-                      </option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div class="form-group col-md-6">
-                    <label for="prpic">Profile Picture</label>
-                    <input class="form-control" accept="image/*" type="file" id="propic" name="propic">
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <input type="email" class="form-control" name="email" placeholder="Email Address"
-                      value="<%= user[0].email %>" />
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" name="phone" placeholder="Mobile Number"
-                      value="<%= user[0].phone %>" />
-                  </div>
-                </div>
-
-
-
-
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" placeholder="House" name="house"
-                      value="<%= user[0].house %>" />
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" placeholder="Road" name="road"
-                      value="<%= user[0].road %>" />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <select class="form-select divisions" name="division" id="division"
-                      aria-label="Default select example">
-                      <option selected value="<%= user[0].division %>">
-                        <%= user[0].division %>
-                      </option>
-                    </select>
-                  </div>
-
-                  <div class="form-group col-md-6">
-                    <select class="form-select districts" name="zila" id="districts"
-                      aria-label="Default select example">
-                      <option selected value="<%= user[0].zila %>">
-                        <%= user[0].zila %>
-                      </option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" placeholder="Upazila/Thana" name="upazila"
-                      value="<%= user[0].upazila %>" />
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="password" class="form-control" placeholder="Password" name="pass" />
-                  </div>
-                </div>
-                <div class="btn-box">
-                  <button type="submit" class="submit_btn">
-                    Sign Up
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    </div>
-  </section>
-  <!-- end from section -->
-
-  <%- include("../template/lfooter"); -%>
-
-    <script src="/js/signup.js"></script>
-    <script>
-
-    </script>
+<script>
+  let registerFail = '<%= typeof registerFail !== "undefined" && registerFail ? registerFail : false %>';
+  if (registerFail === "true") {
+    Swal.fire({
+      icon: 'error',
+      title: 'Update Failed',
+      text: 'Something went wrong. Please try again.',
+    })
+  }
+</script>

@@ -1,0 +1,52 @@
+<%- include ('../template/header') %>
+<%- include ('../template/nav') -%>
+
+<section class="layout_padding">
+  <div class="container">
+    <div class="heading_container heading_center mb-5">
+      <h2>Special <span>Offers</span></h2>
+      <p class="text-muted">Check out our latest deals and promotions</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4 text-center">
+            <div class="bg-success bg-opacity-10 p-4 rounded-3 mb-3">
+              <i class="ri-truck-line fs-1 text-success"></i>
+            </div>
+            <h5 class="card-title">Free Delivery</h5>
+            <p class="card-text text-muted">Get free medicine delivery on orders above 500 Taka. Limited time offer!</p>
+            <span class="badge bg-success">Active</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4 text-center">
+            <div class="bg-primary bg-opacity-10 p-4 rounded-3 mb-3">
+              <i class="ri-percent-line fs-1 text-primary"></i>
+            </div>
+            <h5 class="card-title">20% Off First Order</h5>
+            <p class="card-text text-muted">New users get 20% discount on their first medicine purchase.</p>
+            <span class="badge bg-primary">New</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4 text-center">
+            <div class="bg-warning bg-opacity-10 p-4 rounded-3 mb-3">
+              <i class="ri-user-add-line fs-1 text-warning"></i>
+            </div>
+            <h5 class="card-title">Refer & Earn</h5>
+            <p class="card-text text-muted">Refer a friend and earn 100 Taka credit on your next purchase.</p>
+            <span class="badge bg-warning text-dark">Popular</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include("../template/footer"); -%>

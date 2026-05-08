@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const { validationResult } = require('express-validator');
 const UserModels = require('../models/UserModels');
-const { checkCurrentLogin } = require('../middleware/AuthMiddleware');
+const { checkCurrentLogin, requireUser, requireShopkeeper, requireAdmin } = require('../middleware/AuthMiddleware');
 
 require('dotenv').config();
 
@@ -37,25 +37,25 @@ const UserController = {
 
   getHome: async (req, res) => {
     const allService = await UserModels.getaService()
-    const uId = localStorage.getItem("userMail");
-    const userData = await UserModels.getUser(uId)
+    const uId = req.user ? req.user.mail : null;
+    const userData = uId ? await UserModels.getUser(uId) : null
     res.render('pages/home', { uId, allService, userData })
   },
   getAbout: async (req, res) => {
-    const uId = localStorage.getItem("userMail");
-    const userData = await UserModels.getUser(uId)
+    const uId = req.user ? req.user.mail : null;
+    const userData = uId ? await UserModels.getUser(uId) : null
 
     res.render('pages/about', { uId, userData })
   },
   getContact: async (req, res) => {
-    const uId = localStorage.getItem("userMail");
-    const userData = await UserModels.getUser(uId)
+    const uId = req.user ? req.user.mail : null;
+    const userData = uId ? await UserModels.getUser(uId) : null
 
     res.render('pages/contact', { uId, userData })
   },
   getOffer: async (req, res) => {
-    const uId = localStorage.getItem("userMail");
-    const userData = await UserModels.getUser(uId)
+    const uId = req.user ? req.user.mail : null;
+    const userData = uId ? await UserModels.getUser(uId) : null
 
     res.render('pages/offer', { uId, userData })
   },
@@ -63,15 +63,15 @@ const UserController = {
   getAdmin: async (req, res) => {
     const allUser = await UserModels.getallUser()
     const allService = await UserModels.getaService()
-    const allWorker = await UserModels.getallWorker()
-    const adminData = localStorage.getItem("adminData");
+    const allShopkeeper = await UserModels.getallWorker()
+    const adminData = req.user ? req.user.mail : null;
 
-    res.render('pages/admin', { allUser, allService, allWorker, adminData })
+    res.render('pages/admin', { allUser, allService, allShopkeeper, adminData })
   },
   getBooked: async (req, res) => {
-    const uId = localStorage.getItem("userMail");
-    const userData = await UserModels.getUser(uId);
-    const userBooking = await UserModels.getUserBooking(uId);
+    const uId = req.user ? req.user.mail : null;
+    const userData = uId ? await UserModels.getUser(uId) : null;
+    const userBooking = uId ? await UserModels.getUserBooking(uId) : null;
 
     res.render('pages/booked', { uId, userData, userBooking })
   },
@@ -80,27 +80,27 @@ const UserController = {
     res.render('pages/user', { allUser })
   },
 
-  getWorker: async (req, res) => {
-    const allWorker = await UserModels.getallWorker()
-    res.render('pages/worker', { allWorker })
+  getShopkeeper: async (req, res) => {
+    const allShopkeeper = await UserModels.getallWorker()
+    res.render('pages/shopkeeper', { allShopkeeper })
   },
 
   getMediReqData: async (req, res) => {
 
-    const uId = localStorage.getItem("workerData");
-    const workerData = await UserModels.workermailCatchM(uId);
-    const allMedicine = await UserModels.getMedicineReq(uId)
+    const uId = req.user ? req.user.mail : null;
+    const shopkeeperData = uId ? await UserModels.workermailCatchM(uId) : null;
+    const allMedicine = uId ? await UserModels.getMedicineReq(uId) : null
 
-    res.render('pages/servicereq', { uId, workerData, allMedicine })
+    res.render('pages/servicereq', { uId, shopkeeperData, allMedicine })
 
   },
 
-  getWorkerDesh: async (req, res) => {
-    const uId = localStorage.getItem("workerData");
-    const workerData = await UserModels.workermailCatchM(uId);
+  getShopkeeperDesh: async (req, res) => {
+    const uId = req.user ? req.user.mail : null;
+    const shopkeeperData = uId ? await UserModels.workermailCatchM(uId) : null;
     const allService = await UserModels.getaService()
-    const allMedicine = await UserModels.getMedicine(uId)
-    res.render('pages/workerdesh', { uId, allService, workerData, allMedicine })
+    const allMedicine = uId ? await UserModels.getMedicine(uId) : null
+    res.render('pages/shopkeeperdesh', { uId, allService, shopkeeperData, allMedicine })
   },
 
 
@@ -152,36 +152,65 @@ const UserController = {
       const errors = validationResult(req).formatWith((error) => error.msg);
 
       if (!errors.isEmpty()) {
-
         return res.render('pages/login', {
           error: errors.mapped(),
           value: { email, pass },
         });
       }
       const user = await UserModels.mailCatchM(email);
+      if (!user || user.length === 0) {
+        return res.render('pages/login', { auth: true });
+      }
+
       const userName = user[0].first_name;
       const userMail = user[0].email;
       const password = user[0].pass;
 
-
-
       if (user[0].u_id !== '') {
-
         const isValidPassword = await bcrypt.compare(pass, password);
         if (isValidPassword) {
           if (user[0].status == 1) {
+              const token = jwt.sign(
+                {
+                  name: userName,
+                  mail: userMail,
+                  role: 'user'
+                },
+                process.env.JWT_SECRET,
+                { expiresIn: maxAge },
+              )
 
+              res.clearCookie(process.env.COOKIE_NAME);
+              res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true });
 
+              const allService = await UserModels.getaService()
+              const userData = await UserModels.getUser(userMail)
 
+              res.render('pages/home', { uId: userMail, allService, userData })
 
-
-            localStorage.setItem('userMail', `${userMail}`)
-
-            const token = jwt.sign(
-              {
-                name: userName,
-                mail: userMail,
-              },
+          } else {
+            res.send('Active your account.');
+          }
+        } else {
+          res.render('pages/login', { auth: true });
+        }
+      } else {
+        res.render('pages/login', { auth: true });
+      }
+    } catch (err) {
+      res.render('pages/login', {
+        auth: true,
+        data: {
+          email: req.body.email,
+        },
+        errors: {
+          common: {
+            msg: err.message,
+          },
+        },
+      });
+    }
+  },
               process.env.JWT_SECRET,
               { expiresIn: maxAge },
             )
@@ -201,14 +230,17 @@ const UserController = {
             res.send('Active your account.');
           }
         } else {
-          res.render('pages/login', { auth: true });
+          const uId = localStorage.getItem("userMail");
+          res.render('pages/login', { uId, auth: true });
         }
       } else {
-
-        res.render('pages/login', { auth: true });
+        const uId = localStorage.getItem("userMail");
+        res.render('pages/login', { uId, auth: true });
       }
     } catch (err) {
+      const uId = localStorage.getItem("userMail");
       res.render('pages/login', {
+        uId,
         auth: true,
         data: {
           email: req.body.email,
@@ -222,8 +254,8 @@ const UserController = {
     }
   },
 
-  /* Worker login controller */
-  workerloginC: async (req, res) => {
+  /* Shopkeeper login controller */
+  shopkeeperloginC: async (req, res) => {
     try {
       const {
         email, pass,
@@ -236,29 +268,41 @@ const UserController = {
             const validPass = await bcrypt.compare(pass, login[i].pass);
             if (validPass) {
               if (login[i].status == 1) {
-                const userMail = login[0].email;
+                const userMail = login[i].email;
+                const shopName = login[i].shopname;
 
-                localStorage.setItem(`workerData`, `${userMail}`)
+                const token = jwt.sign(
+                  {
+                    name: shopName,
+                    mail: userMail,
+                    role: 'shopkeeper'
+                  },
+                  process.env.JWT_SECRET,
+                  { expiresIn: maxAge },
+                )
 
-                res.redirect('/workers');
+                res.clearCookie(process.env.COOKIE_NAME);
+                res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true });
+
+                res.redirect('/shopkeeper');
+                return;
               } else {
                 res.send('Your account not active.');
+                return;
               }
-            } else {
-              res.send('Incorrect Password');
             }
           }
+          res.send('Incorrect Password');
         } else {
           res.send('Incorrect Email Address');
         }
         res.end();
       } else {
-        res.send('Please enter your email, password and role, If you have no account please sign up.')
+        res.send('Please enter your email, password. If you have no account please sign up.')
         res.end();
       }
     } catch (e) {
       res.send('Wrong')
-      // res.send(<script>alert("your alert message"); window.location.href = "/page_location"; </script>);
     }
   },
 
@@ -269,11 +313,11 @@ const UserController = {
     const user = await UserModels.getUser(uId)
     res.render('pages/signup', { uId, user });
   },
-  /* ====== New Worker register  Controller  ====== */
-  workerRegisterC: async (req, res) => {
-    const uId = localStorage.getItem("userMail");
-    const user = await UserModels.getUser(uId)
-    res.render('pages/workersignup', { uId, user });
+  /* ====== New Shopkeeper register  Controller  ====== */
+  shopkeeperRegisterC: async (req, res) => {
+    const uId = req.user ? req.user.mail : null;
+    const user = uId ? await UserModels.getUser(uId) : null
+    res.render('pages/shopkeepersignup', { uId, user });
   },
 
   /* ====== User upadate  Controller  ====== */
@@ -285,17 +329,17 @@ const UserController = {
   },
 
   mediUpadateC: async (req, res) => {
-     const wId = localStorage.getItem("workerData");
-    const workerData = await UserModels.workermailCatchM(wId);  
-    const allMedicine = await UserModels.getMedicine(wId)
-    const allService = await UserModels.getaService() 
-    res.render('pages/mediupdate', { wId, workerData,allMedicine, allService });
+     const wId = req.user ? req.user.mail : null;
+    const shopkeeperData = wId ? await UserModels.workermailCatchM(wId) : null;
+    const allMedicine = wId ? await UserModels.getMedicine(wId) : null;
+    const allService = await UserModels.getaService()
+    res.render('pages/mediupdate', { wId, shopkeeperData, allMedicine, allService });
   },
   mediReqC: async (req, res) => {
-    const uId = localStorage.getItem("userMail");
-    const reqId = localStorage.getItem("requId");
-    const user = await UserModels.getUser(uId)
-    const mediData = await UserModels.getRequestMedicine(reqId)
+    const uId = req.user ? req.user.mail : null;
+    const reqId = req.params.service_id;
+    const user = uId ? await UserModels.getUser(uId) : null;
+    const mediData = reqId ? await UserModels.getRequestMedicine(reqId) : null
 
     res.render('pages/request', { uId, user, reqId, mediData });
   },
@@ -303,17 +347,17 @@ const UserController = {
   /* ====== New login Controller  ====== */
 
   newlogin: async (req, res) => {
-    const uId = localStorage.getItem("userMail");
-    const user = await UserModels.getUser(uId)
+    const uId = req.user ? req.user.mail : null;
+    const userData = uId ? await UserModels.getUser(uId) : null;
 
-    res.render('pages/login', { uId, user });
+    res.render('pages/login', { uId, userData });
   },
 
 
-  workerlogin: async (req, res) => {
-    const uId = localStorage.getItem("userMail");
-    const user = await UserModels.getUser(uId)
-    res.render('pages/workerlogin', { uId, user });
+  shopkeeperlogin: async (req, res) => {
+    const uId = req.user ? req.user.mail : null;
+    const user = uId ? await UserModels.getUser(uId) : null
+    res.render('pages/shopkeeperlogin', { uId, user });
   },
 
   adminLoginData: async (req, res) => {
@@ -326,13 +370,24 @@ const UserController = {
         const alogin = await UserModels.getAdmin(userid);
 
         if (alogin.length > 0) {
-          for (let i = 0; i < alogin.length; i++) {
-            if (pass == alogin[0].pass) {
-              localStorage.setItem(`adminData`, `${userid}`);
-              res.redirect('/admin');
-            } else {
-              res.send('Incorrect Password');
-            }
+          const validPass = await bcrypt.compare(pass, alogin[0].pass);
+          if (validPass) {
+            const token = jwt.sign(
+              {
+                name: 'Admin',
+                mail: userid,
+                role: 'admin'
+              },
+              process.env.JWT_SECRET,
+              { expiresIn: maxAge },
+            )
+
+            res.clearCookie(process.env.COOKIE_NAME);
+            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true });
+
+            res.redirect('/admin');
+          } else {
+            res.send('Incorrect Password');
           }
         } else {
           res.send('Incorrect User ID');
@@ -351,36 +406,33 @@ const UserController = {
 
   /* ====== Profile Controller  ====== */
   profile: async (req, res) => {
-    const uId = localStorage.getItem("userMail");
-    const userData = await UserModels.getUser(uId)
+    const uId = req.user ? req.user.mail : null;
+    const userData = uId ? await UserModels.getUser(uId) : null
 
     res.render('pages/userprofile', { uId, userData });
   },
 
   userRequestData: async (req, res) => {
-    const uId = localStorage.getItem("userMail");
-    const userData = await UserModels.getUser(uId)
-    const mediData = await UserModels.getMedicineUserReq(uId)
+    const uId = req.user ? req.user.mail : null;
+    const userData = uId ? await UserModels.getUser(uId) : null
+    const mediData = uId ? await UserModels.getMedicineUserReq(uId) : null
     res.render('pages/userreqest', { uId, userData,mediData });
   },
 
   /* ====== Register controller ====== */
   insertRegisterC: async (req, res) => {
-    const { firstName, lastName, gender, email, phone, propic, house, road, division, zila, upazila, pass } = req.body;
-    const errors = validationResult(req).formatWith((error) => error.msg);
-    const uId = localStorage.getItem("userMail");
-    const user = await UserModels.getUser(uId)
-    const images = req.files;
-    propicFilename = images.propic[0].filename
+    try {
+      const { firstName, lastName, gender, email, phone, propic, house, road, division, zila, upazila, pass } = req.body;
+      const errors = validationResult(req).formatWith((error) => error.msg);
+      const images = req.files || {};
+      const propicFilename = images.propic && images.propic[0] ? images.propic[0].filename : 'default-user.png';
 
-
-    if (!errors.isEmpty()) {
-      res.render('pages/signup', { uId, user });
-      return res.render('pages/signup', {
-        error: errors.mapped(),
-        value: { firstName, lastName, gender, email, phone, propicFilename, house, road, division, zila, upazila, pass },
-      });
-    } try {
+      if (!errors.isEmpty()) {
+        return res.render('pages/signup', {
+          error: errors.mapped(),
+          value: { firstName, lastName, gender, email, phone, propicFilename, house, road, division, zila, upazila, pass },
+        });
+      }
       const hashPassword = await bcrypt.hash(pass, 10);
       const registerData = await UserModels.insertRegisterM(
         firstName, lastName, gender, email, phone, propicFilename, house, road, division, zila, upazila, hashPassword
@@ -390,7 +442,7 @@ const UserController = {
       const toMail = "emflocal0@gmail.com"
       const subject = 'EMF Service active account';
       const textMessage = 'EMF Service account verify'
-      const link = `${process.env.BASE_UR}`
+      const link = `${process.env.BASE_URL}`
       const activeBtn = `
       <div style="padding: 0px 20px;margin-left: 8px;text-align: center;">
       <h4>Wellcome  ${firstName} ${lastName}.<h4>
@@ -398,7 +450,7 @@ const UserController = {
       <p>Please EMF Service account verify. Othewise ignore the mail. <p>
       </div>
       <div>
-      <a style="cursor: pointer;" href="http://localhost:3802/verify-account/${registerData[0].insertId}">
+      <a style="cursor: pointer;" href="${process.env.BASE_URL}/verify-account/${registerData[0].insertId}">
       <button style="padding: 0px 20px;
       border-radius: 8px;
       background-color: #188bde;
@@ -421,31 +473,31 @@ const UserController = {
     }
   },
 
-  /* ======Worker Register controller ====== */
-  insertWorkerRegisterC: async (req, res) => {
+  /* ====== Shopkeeper Register controller ====== */
+  insertShopkeeperRegisterC: async (req, res) => {
     try {
       const { firstName, lastName, gender, shopname, email, phone, propic, nid1, nid2, house, road, division, zila, upazila, lat, lng, pass } = req.body;
-      const images = req.files;
-      propicFilename = images.propic[0].filename
-      nid1Filename = images.nid1[0].filename
-      nid2Filename = images.nid2[0].filename
+      const images = req.files || {};
+      const propicFilename = images.propic && images.propic[0] ? images.propic[0].filename : 'default-shop.png';
+      const nid1Filename = images.nid1 && images.nid1[0] ? images.nid1[0].filename : 'default-nid.jpg';
+      const nid2Filename = images.nid2 && images.nid2[0] ? images.nid2[0].filename : 'default-nid.jpg';
 
       const hashPassword = await bcrypt.hash(pass, 10);
       const registerData = await UserModels.insertWorkerRegisterM(
         firstName, lastName, gender, shopname, email, phone, propicFilename, nid1Filename, nid2Filename, house, road, division, zila, upazila, lat, lng, hashPassword
       );
-      res.redirect('/workerlogin')
+      res.redirect('/shopkeeperlogin')
     } catch (err) {
 
-      return res.render('pages/workersignup', { registerFail: true });
+      return res.render('pages/shopkeepersignup', { registerFail: true });
     }
   },
   insertMediReqC: async (req, res) => {
     try {
       const { userId, userMail, mediId, mediName, shopMail, quantity, ppic }
         = req.body;
-      const images = req.files;
-      ppicFilename = images.ppic[0].filename
+      const images = req.files || {};
+      const ppicFilename = images.ppic && images.ppic[0] ? images.ppic[0].filename : 'default-prescription.jpg';
 
       const registerData = await UserModels.insertMediReqM(
         userId, userMail, mediId, mediName, shopMail, quantity, ppicFilename
@@ -478,8 +530,7 @@ const UserController = {
       const {
         service_id
       } = req.body;
-      localStorage.setItem(`requId`, `${service_id}`);
-      res.redirect('/request')
+      res.redirect('/request/' + service_id)
     } catch (e) {
       res.send('Somthing Wrong')
     }
@@ -487,21 +538,18 @@ const UserController = {
 
   /* ====== user update controller ====== */
   insertUserUpadateC: async (req, res) => {
-    const { userId, firstName, lastName, gender, email, phone, propic, house, road, division, zila, upazila, pass } = req.body;
-    const errors = validationResult(req).formatWith((error) => error.msg);
-    const uId = localStorage.getItem("userMail");
-    const user = await UserModels.getUser(uId)
-    const images = req.files;
-    propicFilename = images.propic[0].filename
-
-    if (!errors.isEmpty()) {
-      res.render('pages/userupdate', { uId, user });
-      return res.render('pages/userupdate', {
-        error: errors.mapped(),
-        value: { userId, firstName, lastName, gender, email, phone, propicFilename, house, road, division, zila, upazila, pass },
-      });
-    }
     try {
+      const { userId, firstName, lastName, gender, email, phone, propic, house, road, division, zila, upazila, pass } = req.body;
+      const errors = validationResult(req).formatWith((error) => error.msg);
+      const images = req.files || {};
+      const propicFilename = images.propic && images.propic[0] ? images.propic[0].filename : 'default-user.png';
+
+      if (!errors.isEmpty()) {
+        return res.render('pages/userupdate', {
+          error: errors.mapped(),
+          value: { userId, firstName, lastName, gender, email, phone, propicFilename, house, road, division, zila, upazila, pass },
+        });
+      }
       const hashPassword = await bcrypt.hash(pass, 10);
       const registerData = await UserModels.UserUpadateM(
         firstName, lastName, gender, email, phone, propicFilename, house, road, division, zila, upazila, hashPassword, userId
@@ -511,7 +559,7 @@ const UserController = {
       const toMail = "emflocal0@gmail.com"
       const subject = 'EMF Service active account';
       const textMessage = 'EMF Service account verify'
-      const link = `${process.env.BASE_UR}`
+      const link = `${process.env.BASE_URL}`
       const activeBtn = `
         <div style="padding: 0px 20px;margin-left: 8px;text-align: center;">
         <h4>Wellcome  ${firstName} ${lastName}.<h4>
@@ -519,7 +567,7 @@ const UserController = {
         <p>Please EMF Service account verify. Othewise ignore the mail. <p>
         </div>
         <div>
-        <a style="cursor: pointer;" href="http://localhost:3802/verify-account/${userId}">
+        <a style="cursor: pointer;" href="${process.env.BASE_URL}/verify-account/${userId}">
         <button style="padding: 0px 20px;
         border-radius: 8px;
         background-color: #188bde;
@@ -545,18 +593,17 @@ const UserController = {
 
   /* ====== Logout Controller  ====== */
   logout: async (req, res) => {
-    res.cookie(process.env.COOKIE_NAME, '', { maxAge, httpOnly: true, signed: true });
-    localStorage.removeItem('userMail');
+    res.clearCookie(process.env.COOKIE_NAME);
     res.redirect('/');
   },
 
-  WorkerLogout: async (req, res) => {
-    localStorage.removeItem('workerData');
-    res.redirect('/workerlogin');
+  shopkeeperLogout: async (req, res) => {
+    res.clearCookie(process.env.COOKIE_NAME);
+    res.redirect('/shopkeeperlogin');
   },
 
   adminLogout: async (req, res) => {
-    localStorage.removeItem('adminData');
+    res.clearCookie(process.env.COOKIE_NAME);
     res.redirect('/admin');
   },
 
@@ -569,7 +616,7 @@ const UserController = {
     }
   },
 
-  workerAccountVerify: async (req, res) => {
+  shopkeeperAccountVerify: async (req, res) => {
     const userId = req.params.id
     const isUpdate = await UserModels.workeracUpdateStatus(userId)
     if (isUpdate.affectedRows) {
@@ -582,11 +629,11 @@ const UserController = {
       <p>Thank you very much for staying with our service. </p>
       </div>`
       sendMail(userId, subject, textMessage, activeMassage)
-      res.redirect('/worker')
+      res.redirect('/shopkeeper')
     }
   },
 
-  workerAccountHold: async (req, res) => {
+  shopkeeperAccountHold: async (req, res) => {
     const userId = req.params.id
 
     const isUpdate = await UserModels.workerHoaldUpdateStatus(userId)
@@ -601,7 +648,7 @@ const UserController = {
       </div>`
       sendMail(userId, subject, textMessage, activeMassage)
 
-      res.redirect('/worker')
+      res.redirect('/shopkeeper')
     }
   },
   medicineReqVerify: async (req, res) => {
@@ -629,5 +676,7 @@ const UserController = {
     }
   },
 
-}
+};
+
+module.exports = UserController;
 module.exports = UserController

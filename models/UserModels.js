@@ -194,6 +194,11 @@ const UserModels = {
      const [rows] = await dbConnect.promise().execute(sql,value);
      return rows;
    },
+   getUserBooking: async (email) => {
+     const sql = 'SELECT * FROM org_service WHERE ser_id IS NOT NULL';
+     const [rows] = await dbConnect.promise().execute(sql);
+     return rows;
+   },
 };
 
 module.exports = UserModels;

@@ -10,6 +10,10 @@ const upload = multer({ dest: 'public/uploads/' });
 /* ======== import files ========= */
 const {
   requireAuth,
+  requireUser,
+  requireShopkeeper,
+  requireAdmin,
+  checkUser,
   checkCurrentLogin,
   redirectLoggedIn,
 } = require('../middleware/AuthMiddleware');
@@ -20,25 +24,27 @@ const decorateHtmlResponse = require('../middleware/decorateHtmlResponse');
 router.get('/', UserController.getHome)
 router.get('/home', UserController.getHome)
 router.get('/about', UserController.getAbout)
-router.get('/admin', UserController.getAdmin)
-router.get('/booked', UserController.getBooked)
-router.get('/user', UserController.getUser)
-router.get('/worker', UserController.getWorker)
-router.get('/servicereq', UserController.getMediReqData)
-router.get('/workers', UserController.getWorkerDesh)
+router.get('/contact', UserController.getContact)
+router.get('/offer', UserController.getOffer)
+router.get('/admin', requireAdmin, UserController.getAdmin)
+router.get('/booked', requireUser, UserController.getBooked)
+router.get('/user', requireAdmin, UserController.getUser)
+router.get('/shopkeeper', requireAdmin, UserController.getShopkeeper)
+router.get('/servicereq', requireShopkeeper, UserController.getMediReqData)
+router.get('/shopkeeper', requireShopkeeper, UserController.getShopkeeperDesh)
 router.get('/service', UserController.getServiceData)
 router.get('/login', decorateHtmlResponse('Home'), redirectLoggedIn, UserController.newlogin,);
 
 router.get(
-  '/workerlogin', UserController.workerlogin,
+  '/shopkeeperlogin', UserController.shopkeeperlogin,
 );
 
 
 router.get(
-  '/profile', UserController.profile,
+  '/profile', requireUser, UserController.profile,
 );
 router.get(
-  '/req', UserController.userRequestData,
+  '/req', requireUser, UserController.userRequestData,
 );
 
 router.get(
@@ -50,32 +56,35 @@ router.get(
 
 router.get(
   '/userupdate',
+  requireUser,
   UserController.userUpadateC,
 );
 
 router.get(
   '/mediupdate',
+  requireShopkeeper,
   UserController.mediUpadateC,
 );
 
 router.get(
-  '/request',
+  '/request/:service_id',
+  requireUser,
   UserController.mediReqC,
 );
 
 router.get(
-  '/workersignup',
+  '/shopkeepersignup',
   decorateHtmlResponse('SignUp'),
-  UserController.workerRegisterC,
+  UserController.shopkeeperRegisterC,
 );
 
 router.get('/logout', UserController.logout);
-router.get('/workerlogout', UserController.WorkerLogout);
+router.get('/shopkeeperlogout', UserController.shopkeeperLogout);
 router.get('/adminlogout', UserController.adminLogout);
 
 router.get('/verify-account/:id', UserController.accountVerify)
-router.get('/verify-worker-account/:id', UserController.workerAccountVerify)
-router.get('/hold-worker-account/:id', UserController.workerAccountHold)
+router.get('/verify-shopkeeper-account/:id', UserController.shopkeeperAccountVerify)
+router.get('/hold-shopkeeper-account/:id', UserController.shopkeeperAccountHold)
 
 router.get('/verify-medicine-request/:id', UserController.medicineReqVerify)
 router.get('/hold-medicine-request/:id', UserController.medicineReqHold)
@@ -86,7 +95,7 @@ router.post('/alogin', UserController.adminLoginData)
 router.post('/add-medi', UserController.mediData)
 router.post('/add-medicine', UserController.medicineData)
 router.post('/login', decorateHtmlResponse('Login'), UserController.loginC)
-router.post('/workerlogin', UserController.workerloginC)
+router.post('/shopkeeperlogin', loginValidator, UserController.shopkeeperloginC)
 router.post(
   '/signup', upload.fields([{ name: 'propic' }]),
   decorateHtmlResponse('SignUp'),
@@ -99,10 +108,10 @@ router.post(
 );
 
 router.post(
-  '/workersignup', upload.fields([{ name: 'propic' },
+  '/shopkeepersignup', upload.fields([{ name: 'propic' },
   { name: 'nid1' },
   { name: 'nid2' }]),
-  UserController.insertWorkerRegisterC,
+  UserController.insertShopkeeperRegisterC,
 );
 router.post(
   '/request', upload.fields([{ name: 'ppic' }]),  UserController.insertMediReqC,

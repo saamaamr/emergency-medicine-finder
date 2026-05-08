@@ -1,201 +1,137 @@
 <%- include ('../template/header') %>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-    integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
-    integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
-  <%- include ('../template/nav') -%>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<%- include ('../template/nav') %>
 
-
-  <% if(uId) { %>
-    <br>
-
-    <label for="shopmap">Pin your location</label>
-    <div id="shopmap">
-
-    </div>
-    <br>
-    <!-- Admin service section -->
-
-    <section class="service_section layout_padding-bottom">
-      <div class="service_container">
-        <div class="container" id="viwe">
-          <div class="heading_container heading_center">
-            <h2>
-              Viwe <span>Product</span>
-            </h2>
-            <p>
-              There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration
-            </p>
-          </div>
-          <div class="row" id="data">
-           
-          </div>
-
-        </div>
-
-
-        
-
-    </section>
-
-    <!-- end service section -->
-    <% }%>
-<!-- about section -->
-
-<section class="about_section layout_padding">
-  <div class="container  ">
-    <div class="row">
-      <div class="col-md-6 ">
-        <div class="img-box">
-          <img src="images/about-img.jpg" alt="">
+<% if(uId) { %>
+<section class="hero-section py-5" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <h1 class="display-5 fw-bold mb-3">Find Medicines <span class="text-primary">Near You</span></h1>
+        <p class="lead text-muted mb-4">Emergency Medicine Finder connects you with local pharmacies for fast access to essential medicines. Search, locate, and order medicines in minutes.</p>
+        <div class="d-flex gap-3 flex-wrap">
+          <a href="/service" class="btn btn-primary btn-lg">Browse Medicines</a>
+          <a href="/contact" class="btn btn-outline-primary btn-lg">Contact Us</a>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="detail-box">
-          <div class="heading_container">
-            <h2>
-              Find <span>Medicine</span>
-            </h2>
+      <div class="col-lg-6">
+        <img src="images/hero-img.svg" alt="" class="img-fluid" style="max-height: 400px;">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="layout_padding">
+  <div class="container">
+    <div class="heading_container heading_center mb-5">
+      <h2>Available <span>Medicines</span></h2>
+      <p class="text-muted">Search from our catalog of medicines available at nearby pharmacies</p>
+    </div>
+    <div class="row g-4" id="data">
+      <% if(typeof allService !== 'undefined') { %>
+        <% allService.slice(0, 6).forEach(function(medi) { %>
+          <div class="col-lg-4 col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body text-center p-4">
+                <div class="mb-3">
+                  <i class="ri-medicine-bottle-line fs-1 text-primary"></i>
+                </div>
+                <h5 class="card-title"><%= medi.name %></h5>
+                <p class="card-text text-muted small"><%= medi.generic %> | <%= medi.strength %></p>
+                <p class="card-text text-muted small"><%= medi.company %></p>
+              </div>
+            </div>
           </div>
-          <p>
-            Emergency Medicine Finder is a web application that allows users to quickly and easily find the medicine
-            they need in the nearest pharmacy. This project aims to simplify the process of finding emergency
-            medicine, which can often be a time-sensitive and stressful situation.
-          </p>
-          <p>             
-            Our web application provides a user-friendly interface where users can search for the medicine they need
-            and see a list of nearby pharmacies that carry the medicine. The system uses real-time data to ensure
-            that the information displayed is accurate and up-to-date.
-          </p>
+        <% }) %>
+      <% } %>
+    </div>
+    <div class="text-center mt-4">
+      <a href="/service" class="btn btn-outline-primary">View All Medicines</a>
+    </div>
+  </div>
+</section>
+
+<div class="container"><hr class="my-0"></div>
+
+<section class="layout_padding">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-md-6">
+        <img src="images/about-img.jpg" alt="About EMF" class="img-fluid rounded-4 shadow">
+      </div>
+      <div class="col-md-6">
+        <div class="heading_container mb-4">
+          <h2>Find <span>Medicine</span> Fast</h2>
+        </div>
+        <p class="mb-3">Emergency Medicine Finder is a web application that allows users to quickly and easily find the medicine they need in the nearest pharmacy. This project aims to simplify the process of finding emergency medicine, which can often be a time-sensitive and stressful situation.</p>
+        <p class="mb-4">Our web application provides a user-friendly interface where users can search for the medicine they need and see a list of nearby pharmacies that carry the medicine. The system uses real-time data to ensure that the information displayed is accurate and up-to-date.</p>
+        <div class="d-flex gap-3">
+          <a href="/about" class="btn btn-primary">Learn More</a>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- end about section -->
+<% } else { %>
 
-    <!-- call section -->
-
-    <section class="call_section ">
-      <div class="container  ">
-        <div class="row">
-          <div class="col-md-6 ">
-            <div class="img-box">
-              <img src="images/call-img.jpg" alt="">
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="detail-box">
-              <h5>
-                Call Us Today
-              </h5>
-              <h3>
-                +880 1601XXXXXX
-              </h3>
-              <p>
-                If you’re somebody who lives with a long-term illness or disability or you care for someone who does,
-                it’s likely that you rely on regular prescription medication. While NHS prescriptions are usually
-                affordable (and sometimes even free) to the people who use them most, the process of picking up a
-                prescription, taking it into your pharmacy and paying on a regular basis can be inconvenient and
-                time-consuming.
-              </p>
-            </div>
-          </div>
+<section class="layout_padding">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-md-6">
+        <img src="images/about-img.jpg" alt="About EMF" class="img-fluid rounded-4 shadow">
+      </div>
+      <div class="col-md-6">
+        <div class="heading_container mb-4">
+          <h2>Find <span>Medicine</span> Fast</h2>
+        </div>
+        <p class="mb-3">Emergency Medicine Finder is a web application that allows users to quickly and easily find the medicine they need in the nearest pharmacy.</p>
+        <div class="d-flex gap-3 flex-wrap">
+          <a href="/login" class="btn btn-primary btn-lg">Login to Search</a>
+          <a href="/signup" class="btn btn-outline-primary btn-lg">Sign Up</a>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <!-- end call section -->
-
-    <!-- faq section -->
-
-    <!-- remove -->
-
-    <!-- end faq section -->
-
-    <!-- Offer section -->
-
-
-    <!-- end Offer section -->
-
-    <% if(!uId) { %>
-
-      <!-- contact section -->
-      <section class="contact_section layout_padding">
-        <div class="container">
-          <div class="row">
-            <div class="col-md-11 col-lg-9 mx-auto">
-              <div class="map_form_container">
-                <div class="form_container">
-                  <div class="heading_container heading_center">
-                    <h2 class="contact_heading">
-                      Contact <span>Us</span>
-                    </h2>
-                  </div>
-                  <form action="">
-                    <div class="form-row">
-                      <div class="form-group col-md-6">
-                        <input type="text" class="form-control" placeholder="First Name" />
-                      </div>
-                      <div class="form-group col-md-6">
-                        <input type="text" class="form-control" placeholder="Last Name" />
-                      </div>
-                    </div>
-                    <div class="form-row">
-                      <div class="form-group col-md-6">
-                        <input type="email" class="form-control" placeholder="Email" />
-                      </div>
-                      <div class="form-group col-md-6">
-                        <input type="text" class="form-control" placeholder="Phone Number" />
-                      </div>
-                    </div>
-                    <div class="form-group ">
-                      <input type="text" class="message-box" placeholder="Message" />
-                    </div>
-                    <div class="btn-box">
-                      <button type="submit" class="submit_btn">
-                        Send
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
+<section class="layout_padding2 bg-light">
+  <div class="container">
+    <div class="heading_container heading_center mb-5">
+      <h2>How It <span>Works</span></h2>
+    </div>
+    <div class="row g-4 text-center">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-4">
+          <div class="mb-3"><i class="ri-search-line fs-1 text-primary"></i></div>
+          <h5>Search Medicine</h5>
+          <p class="text-muted small">Enter the medicine name and find all nearby pharmacies</p>
         </div>
-      </section>
-      <!-- end contact section -->
-      <% } else{ %>
-        <br>
-        <% } %>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-4">
+          <div class="mb-3"><i class="ri-map-pin-line fs-1 text-primary"></i></div>
+          <h5>Locate Pharmacy</h5>
+          <p class="text-muted small">See shops on map with distance and directions</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-4">
+          <div class="mb-3"><i class="ri-file-list-3-line fs-1 text-primary"></i></div>
+          <h5>Place Request</h5>
+          <p class="text-muted small">Upload prescription and request medicines instantly</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<% } %>
 
+<%- include ('../template/footer') %>
 
-
-          <% if(uId) { %>
-            <script src="/js/custom.js"></script>
-            <% } else{ %>
-              <script src="/js/home.js"></script>
-              <% } %>
-
-
-
-                <%- include ('../template/footer') %>
-
-
-                  <!-- jQery -->
-                  <script src="js/jquery-3.4.1.min.js"></script>
-                  <!-- popper js -->
-                  <script src="js/popper.min.js"></script>
-                  <!-- bootstrap js -->
-                  <script src="js/bootstrap.js"></script>
-                  <!-- custom js -->
-                  <script src="js/custom.js"></script>
-                  <script src="js/home.js"></script>
-
-                  <script>
-                    
-                  </script>
-                  </body>
-
-                  </html>
+<% if(uId) { %>
+<script src="/js/home.js"></script>
+<% } else { %>
+<script src="/js/home.js"></script>
+<% } %>

@@ -1,131 +1,59 @@
 <%- include("../template/header"); -%>
-  <div class="hero_area">
-    <div class="hero_bg_box">
-      <img src="images/hero-bg.jpg" alt="">
-    </div>
-    <!-- header section strats -->
-    <header class="header_section">
-      <div class="header_bottom">
-        <div class="container">
-          <div class="row">
-            <div class="col-md-12">
-              <div class="full">
-                <nav class="navbar navbar-expand-lg custom_nav-container">
-                  <a class="navbar-brand " href="/home"><img width="120" src="images/logo_main.png" alt="#" /></a>
+<%- include ('../template/nav') -%>
 
-                  <button class="navbar-toggler" type="button" data-toggle="collapse"
-                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                    <span class=""> </span>
-                  </button>
-
-                  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav">
-                      <li class="nav-item active">
-                        <a class="nav-link" href="/home">Home <span class="sr-only">(current)</span></a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link" href="/about">About</a>
-                      </li>
-
-                      <% if(uId) { %>
-                        <li class="nav-item">
-                          <a class="nav-link" href="/profile">
-                            <%= user[0].first_name %>
-                              <%= user[0].last_name %>
-                          </a>
-                        </li>
-                        <li class="nav-item">
-                          <a class="nav-link" href="/logout">Logout</a>
-                        </li>
-                        <% } else{ %>
-                          <li class="nav-item">
-                            <a class="nav-link" aria-current="page" href="/login" value="user" id="user">User
-                              Login</a>
-                          </li>
-                          <li class="nav-item">
-                            <a class="nav-link" aria-current="page" href="/workerlogin" value="worker"
-                              id="worker">Shopkeeper Login</a>
-                          </li>
-                          <% } %>
-
-                    </ul>
-                  </div>
-                </nav>
-              </div>
+<section class="layout_padding">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4">
+            <div class="text-center mb-4">
+              <h3>Medicine <span>Request</span></h3>
+              <p class="text-muted">Submit your medicine request with prescription</p>
             </div>
+            <form action="/request" method="post" enctype="multipart/form-data">
+              <input type="hidden" name="userId" value="<%= user[0].u_id %>">
+              <input type="hidden" name="userMail" value="<%= user[0].email %>">
+              <input type="hidden" name="mediId" value="<%= mediData[0].id %>">
+              <input type="hidden" name="mediName" value="<%= mediData[0].mediname %>">
+              <input type="hidden" name="shopMail" value="<%= mediData[0].shop_email %>">
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" value="<%= mediData[0].mediname %>" readonly>
+                    <label><i class="ri-medicine-bottle-line me-1"></i>Medicine Name</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input type="number" class="form-control" name="quantity" placeholder="Quantity" required>
+                    <label><i class="ri-box-3-line me-1"></i>Quantity</label>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="mb-3">
+                    <label class="form-label"><i class="ri-image-line me-1"></i>Prescription Picture</label>
+                    <input type="file" class="form-control" name="ppic" accept="image/*" required>
+                  </div>
+                </div>
+              </div>
+              <div class="d-grid gap-3 mt-3">
+                <button type="submit" class="btn btn-primary btn-lg rounded-3 w-100">
+                  <i class="ri-send-plane-line me-1"></i>Submit Request
+                </button>
+                <a href="/home" class="btn btn-outline-secondary rounded-3">
+                  <i class="ri-arrow-left-line me-1"></i>Back to Home
+                </a>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-    </header>
-    <!-- end header section -->
+    </div>
   </div>
+</section>
 
-  <!-- from section -->
-  <section class="contact_section layout_padding">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-11 col-lg-9 mx-auto">
-          <div class="map_form_container">
-            <div class="form_container">
-              <div class="heading_container heading_center">
-                <h2 class="contact_heading">
-                  Medicine <span>Request</span>
-                </h2>
-              </div>
-              <form action="/request" method="post" enctype="multipart/form-data">
-                <div class="form-row">
-                  <div class="form-group col-md-4" hidden>
-                    <label>User Id</label>
-                    <input type="text" class="form-control" name="userId" value="<%= user[0].u_id %>" />
-                  </div>
-                  <div class="form-group col-md-4" hidden>
-                    <label>User Mail</label>
-                    <input type="text" class="form-control" name="userMail" value="<%= user[0].email %>" />
-                  </div>
-                </div>
+<%- include("../template/footer"); -%>
 
-                <div class="form-row">
-                  <div class="form-group col-md-4" hidden>
-                    <label>Medicine id</label>
-                    <input type="text" class="form-control" name="mediId" value="<%= mediData[0].id %>" />
-                  </div>
-                  <div class="form-group col-md-4">
-                    <label>Medicine Name</label>
-                    <input type="text" class="form-control" name="mediName" value="<%= mediData[0].mediname %>" />
-                  </div>
-                  <div class="form-group col-md-4" hidden>
-                    <label>User Mail</label>
-                    <input type="text" class="form-control" name="shopMail" value="<%= mediData[0].shop_email %>" />
-                  </div>
-                  <div class="form-group col-md-4">
-                    <label>Quantity</label>
-                    <input type="Number" class="form-control" name="quantity" />
-                  </div>
-                  <div class="form-group col-md-4">
-                    <label for="ppic">Prescription Picture</label>
-                    <input class="form-control" accept="image/*" type="file" id="ppic" name="ppic">
-                  </div>
-                </div>
-
-                <div class="btn-box">
-                  <button type="submit" class="submit_btn">
-                    Send
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    </div>
-  </section>
-  <!-- end from section -->
-
-  <%- include("../template/lfooter"); -%>
-
-    <!-- <script src="/js/home.js"></script> -->
-    <script>
-
-    </script>
+<script src="/js/home.js"></script>
