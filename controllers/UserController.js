@@ -60,6 +60,9 @@ const UserController = {
   },
   // Admin Related
   getAdmin: async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.render('pages/adminlogin')
+    }
     const allUser = await UserModels.getallUser()
     const allService = await UserModels.getaService()
     const allShopkeeper = await UserModels.getallWorker()
