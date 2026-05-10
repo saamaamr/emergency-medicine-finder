@@ -244,13 +244,22 @@ async function getRoute(startLng, startLat, endLng, endLat, pharmacyName) {
       geometry: geometry
     }
     
+    // Store route destination with coordinates for popup matching
+    currentRouteDestination = {
+      name: pharmacyName,
+      lat: endLat,
+      lng: endLng,
+      distance: route.distance,
+      duration: route.duration
+    }
+    
     log('info', 'Route found', { 
       distance: (route.distance / 1000).toFixed(1) + ' km',
       duration: formatDuration(route.duration)
     })
     
     // Draw route on map
-    drawRoute(geometry, pharmacyName)
+    drawRoute(geometry, pharmacyName, endLat, endLng)
     
   } catch (err) {
     log('error', 'Route calculation failed', err.message)
@@ -274,7 +283,7 @@ function clearRoute() {
 }
 
 // Draw route polyline on map
-function drawRoute(geometry, pharmacyName) {
+function drawRoute(geometry, pharmacyName, endLat, endLng) {
   // Add route source
   map.addSource('route', {
     type: 'geojson',
@@ -331,7 +340,7 @@ function drawRoute(geometry, pharmacyName) {
   })
   
   // Update popup with route info
-  updatePopupWithRoute(pharmacyName)
+  updatePopupWithRoute(pharmacyName, endLat, endLng)
 }
 
 // Format distance in human readable form
@@ -362,17 +371,29 @@ function showRouteLoading(pharmacyName) {
   // Could add a toast/notification here
 }
 
+// Current route destination for updating popups
+let currentRouteDestination = null
+
 // Update popup with route info
-function updatePopupWithRoute(pharmacyName) {
+function updatePopupWithRoute(pharmacyName, lat, lng) {
   if (!routeInfo) return
   
   const distance = formatDistance(routeInfo.distance)
   const duration = formatDuration(routeInfo.duration)
   
+  // Store current route info for popup updates (with coordinates for matching)
+  currentRouteDestination = {
+    name: pharmacyName,
+    lat: lat,
+    lng: lng,
+    distance: routeInfo.distance,
+    duration: routeInfo.duration
+  }
+  
   log('info', `Route: ${distance}, ${duration} to ${pharmacyName}`)
   
-  // Show route info in a toast or notification
-  showNotification(`Route to ${pharmacyName}: ${distance} (${duration})`, 'info')
+  // Show route info in a toast notification
+  showNotification(`Route to ${pharmacyName}: ${distance} (${duration})`, 'success')
 }
 
 // Open Google Maps directions (fallback)
@@ -520,7 +541,34 @@ function clearMarkers() {
 
 // Generate popup HTML
 function generatePopupHTML(item, isNearest) {
-  const dist = item.distance ? formatDistance(item.distance) : '--'
+  // Check if there's a route to this pharmacy - use route distance if available
+  let displayDistance = '--'
+  let distanceLabel = ''
+  let isRouteDistance = false
+  
+  if (currentRouteDestination && item.lat && item.lng) {
+    // Compare coordinates to check if this is the destination
+    const routeLat = parseFloat(item.lat)
+    const routeLng = parseFloat(item.lng)
+    // We need the original route coordinates - check by name match
+    if (currentRouteDestination.name === item.shopname || 
+        Math.abs(routeLat - currentRouteDestination.lat) < 0.001 && 
+        Math.abs(routeLng - currentRouteDestination.lng) < 0.001) {
+      displayDistance = formatDistance(currentRouteDestination.distance)
+      const duration = formatDuration(currentRouteDestination.duration)
+      distanceLabel = ` (${duration} via road)`
+      isRouteDistance = true
+    }
+  }
+  
+  // Fall back to straight-line distance if no route
+  if (displayDistance === '--') {
+    displayDistance = item.distance ? formatDistance(item.distance) : '--'
+    if (item.distance && item.distance > 0) {
+      distanceLabel = ' (straight line)'
+    }
+  }
+  
   const distRaw = item.distance || 0
   const qty = item.stock != null ? parseInt(item.stock) : 0
   const stockLabel = qty > 10 ? 'In Stock' : qty > 0 ? 'Low Stock' : 'Out of Stock'
@@ -549,7 +597,12 @@ function generatePopupHTML(item, isNearest) {
           <span style="font-size:0.75rem;padding:2px 8px;border-radius:20px;background:${stockColor}15;color:${stockColor};font-weight:600;">${stockLabel}</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#6b7280;margin-top:6px;">
-          <span><svg width="12" height="12" viewBox="0 0 24 24" fill="#0369A1" style="display:inline;vertical-align:-2px;margin-right:2px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg> ${dist}${distRaw > 0 ? ' from you' : ''}</span>
+          <span style="${isRouteDistance ? 'color:#0891B2;font-weight:600;' : ''}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="${isRouteDistance ? '#0891B2' : '#0369A1'}" style="display:inline;vertical-align:-2px;margin-right:2px;">
+              ${isRouteDistance ? '<path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16"/><path d="M16 6v16"/>' : '<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>'}
+            </svg> 
+            ${displayDistance}${distanceLabel}
+          </span>
         </div>
         ${addr ? '<div style="font-size:0.75rem;color:#6b7280;margin-top:4px;border-top:1px solid #f3f4f6;padding-top:4px;word-break:break-word;"><svg width="10" height="10" viewBox="0 0 24 24" fill="#6b7280" style="display:inline;vertical-align:-1px;margin-right:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/></svg> ' + addr + '</div>' : ''}
       </div>
