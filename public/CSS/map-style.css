@@ -1,5 +1,22 @@
 /* MapLibre Custom Styles */
 
+:root {
+  --map-bg: #f8fafc;
+  --map-text: #0F172A;
+  --map-text-muted: #64748B;
+  --map-surface: #FFFFFF;
+  --map-border: #E2E8F0;
+  --map-primary: #0284C7;
+}
+
+.dark {
+  --map-bg: #0F172A;
+  --map-text: #F1F5F9;
+  --map-text-muted: #94A3B8;
+  --map-surface: #1E293B;
+  --map-border: #334155;
+}
+
 /* Custom markers */
 .marker-pharmacy {
   width: 36px;
@@ -85,13 +102,13 @@
 
 /* Geolocate control styling */
 .maplibregl-ctrl-geolocate {
-  background: #fff;
+  background: var(--map-surface);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .maplibregl-ctrl-geolocate:hover {
-  background: #f8fafc;
+  background: var(--map-bg);
 }
 
 /* Navigation control styling adjustments */
@@ -102,11 +119,11 @@
 
 /* Popup animations */
 .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
-  border-top-color: #fff;
+  border-top-color: var(--map-surface);
 }
 
 .maplibregl-popup-anchor-top .maplibregl-popup-tip {
-  border-bottom-color: #fff;
+  border-bottom-color: var(--map-surface);
 }
 
 /* Popup action button */
@@ -114,7 +131,7 @@
   width: 100%;
   padding: 10px;
   margin-top: 8px;
-  background: #0284C7;
+  background: var(--map-primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -138,12 +155,12 @@
 }
 
 .popup-directions-btn:hover {
-  background: #0284C7;
+  background: var(--map-primary);
 }
 
 /* Result card active state */
 .result-card.active {
-  border-color: #0284C7;
+  border-color: var(--map-primary);
   box-shadow: 0 2px 12px rgba(2,132,199,0.15);
   background: #E0F2FE;
 }
@@ -182,7 +199,7 @@
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: white;
+  background: var(--map-surface);
   padding: 12px 24px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
@@ -196,16 +213,16 @@
 .route-info-panel .route-distance {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0891B2;
+  color: var(--map-primary);
 }
 
 .route-info-panel .route-duration {
   font-size: 1rem;
-  color: #6b7280;
+  color: var(--map-text-muted);
 }
 
 .route-info-panel .route-close {
-  background: #f3f4f6;
+  background: var(--map-bg);
   border: none;
   width: 28px;
   height: 28px;
@@ -214,12 +231,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--map-text-muted);
   font-size: 18px;
 }
 
 .route-info-panel .route-close:hover {
-  background: #e5e7eb;
+  background: var(--map-border);
 }
 
 /* Route line animation */
