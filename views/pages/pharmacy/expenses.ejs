@@ -1,0 +1,173 @@
+<%- include ('../../template/aheader') %>
+
+<section class="main">
+  <div class="sidebar">
+    <div class="sidebar--profile mb-4 pb-3 border-bottom">
+      <div class="text-center">
+        <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" class="rounded-circle mb-2" width="60" height="60">
+        <h6 class="mb-0"><%= shopkeeperData[0].shopname %></h6>
+        <small class="text-muted"><%= shopkeeperData[0].email %></small>
+      </div>
+    </div>
+    <ul class="sidebar--items">
+      <li><a href="/shopkeeperdesh"><span class="icon icon-1"><i class="ri-layout-grid-line"></i></span><span class="sidebar--item">Dashboard</span></a></li>
+      <li><a href="/pharmacy/dashboard"><span class="icon icon-2"><i class="ri-store-2-line"></i></span><span class="sidebar--item">Pharmacy</span></a></li>
+      <li><a href="/pharmacy/suppliers"><span class="icon icon-3"><i class="ri-truck-line"></i></span><span class="sidebar--item">Suppliers</span></a></li>
+      <li><a href="/pharmacy/purchases"><span class="icon icon-4"><i class="ri-shopping-cart-line"></i></span><span class="sidebar--item">Purchases</span></a></li>
+      <li><a href="/pharmacy/sales"><span class="icon icon-5"><i class="ri-handbag-line"></i></span><span class="sidebar--item">Sales</span></a></li>
+      <li><a href="/pharmacy/expenses" id="active--link"><span class="icon icon-6"><i class="ri-bill-line"></i></span><span class="sidebar--item">Expenses</span></a></li>
+      <li><a href="/pharmacy/reports"><span class="icon icon-7"><i class="ri-bar-chart-line"></i></span><span class="sidebar--item">Reports</span></a></li>
+      <li><a href="/servicereq"><span class="icon icon-8"><i class="ri-git-repository-line"></i></span><span class="sidebar--item">Med Requests</span></a></li>
+      <li><a href="/shopprofile"><span class="icon icon-9"><i class="ri-user-settings-line"></i></span><span class="sidebar--item">My Profile</span></a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/shopkeeperlogout"><span class="icon icon-10"><i class="ri-logout-box-r-line"></i></span><span class="sidebar--item">Logout</span></a></li>
+    </ul>
+  </div>
+
+  <div class="main--content">
+    <% if (messages.added === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="ri-check-circle-line me-2"></i>Expense added!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (messages.updated === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="ri-check-circle-line me-2"></i>Expense updated!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (messages.deleted === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="ri-check-circle-line me-2"></i>Expense deleted!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (messages.cat_added === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="ri-check-circle-line me-2"></i>Category added!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (messages.error === 'true') { %>
+      <div class="alert alert-danger alert-dismissible fade show"><i class="ri-error-warning-line me-2"></i>Something went wrong.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0"><i class="ri-bill-line me-2"></i>Expenses</h4>
+      <div>
+        <button class="btn btn-outline-secondary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#addCategoryModal"><i class="ri-price-tag-3-line me-1"></i>Add Category</button>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal"><i class="ri-add-line me-1"></i>Add Expense</button>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Payment</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <% if (expenses.length === 0) { %>
+              <tr><td colspan="6" class="text-center text-muted py-4">No expenses recorded</td></tr>
+            <% } %>
+            <% expenses.forEach(e => { %>
+              <tr>
+                <td><%= new Date(e.expense_date).toLocaleDateString() %></td>
+                <td><span class="badge bg-light text-dark"><%= e.category_name %></span></td>
+                <td><%= e.description %></td>
+                <td class="fw-bold text-danger">৳<%= parseFloat(e.amount).toFixed(2) %></td>
+                <td><span class="badge bg-secondary"><%= e.payment_method %></span></td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary" onclick='editExpense(<%= JSON.stringify(e) %>)'><i class="ri-edit-line"></i></button>
+                  <a href="/pharmacy/expenses/delete/<%= e.expense_id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this expense?')"><i class="ri-delete-bin-line"></i></a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="ri-price-tag-3-line me-2"></i>Add Expense Category</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <form action="/pharmacy/expense-categories/add" method="POST">
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label">Category Name *</label><input type="text" class="form-control" name="name" required></div>
+        <div class="mb-3"><label class="form-label">Type</label>
+          <select class="form-select" name="type">
+            <option value="utility">Utility</option><option value="rent">Rent</option><option value="salary">Salary</option>
+            <option value="maintenance">Maintenance</option><option value="marketing">Marketing</option><option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+    </form>
+  </div></div>
+</div>
+
+<div class="modal fade" id="addExpenseModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="ri-add-line me-2"></i>Add Expense</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <form action="/pharmacy/expenses/add" method="POST">
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Category *</label>
+          <select class="form-select" name="category_id" required>
+            <option value="">Select Category</option>
+            <% categories.forEach(c => { %>
+              <option value="<%= c.category_id %>"><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="mb-3"><label class="form-label">Description *</label><input type="text" class="form-control" name="description" required></div>
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Amount (Taka) *</label><input type="number" step="0.01" class="form-control" name="amount" required></div>
+          <div class="col-md-6"><label class="form-label">Date *</label><input type="date" class="form-control" name="expense_date" value="<%= new Date().toISOString().slice(0,10) %>" required></div>
+          <div class="col-md-6"><label class="form-label">Payment Method</label>
+            <select class="form-select" name="payment_method"><option value="cash">Cash</option><option value="bank">Bank</option><option value="mobile_banking">Mobile Banking</option></select>
+          </div>
+          <div class="col-md-6"><label class="form-label">Reference No</label><input type="text" class="form-control" name="reference_no"></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save Expense</button></div>
+    </form>
+  </div></div>
+</div>
+
+<div class="modal fade" id="editExpenseModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="ri-edit-line me-2"></i>Edit Expense</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <form method="POST" id="editExpenseForm">
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Category *</label>
+          <select class="form-select" name="category_id" id="edit_category_id" required>
+            <% categories.forEach(c => { %>
+              <option value="<%= c.category_id %>"><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="mb-3"><label class="form-label">Description *</label><input type="text" class="form-control" name="description" id="edit_description" required></div>
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Amount *</label><input type="number" step="0.01" class="form-control" name="amount" id="edit_amount" required></div>
+          <div class="col-md-6"><label class="form-label">Date *</label><input type="date" class="form-control" name="expense_date" id="edit_expense_date" required></div>
+          <div class="col-md-6"><label class="form-label">Payment Method</label>
+            <select class="form-select" name="payment_method" id="edit_payment_method">
+              <option value="cash">Cash</option><option value="bank">Bank</option><option value="mobile_banking">Mobile Banking</option>
+            </select>
+          </div>
+          <div class="col-md-6"><label class="form-label">Reference No</label><input type="text" class="form-control" name="reference_no" id="edit_reference_no"></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Update</button></div>
+    </form>
+  </div></div>
+</div>
+
+<script>
+function editExpense(e) {
+  document.getElementById('edit_category_id').value = e.category_id;
+  document.getElementById('edit_description').value = e.description;
+  document.getElementById('edit_amount').value = e.amount;
+  document.getElementById('edit_expense_date').value = e.expense_date ? e.expense_date.slice(0,10) : '';
+  document.getElementById('edit_payment_method').value = e.payment_method || 'cash';
+  document.getElementById('edit_reference_no').value = e.reference_no || '';
+  document.getElementById('editExpenseForm').action = '/pharmacy/expenses/update/' + e.expense_id;
+  new bootstrap.Modal(document.getElementById('editExpenseModal')).show();
+}
+</script>
+
+<%- include ('../../template/alfooter') %>

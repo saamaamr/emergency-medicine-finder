@@ -8,9 +8,10 @@
             <h3 class="contact_heading">Admin <span>Login</span></h3>
             <p class="text-muted small">Access the admin dashboard</p>
           </div>
-          <form action="/alogin" method="POST">
+          <form action="/alogin" method="POST" id="adminLoginForm">
+            <input type="hidden" name="browserKey" id="adminBrowserKey" value="">
             <div class="form-floating mb-3">
-              <input type="text" class="form-control" id="floatingInput" 
+              <input type="text" class="form-control" id="floatingInput"
                      name="userid" placeholder="admin@example.com" required>
               <label for="floatingInput"><i class="ri-admin-line me-1"></i>Admin ID</label>
             </div>
@@ -32,3 +33,11 @@
   </div>
 </div>
 <%- include("../template/lfooter") -%>
+<script>
+  document.getElementById('adminLoginForm')?.addEventListener('submit', function() {
+    const browserKeyInput = document.getElementById('adminBrowserKey');
+    if (browserKeyInput && window.emfBrowserKey) {
+      browserKeyInput.value = window.emfBrowserKey;
+    }
+  });
+</script>

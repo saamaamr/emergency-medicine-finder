@@ -2,14 +2,49 @@
 
 <section class="main">
   <div class="sidebar">
+    <div class="sidebar--profile mb-4 pb-3 border-bottom">
+      <div class="text-center">
+        <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" alt="Shop" class="rounded-circle mb-2" width="60" height="60">
+        <h6 class="mb-0"><%= shopkeeperData[0].shopname %></h6>
+        <small class="text-muted"><%= shopkeeperData[0].email %></small>
+      </div>
+    </div>
     <ul class="sidebar--items">
-      <li><a href="/shopkeeper">
+      <li><a href="/shopkeeperdesh">
         <span class="icon icon-1"><i class="ri-layout-grid-line"></i></span>
         <span class="sidebar--item">Dashboard</span>
       </a></li>
+      <li><a href="/pharmacy/dashboard">
+        <span class="icon icon-2"><i class="ri-store-2-line"></i></span>
+        <span class="sidebar--item">Pharmacy Mgmt</span>
+      </a></li>
+      <li><a href="/pharmacy/suppliers">
+        <span class="icon icon-3"><i class="ri-truck-line"></i></span>
+        <span class="sidebar--item">Suppliers</span>
+      </a></li>
+      <li><a href="/pharmacy/purchases">
+        <span class="icon icon-4"><i class="ri-shopping-cart-line"></i></span>
+        <span class="sidebar--item">Purchases</span>
+      </a></li>
+      <li><a href="/pharmacy/sales">
+        <span class="icon icon-5"><i class="ri-handbag-line"></i></span>
+        <span class="sidebar--item">Sales</span>
+      </a></li>
+      <li><a href="/pharmacy/expenses">
+        <span class="icon icon-6"><i class="ri-bill-line"></i></span>
+        <span class="sidebar--item">Expenses</span>
+      </a></li>
+      <li><a href="/pharmacy/reports">
+        <span class="icon icon-7"><i class="ri-bar-chart-line"></i></span>
+        <span class="sidebar--item">Reports</span>
+      </a></li>
       <li><a href="/servicereq" id="active--link">
-        <span class="icon icon-2"><i class="ri-git-repository-line"></i></span>
-        <span class="sidebar--item">Requests</span>
+        <span class="icon icon-8"><i class="ri-git-repository-line"></i></span>
+        <span class="sidebar--item">Medicine Requests</span>
+      </a></li>
+      <li><a href="/shopprofile">
+        <span class="icon icon-9"><i class="ri-user-settings-line"></i></span>
+        <span class="sidebar--item">My Profile</span>
       </a></li>
     </ul>
     <ul class="sidebar--bottom-items">

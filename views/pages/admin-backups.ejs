@@ -1,0 +1,116 @@
+<%- include ('../template/aheader') %>
+
+<section class="main">
+  <div class="sidebar">
+    <ul class="sidebar--items">
+      <li><a href="/admin">
+        <span class="icon icon-1"><i class="ri-layout-grid-line"></i></span>
+        <span class="sidebar--item">Dashboard</span>
+      </a></li>
+      <li><a href="/service">
+        <span class="icon icon-2"><i class="ri-git-repository-line"></i></span>
+        <span class="sidebar--item">Medicine</span>
+      </a></li>
+      <li><a href="/admin/inventory">
+        <span class="icon icon-3"><i class="ri-store-2-line"></i></span>
+        <span class="sidebar--item">Inventory</span>
+      </a></li>
+      <li><a href="/admin/transfers">
+        <span class="icon icon-4"><i class="ri-exchange-line"></i></span>
+        <span class="sidebar--item">Transfers</span>
+      </a></li>
+      <li><a href="/user">
+        <span class="icon icon-5"><i class="ri-user-line"></i></span>
+        <span class="sidebar--item">User</span>
+      </a></li>
+      <li><a href="/shopkeeper">
+        <span class="icon icon-6"><i class="ri-user-2-line"></i></span>
+        <span class="sidebar--item">Shopkeeper</span>
+      </a></li>
+      <li><a href="/admin/backups" id="active--link">
+        <span class="icon icon-7"><i class="ri-database-2-line"></i></span>
+        <span class="sidebar--item">Backups</span>
+      </a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/adminlogout">
+        <span class="icon icon-8"><i class="ri-logout-box-r-line"></i></span>
+        <span class="sidebar--item">Logout</span>
+      </a></li>
+    </ul>
+  </div>
+
+  <div class="main--content">
+    <% if (messages.backup_ok === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="ri-check-circle-line me-2"></i>Backup created successfully!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (messages.backup_err === 'true') { %>
+      <div class="alert alert-danger alert-dismissible fade show"><i class="ri-error-warning-line me-2"></i>Backup failed. Check server logs.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (messages.deleted === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="ri-check-circle-line me-2"></i>Backup deleted.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0"><i class="ri-database-2-line me-2"></i>Database Backups</h4>
+      <form action="/admin/backups/trigger" method="POST" style="display:inline">
+        <button type="submit" class="btn btn-primary"><i class="ri-refresh-line me-1"></i>Backup Now</button>
+      </form>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center p-3">
+            <h6 class="text-muted mb-2">Total Backups</h6>
+            <h3 class="mb-0"><%= stats.count %></h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center p-3">
+            <h6 class="text-muted mb-2">Total Size</h6>
+            <h3 class="mb-0"><%= stats.totalSizeFormatted %></h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center p-3">
+            <h6 class="text-muted mb-2">Last Backup</h6>
+            <h5 class="mb-0"><%= stats.lastBackup %></h5>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>Filename</th><th>Size</th><th>Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <% if (backups.length === 0) { %>
+              <tr><td colspan="4" class="text-center text-muted py-4">No backups yet. Click "Backup Now" to create one.</td></tr>
+            <% } %>
+            <% backups.forEach(b => { %>
+              <tr>
+                <td class="fw-500"><%= b.filename %></td>
+                <td><%= b.sizeFormatted %></td>
+                <td><%= b.dateFormatted %></td>
+                <td>
+                  <a href="/admin/backups/download/<%= b.filename %>" class="btn btn-sm btn-outline-success"><i class="ri-download-line"></i></a>
+                  <a href="/admin/backups/delete/<%= b.filename %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this backup?')"><i class="ri-delete-bin-line"></i></a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../template/alfooter') %>

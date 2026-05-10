@@ -2,14 +2,49 @@
 
 <section class="main">
   <div class="sidebar">
+    <div class="sidebar--profile mb-4 pb-3 border-bottom">
+      <div class="text-center">
+        <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" alt="Shop" class="rounded-circle mb-2" width="60" height="60">
+        <h6 class="mb-0"><%= shopkeeperData[0].shopname %></h6>
+        <small class="text-muted"><%= shopkeeperData[0].email %></small>
+      </div>
+    </div>
     <ul class="sidebar--items">
-      <li><a href="/shopkeeper" id="active--link">
+      <li><a href="/shopkeeperdesh" id="active--link">
         <span class="icon icon-1"><i class="ri-layout-grid-line"></i></span>
         <span class="sidebar--item">Dashboard</span>
       </a></li>
+      <li><a href="/pharmacy/dashboard">
+        <span class="icon icon-2"><i class="ri-store-2-line"></i></span>
+        <span class="sidebar--item">Pharmacy Mgmt</span>
+      </a></li>
+      <li><a href="/pharmacy/suppliers">
+        <span class="icon icon-3"><i class="ri-truck-line"></i></span>
+        <span class="sidebar--item">Suppliers</span>
+      </a></li>
+      <li><a href="/pharmacy/purchases">
+        <span class="icon icon-4"><i class="ri-shopping-cart-line"></i></span>
+        <span class="sidebar--item">Purchases</span>
+      </a></li>
+      <li><a href="/pharmacy/sales">
+        <span class="icon icon-5"><i class="ri-handbag-line"></i></span>
+        <span class="sidebar--item">Sales</span>
+      </a></li>
+      <li><a href="/pharmacy/expenses">
+        <span class="icon icon-6"><i class="ri-bill-line"></i></span>
+        <span class="sidebar--item">Expenses</span>
+      </a></li>
+      <li><a href="/pharmacy/reports">
+        <span class="icon icon-7"><i class="ri-bar-chart-line"></i></span>
+        <span class="sidebar--item">Reports</span>
+      </a></li>
       <li><a href="/servicereq">
-        <span class="icon icon-2"><i class="ri-git-repository-line"></i></span>
-        <span class="sidebar--item">Requests</span>
+        <span class="icon icon-8"><i class="ri-git-repository-line"></i></span>
+        <span class="sidebar--item">Medicine Requests</span>
+      </a></li>
+      <li><a href="/shopprofile">
+        <span class="icon icon-9"><i class="ri-user-settings-line"></i></span>
+        <span class="sidebar--item">My Profile</span>
       </a></li>
     </ul>
     <ul class="sidebar--bottom-items">
@@ -21,10 +56,31 @@
   </div>
 
   <div class="main--content">
+    <% if (typeof added !== 'undefined' && added === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-check-circle-line me-2"></i>Medicine added to inventory!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+    
+    <% if (typeof updated !== 'undefined' && updated === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-check-circle-line me-2"></i>Stock updated successfully!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+    
+    <% if (typeof error !== 'undefined' && error === 'true') { %>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="ri-error-warning-line me-2"></i>Something went wrong. Please try again.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+
     <!-- Add Medicine Form -->
     <div class="card shadow-sm border-0 mb-4">
       <div class="card-body p-4">
-        <h5 class="section--title mb-3"><i class="ri-add-circle-line me-1"></i>Add Medicine</h5>
+        <h5 class="section--title mb-3"><i class="ri-add-circle-line me-1"></i>Add Medicine to Inventory</h5>
         <form action="/add-medicine" method="post">
           <div class="row g-3">
             <input type="hidden" name="shopemail" value="<%= shopkeeperData[0].email %>">
@@ -64,11 +120,14 @@
       </div>
     </div>
 
-    <!-- Medicine List -->
+    <!-- Medicine List with Stock Management -->
     <div class="card shadow-sm border-0">
       <div class="card-body p-0">
-        <div class="p-3 border-bottom">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
           <h5 class="section--title mb-0"><i class="ri-medicine-bottle-line me-1"></i>Medicine Inventory</h5>
+          <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#stockModal">
+            <i class="ri-edit-line me-1"></i>Update Stock
+          </button>
         </div>
         <div class="table-responsive">
           <table class="table table-hover mb-0">
@@ -81,6 +140,7 @@
                 <th>Company</th>
                 <th>Stock</th>
                 <th>Price</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -91,8 +151,17 @@
                   <td><%= service.medistrength %></td>
                   <td class="text-muted small"><%= service.medigeneric %></td>
                   <td class="text-muted small"><%= service.medicompany %></td>
-                  <td><span class="badge bg-info"><%= service.stock %> pcs</span></td>
+                  <td>
+                    <span class="badge <%= service.stock > 50 ? 'bg-success' : service.stock > 10 ? 'bg-warning' : 'bg-danger' %>">
+                      <%= service.stock %> pcs
+                    </span>
+                  </td>
                   <td class="fw-bold"><%= service.price %> tk</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-danger" onclick="openStockUpdate('<%= service.mediname %>', <%= service.stock %>)">
+                      <i class="ri-subtract-line"></i>
+                    </button>
+                  </td>
                 </tr>
               <% }) %>
             </tbody>
@@ -102,6 +171,48 @@
     </div>
   </div>
 </section>
+
+<!-- Stock Update Modal -->
+<div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="ri-edit-line me-2"></i>Update Stock</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="/update-stock" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="shopemail" value="<%= shopkeeperData[0].email %>">
+          <div class="mb-3">
+            <label class="form-label">Select Medicine</label>
+            <select class="form-select" name="mediname" required>
+              <option value="">Select Medicine</option>
+              <% allMedicine.map(service=>{ %>
+                <option value="<%= service.mediname %>"><%= service.mediname %> - Stock: <%= service.stock %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Update Type</label>
+            <select class="form-select" name="updateType" id="updateType" onchange="toggleQuantity()">
+              <option value="decrease">Decrease Stock (Sold)</option>
+              <option value="increase">Increase Stock</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Quantity</label>
+            <input type="number" class="form-control" name="quantity" min="1" required>
+            <small class="text-muted">Enter quantity to <span id="actionText">remove</span></small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Stock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <script>
   const mediid = document.getElementById("mediid")
@@ -116,5 +227,17 @@
         document.getElementById("medicompany").value = data.company
       })
   })
+
+  function openStockUpdate(mediname, currentStock) {
+    const select = document.querySelector('select[name="mediname"]');
+    select.value = mediname;
+    const modal = new bootstrap.Modal(document.getElementById('stockModal'));
+    modal.show();
+  }
+
+  function toggleQuantity() {
+    const type = document.getElementById('updateType').value;
+    document.getElementById('actionText').textContent = type === 'decrease' ? 'remove' : 'add';
+  }
 </script>
 <%- include ('../template/alfooter') %>

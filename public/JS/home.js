@@ -776,67 +776,54 @@ function generatePopupHTML(item, isNearest) {
   const distRaw = item.distance || 0
   const qty = item.stock != null ? parseInt(item.stock) : 0
   const stockLabel = qty > 10 ? 'In Stock' : qty > 0 ? 'Low Stock' : 'Out of Stock'
-  const stockColor = qty > 10 ? '#15803D' : qty > 0 ? '#D97706' : '#dc2626'
+  const stockColor = qty > 10 ? '#059669' : qty > 0 ? '#D97706' : '#DC2626'
   const addr = buildAddress(item)
 
-  return `
-    <div style="font-family:'Figtree',sans-serif;min-width:220px;max-width:300px;padding:12px;">
-      ${isNearest ? '<div style="background:#15803D;color:white;font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:6px;">Nearest Pharmacy</div>' : ''}
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <div style="width:38px;height:38px;background:#F0FDF4;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#15803D"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-        </div>
-        <div style="min-width:0;">
-          <div style="font-weight:700;color:#14532D;font-size:1rem;line-height:1.2;word-break:break-word;">${item.shopname}</div>
-          <div style="font-size:0.75rem;color:#6b7280;"><svg width="10" height="10" viewBox="0 0 24 24" fill="#6b7280" style="display:inline;vertical-align:-1px;margin-right:2px;"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.36 11.36 0 003.58.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 00.57 3.58 1 1 0 01-.25 1.01l-2.2 2.2z"/></svg> ${item.phone || '--'}</div>
-        </div>
-      </div>
-      <div style="border-top:1px solid #e5e7eb;margin:6px 0;padding-top:6px;">
-        <div style="color:#166534;font-weight:600;font-size:0.9rem;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="#15803D" style="display:inline;vertical-align:-2px;margin-right:4px;"><rect x="7" y="3" width="4" height="18" rx="2"/><rect x="12" y="7" width="4" height="10" rx="2" transform="rotate(90 14 12)"/></svg>
-          ${item.mediname} <span style="color:#6b7280;font-weight:400;">${item.medistrength ? '(' + item.medistrength + ')' : ''}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-          <span style="font-size:1.2rem;font-weight:700;color:#15803D;">BDT ${item.price} <small style="font-size:0.75rem;color:#6b7280;">/pcs</small></span>
-          <span style="font-size:0.75rem;padding:2px 8px;border-radius:20px;background:${stockColor}15;color:${stockColor};font-weight:600;">${stockLabel}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#6b7280;margin-top:6px;">
-          <span style="${isRouteDistance ? 'color:#0891B2;font-weight:600;' : ''}">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="${isRouteDistance ? '#0891B2' : '#0369A1'}" style="display:inline;vertical-align:-2px;margin-right:2px;">
-              ${isRouteDistance ? '<path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16"/><path d="M16 6v16"/>' : '<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>'}
-            </svg> 
-            ${displayDistance}${distanceLabel}
-          </span>
-        </div>
-        ${addr ? '<div style="font-size:0.75rem;color:#6b7280;margin-top:4px;border-top:1px solid #f3f4f6;padding-top:4px;word-break:break-word;"><svg width="10" height="10" viewBox="0 0 24 24" fill="#6b7280" style="display:inline;vertical-align:-1px;margin-right:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/></svg> ' + addr + '</div>' : ''}
-      </div>
-      <button onclick="handleRequestFromPopup('${item.id}','${item.email}')"
-        style="width:100%;padding:10px;margin-top:8px;background:#15803D;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;gap:6px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-        Request Medicine
-      </button>
-      <button onclick="startLiveTracking(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}', '${(addr || '').replace(/'/g, "\\'")}')"
-        style="width:100%;padding:12px;margin-top:8px;background:linear-gradient(135deg, #7c3aed, #6d28d9);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(124,58,237,0.3);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="white"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
-        <span style="position:relative;">
-          Live Tracking
-          <span style="position:absolute;top:-2px;right:-8px;width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse 1s infinite;"></span>
-        </span>
-      </button>
-      <div style="display:flex;gap:6px;margin-top:6px;">
-        <button onclick="showRouteToPharmacy(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}', '${(addr || '').replace(/'/g, "\\'")}')"
-          style="flex:1;padding:10px;background:#0891B2;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;gap:4px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16"/><path d="M16 6v16"/></svg>
-          Route
-        </button>
-        <button onclick="openGoogleMapsDirections(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}')"
-          style="flex:1;padding:10px;background:#6b7280;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;gap:4px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
-          Maps
-        </button>
-      </div>
-    </div>
-  `
+return `
+     <div style="font-family:'Figtree',sans-serif;min-width:220px;max-width:280px;padding:10px;border-radius:12px;background:white;box-shadow:0 8px 24px rgba(0,0,0,0.15);">
+       ${isNearest ? '<div style="background:linear-gradient(135deg,#0284C7,#0369A1);color:white;font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:12px;display:inline-block;margin-bottom:6px;">★ Nearest</div>' : ''}
+       <div style="font-weight:700;color:#0F172A;font-size:0.9rem;margin-bottom:4px;">${item.shopname}</div>
+       <div style="font-size:0.7rem;color:#64748B;margin-bottom:6px;">${item.phone || '--'}</div>
+       
+       <div style="border-top:1px solid #E2E8F0;margin:6px 0;padding-top:6px;">
+         <div style="color:#0284C7;font-weight:600;font-size:0.8rem;margin-bottom:4px;">${item.mediname} ${item.medistrength ? '(' + item.medistrength + ')' : ''}</div>
+         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+           <span style="font-size:1rem;font-weight:700;color:#0284C7;">BDT ${item.price}</span>
+           <span style="font-size:0.65rem;padding:2px 6px;border-radius:10px;background:${stockColor}15;color:${stockColor};font-weight:600;">${stockLabel}</span>
+         </div>
+         <div style="font-size:0.7rem;color:#64748B;margin-bottom:4px;">
+           <svg width="10" height="10" viewBox="0 0 24 24" fill="${isRouteDistance ? '#0284C7' : '#64748B'}" style="display:inline;vertical-align:-2px;margin-right:2px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+           ${displayDistance}${distanceLabel}
+         </div>
+         ${addr ? '<div style="font-size:0.65rem;color:#64748B;word-break:break-word;">' + addr + '</div>' : ''}
+       </div>
+       
+       <div style="display:flex;gap:4px;margin-top:6px;">
+         <button onclick="handleRequestFromPopup('${item.id}','${item.email}')"
+           style="flex:1;padding:6px;background:linear-gradient(135deg,#0284C7,#0369A1);color:white;border:none;border-radius:5px;font-weight:600;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;gap:3px;">
+           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+           Request
+         </button>
+         <button onclick="showRouteToPharmacy(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}', '${(addr || '').replace(/'/g, "\\'")}')"
+           style="flex:1;padding:6px;background:linear-gradient(135deg,#0EA5E9,#0284C7);color:white;border:none;border-radius:5px;font-weight:600;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;gap:3px;">
+           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16"/><path d="M16 6v16"/></svg>
+           Route
+         </button>
+       </div>
+       <div style="display:flex;gap:4px;margin-top:4px;">
+         <button onclick="startLiveTracking(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}', '${(addr || '').replace(/'/g, "\\'")}')"
+           style="flex:1;padding:6px;background:linear-gradient(135deg,#7C3AED,#6D28D9);color:white;border:none;border-radius:5px;font-weight:600;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;gap:3px;">
+           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
+           Live
+         </button>
+         <button onclick="openGoogleMapsDirections(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}')"
+           style="flex:1;padding:6px;background:#64748B;color:white;border:none;border-radius:5px;font-weight:600;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;gap:3px;">
+           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+           Maps
+         </button>
+       </div>
+     </div>
+   `
 }
 
 // Create pharmacy marker

@@ -114,7 +114,7 @@
   width: 100%;
   padding: 10px;
   margin-top: 8px;
-  background: #15803D;
+  background: #0284C7;
   color: white;
   border: none;
   border-radius: 8px;
@@ -129,23 +129,23 @@
 }
 
 .popup-action-btn:hover {
-  background: #166534;
+  background: #0369A1;
 }
 
 /* Directions button */
 .popup-directions-btn {
-  background: #0891B2;
+  background: #0EA5E9;
 }
 
 .popup-directions-btn:hover {
-  background: #0e7490;
+  background: #0284C7;
 }
 
 /* Result card active state */
 .result-card.active {
-  border-color: #15803D;
-  box-shadow: 0 2px 12px rgba(21,128,61,0.15);
-  background: #F0FDF4;
+  border-color: #0284C7;
+  box-shadow: 0 2px 12px rgba(2,132,199,0.15);
+  background: #E0F2FE;
 }
 
 /* Loading state for markers */

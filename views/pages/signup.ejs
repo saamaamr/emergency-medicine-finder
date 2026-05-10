@@ -1,111 +1,112 @@
 <%- include("../template/lheader") -%>
-<div class="container mt-5">
+<div class="container py-5">
   <div class="row justify-content-center">
-    <div class="col-md-10 col-lg-8">
-      <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
+    <div class="col-lg-8">
+      <div class="card-custom animate-fade-in-up">
+        <div class="card-body-custom">
           <div class="text-center mb-4">
-            <h3 class="contact_heading">User <span>Register</span></h3>
-            <p class="text-muted">Create your account to find medicines near you</p>
+            <img src="images/logo.svg" alt="EMF" width="100" class="mb-3">
+            <h3 class="mb-2">Create Account</h3>
+            <p class="text-muted">Join EMF to find medicines near you</p>
           </div>
           <form action="/signup" method="post" enctype="multipart/form-data">
             <div class="row g-3">
               <div class="col-md-6">
-                <div class="form-floating mb-3">
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-user-line"></i>
                   <input type="text" class="form-control <%= typeof error !== 'undefined' && error.firstName ? 'is-invalid' : '' %>" 
                     id="firstName" name="firstName" placeholder="First Name"
                     value="<%= typeof value !== 'undefined' && value.firstName ? value.firstName : '' %>" required>
-                  <label for="firstName"><i class="ri-user-line me-1"></i>First Name</label>
                   <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.firstName && error.firstName %></div>
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="form-floating mb-3">
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-user-line"></i>
                   <input type="text" class="form-control <%= typeof error !== 'undefined' && error.lastName ? 'is-invalid' : '' %>" 
                     id="lastName" name="lastName" placeholder="Last Name"
                     value="<%= typeof value !== 'undefined' && value.lastName ? value.lastName : '' %>" required>
-                  <label for="lastName"><i class="ri-user-line me-1"></i>Last Name</label>
                   <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.lastName && error.lastName %></div>
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="form-floating mb-3">
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-mail-line"></i>
                   <input type="email" class="form-control <%= typeof error !== 'undefined' && error.email ? 'is-invalid' : '' %>" 
-                    id="floatingInput" name="email" placeholder="name@example.com"
+                    id="floatingInput" name="email" placeholder="Email address"
                     value="<%= typeof value !== 'undefined' && value.email ? value.email : '' %>" required>
-                  <label for="floatingInput"><i class="ri-mail-line me-1"></i>Email address</label>
                   <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.email && error.email %></div>
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="form-floating mb-3">
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-lock-line"></i>
                   <input type="password" class="form-control <%= typeof error !== 'undefined' && error.pass ? 'is-invalid' : '' %>" 
                     id="floatingPassword" name="pass" placeholder="Password"
                     value="<%= typeof value !== 'undefined' && value.pass ? value.pass : '' %>" required>
-                  <label for="floatingPassword"><i class="ri-lock-line me-1"></i>Password</label>
                   <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.pass && error.pass %></div>
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="form-floating mb-3">
-                  <input type="text" class="form-control" name="phone" placeholder="Phone" required>
-                  <label><i class="ri-phone-line me-1"></i>Phone Number</label>
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-phone-line"></i>
+                  <input type="text" class="form-control" name="phone" placeholder="Phone Number" required>
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="form-floating mb-3">
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-user-settings-line"></i>
                   <select class="form-select" name="gender" required>
                     <option value="">Select Gender</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
                   </select>
-                  <label><i class="ri-user-settings-line me-1"></i>Gender</label>
                 </div>
               </div>
               <div class="col-md-4">
-                <div class="form-floating mb-3">
-                  <input type="text" class="form-control" name="house" placeholder="House No" required>
-                  <label><i class="ri-home-line me-1"></i>House</label>
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-home-line"></i>
+                  <input type="text" class="form-control" name="house" placeholder="House" required>
                 </div>
               </div>
               <div class="col-md-4">
-                <div class="form-floating mb-3">
-                  <input type="text" class="form-control" name="road" placeholder="Road No" required>
-                  <label><i class="ri-road-map-line me-1"></i>Road</label>
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-road-map-line"></i>
+                  <input type="text" class="form-control" name="road" placeholder="Road" required>
                 </div>
               </div>
               <div class="col-md-4">
-                <div class="form-floating mb-3">
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-map-pin-line"></i>
                   <input type="text" class="form-control" name="division" placeholder="Division" required>
-                  <label><i class="ri-map-pin-line me-1"></i>Division</label>
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="form-floating mb-3">
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-map-line"></i>
                   <input type="text" class="form-control" name="zila" placeholder="Zila" required>
-                  <label><i class="ri-map-line me-1"></i>Zila</label>
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="form-floating mb-3">
+                <div class="mb-3 input-with-icon">
+                  <i class="ri-compass-discover-line"></i>
                   <input type="text" class="form-control" name="upazila" placeholder="Upazila" required>
-                  <label><i class="ri-map-line me-1"></i>Upazila</label>
                 </div>
               </div>
               <div class="col-12">
-                <div class="mb-3">
-                  <label class="form-label"><i class="ri-image-line me-1"></i>Profile Picture</label>
+                <div class="mb-2">
+                  <label class="form-label">Profile Picture</label>
                   <input type="file" class="form-control" name="propic" accept="image/*">
                 </div>
               </div>
             </div>
-            <div class="d-grid gap-3 mt-2">
-              <button type="submit" class="btn btn-primary btn-lg rounded-3 w-100">
-                <i class="ri-user-add-line me-1"></i>Register
+            <div class="d-grid gap-2 mt-4">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="ri-user-add-line"></i>Create Account
               </button>
-              <a href="/login" class="btn btn-outline-secondary rounded-3">
-                <i class="ri-login-circle-line me-1"></i>Already have an account? Login
+              <a href="/login" class="btn btn-secondary">
+                <i class="ri-login-circle-line"></i>Already have an account? Sign In
               </a>
             </div>
           </form>

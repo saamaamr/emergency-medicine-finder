@@ -1,38 +1,43 @@
 <%- include("../template/lheader") -%>
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-      <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
+<div class="container">
+  <div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-md-5 col-lg-4">
+      <div class="card-custom animate-fade-in-up">
+        <div class="card-body-custom">
           <div class="text-center mb-4">
-            <h3 class="contact_heading">User <span>Login</span></h3>
-            <p class="text-muted small">Sign in to find medicines near you</p>
+            <img src="images/logo.svg" alt="EMF" width="120" class="mb-3">
+            <h3 class="mb-1">Welcome Back</h3>
+            <p class="text-muted">Sign in to find medicines near you</p>
           </div>
           <form action="/login" method="POST" novalidate>
-            <div class="form-floating mb-3">
-              <input type="email" class="form-control <%= typeof error !== 'undefined' && error.email ? 'is-invalid' : '' %>" 
-                id="floatingInput" name="email" 
-                placeholder="name@example.com" 
+            <input type="hidden" name="browserKey" id="loginBrowserKey" value="">
+            <div class="mb-3 input-with-icon">
+              <i class="ri-mail-line"></i>
+              <input type="email" class="form-control <%= typeof error !== 'undefined' && error.email ? 'is-invalid' : '' %>"
+                id="floatingInput" name="email"
+                placeholder="Email address"
                 value="<%= typeof value !== 'undefined' && value.email ? value.email : '' %>" required>
-              <label for="floatingInput"><i class="ri-mail-line me-1"></i>Email address</label>
               <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.email && error.email %></div>
             </div>
-            <div class="form-floating mb-4">
-              <input type="password" class="form-control <%= typeof error !== 'undefined' && error.pass ? 'is-invalid' : '' %>" 
-                id="floatingPassword" name="pass" 
-                placeholder="Password" 
+            <div class="mb-4 input-with-icon">
+              <i class="ri-lock-line"></i>
+              <input type="password" class="form-control <%= typeof error !== 'undefined' && error.pass ? 'is-invalid' : '' %>"
+                id="floatingPassword" name="pass"
+                placeholder="Password"
                 value="<%= typeof value !== 'undefined' && value.pass ? value.pass : '' %>" required>
-              <label for="floatingPassword"><i class="ri-lock-line me-1"></i>Password</label>
               <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.pass && error.pass %></div>
             </div>
-            <button type="submit" class="btn btn-primary w-100 py-2 rounded-3" id="lgnBtn">
-              <i class="ri-login-circle-line me-1"></i>Login
+            <button type="submit" class="btn btn-primary w-100 py-2.5" id="lgnBtn">
+              <i class="ri-login-circle-line"></i>Sign In
             </button>
-            <div class="text-center mt-3">
-              <a href="/signup" class="text-decoration-none">Don't have an account? <strong>Register</strong></a>
+            <div class="text-center mt-4">
+              <p class="text-muted mb-2">Don't have an account?</p>
+              <a href="/signup" class="btn btn-outline-primary btn-sm">Create Account</a>
             </div>
-            <div class="text-center mt-2">
-              <a href="/shopkeeperlogin" class="text-muted small text-decoration-none"><i class="ri-store-2-line me-1"></i>Shopkeeper Login</a>
+            <div class="text-center mt-3">
+              <a href="/shopkeeperlogin" class="text-muted small">
+                <i class="ri-store-2-line me-1"></i>Shopkeeper Login
+              </a>
             </div>
           </form>
         </div>
@@ -43,12 +48,25 @@
 <%- include("../template/lfooter") -%>
 <script>
   let auth = '<%= typeof auth !== "undefined" ? auth : "false" %>';
+  let errorMsg = '<%= typeof error !== "undefined" && error ? error : "false" %>';
+
   if (auth === "true") {
+    let msg = 'Authentication failed';
+    if (errorMsg && errorMsg !== 'false' && errorMsg !== 'true') {
+      msg = errorMsg;
+    }
     Swal.fire({
       icon: 'error',
       title: 'Oops...',
-      text: 'Authentication failed',
+      text: msg,
       footer: '<a href="/signup">Don\'t have an account?</a>'
     })
   }
+
+  document.querySelector('form[action="/login"]')?.addEventListener('submit', function(e) {
+    const browserKeyInput = document.getElementById('loginBrowserKey');
+    if (browserKeyInput && window.emfBrowserKey) {
+      browserKeyInput.value = window.emfBrowserKey;
+    }
+  });
 </script>
