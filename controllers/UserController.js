@@ -182,7 +182,7 @@ const UserController = {
             )
 
             res.clearCookie(process.env.COOKIE_NAME);
-            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String });
+            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
 
             const allService = await UserModels.getaService()
             const userData = await UserModels.getUser(userMail)
@@ -239,7 +239,7 @@ const UserController = {
                 )
 
                 res.clearCookie(process.env.COOKIE_NAME);
-                res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String });
+                res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
 
                 res.redirect('/shopkeeperdesh');
                 return;
@@ -324,12 +324,15 @@ const UserController = {
       const {
         userid, pass,
       } = req.body;
+      console.log('Admin login attempt:', userid);
 
       if (userid && pass) {
         const alogin = await UserModels.getAdmin(userid);
+        console.log('Admin found:', alogin.length > 0);
 
         if (alogin.length > 0) {
           const validPass = await bcrypt.compare(pass, alogin[0].pass);
+          console.log('Password valid:', validPass);
           if (validPass) {
             const token = jwt.sign(
               {
@@ -342,19 +345,20 @@ const UserController = {
             )
 
             res.clearCookie(process.env.COOKIE_NAME);
-            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String });
+            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
 
             res.redirect('/admin');
+            return;
           } else {
             res.send('Incorrect Password');
+            return;
           }
         } else {
           res.send('Incorrect User ID');
+          return;
         }
-        res.end();
       } else {
         res.send('Please enter your Id, password.')
-        res.end();
       }
     } catch (e) {
       res.send('Wrong')
