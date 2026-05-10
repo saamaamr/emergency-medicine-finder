@@ -622,22 +622,35 @@ const UserController = {
     res.redirect('/shopkeeper')
   },
   medicineReqVerify: async (req, res) => {
-    const reqId = req.params.id
-    const isUpdate = await UserModels.requestUpdateStatus(reqId)
-    if (isUpdate.affectedRows) {
-      res.redirect('/servicereq')
-    } else {
+    try {
+      const reqId = req.params.id
+      console.log('Accept request - reqId:', reqId, 'shopkeeper:', req.user.mail)
+      const isUpdate = await UserModels.requestUpdateStatus(reqId)
+      console.log('Update result:', isUpdate)
+      if (isUpdate.affectedRows) {
+        res.redirect('/servicereq')
+      } else {
+        res.redirect('/servicereq')
+      }
+    } catch (err) {
+      console.error('Error in medicineReqVerify:', err)
       res.redirect('/servicereq')
     }
   },
 
   medicineReqHold: async (req, res) => {
-    const reqId = req.params.id
-
-    const isUpdate = await UserModels.requestHoldUpdateStatus(reqId)
-    if (isUpdate.affectedRows) {
-      res.redirect('/servicereq')
-    } else {
+    try {
+      const reqId = req.params.id
+      console.log('Hold request - reqId:', reqId, 'shopkeeper:', req.user.mail)
+      const isUpdate = await UserModels.requestHoldUpdateStatus(reqId)
+      console.log('Hold result:', isUpdate)
+      if (isUpdate.affectedRows) {
+        res.redirect('/servicereq')
+      } else {
+        res.redirect('/servicereq')
+      }
+    } catch (err) {
+      console.error('Error in medicineReqHold:', err)
       res.redirect('/servicereq')
     }
   },
