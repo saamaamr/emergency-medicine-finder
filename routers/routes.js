@@ -7,7 +7,6 @@ const upload = multer({ dest: 'public/uploads/' });
 
 /* ======== import files ========= */
 const {
-  requireAuth,
   requireUser,
   requireShopkeeper,
   requireAdmin,
@@ -40,9 +39,9 @@ router.get('/mediupdate', requireShopkeeper, UserController.mediUpadateC);
 router.get('/request/:service_id', requireUser, UserController.mediReqC);
 router.get('/shopkeepersignup', decorateHtmlResponse('SignUp'), UserController.shopkeeperRegisterC);
 
-router.get('/logout', requireAuth, UserController.logout);
-router.get('/shopkeeperlogout', requireShopkeeper, UserController.shopkeeperLogout);
-router.get('/adminlogout', requireAdmin, UserController.adminLogout);
+router.get('/logout', UserController.logout);
+router.get('/shopkeeperlogout', UserController.shopkeeperLogout);
+router.get('/adminlogout', UserController.adminLogout);
 
 router.get('/verify-account/:id', UserController.accountVerify)
 router.get('/verify-shopkeeper-account/:id', requireAdmin, UserController.shopkeeperAccountVerify)

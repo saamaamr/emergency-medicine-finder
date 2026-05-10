@@ -34,7 +34,7 @@
 | 2026-05-10 | `GET /verify-shopkeeper-account/:id` & `/hold-shopkeeper-account/:id` — no auth | HIGH | routes.js | Added `requireAdmin` middleware. |
 | 2026-05-10 | `POST /request` — no auth, userMail from body | HIGH | routes.js, UserController.js | Added `requireUser`. Enforced `userMail = req.user.mail`. Look up userId from DB. |
 | 2026-05-10 | `POST /userupdate` — no auth, no ownership check | HIGH | routes.js, UserController.js | Added `requireUser`. Verified `email === req.user.mail`. Look up userId from DB. |
-| 2026-05-10 | `/logout`, `/shopkeeperlogout`, `/adminlogout` — no auth | MEDIUM | routes.js | Added `requireAuth`, `requireShopkeeper`, `requireAdmin` respectively. |
+| 2026-05-10 | `/logout`, `/shopkeeperlogout`, `/adminlogout` — no auth | MEDIUM | routes.js | Initially added auth middleware but reverted — logout is idempotent (just clears cookies) and should work for everyone, including users with expired tokens. |
 | 2026-05-10 | `POST /book-service` — no auth | MEDIUM | routes.js | Added `requireUser` middleware. |
 
 ## Pending Findings
