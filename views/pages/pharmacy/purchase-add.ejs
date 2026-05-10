@@ -1,0 +1,249 @@
+<%- include ('../../template/aheader') %>
+
+<section class="main">
+  <div class="sidebar">
+    <div class="sidebar--profile mb-4 pb-3 border-bottom">
+      <div class="text-center">
+        <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" class="rounded-circle mb-2" width="60" height="60">
+        <h6 class="mb-0"><%= shopkeeperData[0].shopname %></h6>
+        <small class="text-muted"><%= shopkeeperData[0].email %></small>
+      </div>
+    </div>
+    <ul class="sidebar--items">
+      <li><a href="/shopkeeperdesh"><span class="icon icon-1"><i class="ri-layout-grid-line"></i></span><span class="sidebar--item">Dashboard</span></a></li>
+      <li><a href="/pharmacy/dashboard"><span class="icon icon-2"><i class="ri-store-2-line"></i></span><span class="sidebar--item">Pharmacy</span></a></li>
+      <li><a href="/pharmacy/suppliers"><span class="icon icon-3"><i class="ri-truck-line"></i></span><span class="sidebar--item">Suppliers</span></a></li>
+      <li><a href="/pharmacy/purchases" id="active--link"><span class="icon icon-4"><i class="ri-shopping-cart-line"></i></span><span class="sidebar--item">Purchases</span></a></li>
+      <li><a href="/pharmacy/sales"><span class="icon icon-5"><i class="ri-handbag-line"></i></span><span class="sidebar--item">Sales</span></a></li>
+      <li><a href="/pharmacy/expenses"><span class="icon icon-6"><i class="ri-bill-line"></i></span><span class="sidebar--item">Expenses</span></a></li>
+      <li><a href="/pharmacy/reports"><span class="icon icon-7"><i class="ri-bar-chart-line"></i></span><span class="sidebar--item">Reports</span></a></li>
+      <li><a href="/servicereq"><span class="icon icon-8"><i class="ri-git-repository-line"></i></span><span class="sidebar--item">Med Requests</span></a></li>
+      <li><a href="/shopprofile"><span class="icon icon-9"><i class="ri-user-settings-line"></i></span><span class="sidebar--item">My Profile</span></a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/shopkeeperlogout"><span class="icon icon-10"><i class="ri-logout-box-r-line"></i></span><span class="sidebar--item">Logout</span></a></li>
+    </ul>
+  </div>
+
+  <div class="main--content">
+    <% if (messages.error === 'true') { %>
+      <div class="alert alert-danger alert-dismissible fade show"><i class="ri-error-warning-line me-2"></i>Error adding purchase. Try again.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0"><i class="ri-add-circle-line me-2"></i>New Purchase Order</h4>
+      <a href="/pharmacy/purchases" class="btn btn-outline-secondary btn-sm"><i class="ri-arrow-left-line me-1"></i>Back</a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-4">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Supplier</label>
+            <select class="form-select" id="supplier_id">
+              <option value="">Select Supplier</option>
+              <% suppliers.forEach(s => { %>
+                <option value="<%= s.supplier_id %>"><%= s.name %> - <%= s.company || '' %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Invoice No *</label>
+            <input type="text" class="form-control" id="invoice_no" placeholder="INV-001" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Purchase Date *</label>
+            <input type="date" class="form-control" id="purchase_date" value="<%= new Date().toISOString().slice(0,10) %>">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Notes</label>
+            <input type="text" class="form-control" id="notes" placeholder="Optional">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white border-bottom p-3">
+        <h6 class="mb-0"><i class="ri-medicine-bottle-line me-1"></i>Purchase Items</h6>
+      </div>
+      <div class="card-body p-4">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Medicine *</label>
+            <select class="form-select" id="item_medicine">
+              <option value="">Select Medicine</option>
+              <% medicines.forEach(m => { %>
+                <option value="<%= m.mediname %>" data-price="<%= m.price || 0 %>"><%= m.mediname %> (Stock: <%= m.stock %>)</option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Batch No</label>
+            <input type="text" class="form-control" id="item_batch" placeholder="BAT-001">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Expiry Date</label>
+            <input type="date" class="form-control" id="item_expiry">
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Qty *</label>
+            <input type="number" class="form-control" id="item_qty" min="1" value="1">
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Unit Price *</label>
+            <input type="number" step="0.01" class="form-control" id="item_price" value="0">
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">MRP</label>
+            <input type="number" step="0.01" class="form-control" id="item_mrp" value="0">
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Total</label>
+            <input type="text" class="form-control" id="item_total" readonly value="0">
+          </div>
+          <div class="col-md-1">
+            <button class="btn btn-primary w-100" onclick="addItem()"><i class="ri-add-line"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>Medicine</th><th>Batch</th><th>Expiry</th><th>Qty</th><th>Unit Price</th><th>MRP</th><th>Total</th><th>Action</th></tr>
+          </thead>
+          <tbody id="itemsTable">
+            <tr id="noItemsRow"><td colspan="8" class="text-center text-muted py-3">No items added</td></tr>
+          </tbody>
+          <tfoot id="itemsFooter" class="table-light d-none">
+            <tr><td colspan="6" class="text-end fw-bold">Grand Total:</td><td class="fw-bold" id="grandTotal">৳0.00</td><td></td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="text-end">
+      <a href="/pharmacy/purchases" class="btn btn-secondary me-2">Cancel</a>
+      <button class="btn btn-success" onclick="submitPurchase()"><i class="ri-check-line me-1"></i>Save Purchase</button>
+    </div>
+  </div>
+</section>
+
+<script>
+let items = [];
+
+document.getElementById('item_medicine').addEventListener('change', function() {
+  const opt = this.options[this.selectedIndex];
+  const price = opt ? opt.dataset.price : 0;
+  if (price > 0) document.getElementById('item_price').value = price;
+  calcItemTotal();
+});
+
+document.getElementById('item_qty').addEventListener('input', calcItemTotal);
+document.getElementById('item_price').addEventListener('input', calcItemTotal);
+document.getElementById('item_mrp').addEventListener('input', calcItemTotal);
+
+function calcItemTotal() {
+  const qty = parseFloat(document.getElementById('item_qty').value) || 0;
+  const price = parseFloat(document.getElementById('item_price').value) || 0;
+  document.getElementById('item_total').value = (qty * price).toFixed(2);
+}
+
+function addItem() {
+  const med = document.getElementById('item_medicine');
+  const medicineName = med.value;
+  if (!medicineName) { alert('Select a medicine'); return; }
+  const batch = document.getElementById('item_batch').value;
+  const expiry = document.getElementById('item_expiry').value;
+  const qty = parseInt(document.getElementById('item_qty').value) || 0;
+  const price = parseFloat(document.getElementById('item_price').value) || 0;
+  const mrp = parseFloat(document.getElementById('item_mrp').value) || 0;
+  if (qty <= 0 || price <= 0) { alert('Enter valid quantity and price'); return; }
+  const total = qty * price;
+
+  items.push({ medicine_name: medicineName, batch_no: batch, expiry_date: expiry, quantity: qty, unit_price: price, mrp, total });
+  renderItems();
+
+  document.getElementById('item_batch').value = '';
+  document.getElementById('item_expiry').value = '';
+  document.getElementById('item_qty').value = '1';
+  document.getElementById('item_price').value = '0';
+  document.getElementById('item_mrp').value = '0';
+  document.getElementById('item_total').value = '0';
+  med.value = '';
+}
+
+function removeItem(index) {
+  items.splice(index, 1);
+  renderItems();
+}
+
+function renderItems() {
+  const tbody = document.getElementById('itemsTable');
+  const footer = document.getElementById('itemsFooter');
+  let html = '';
+  let grandTotal = 0;
+
+  items.forEach((item, i) => {
+    grandTotal += item.total;
+    html += `<tr>
+      <td>${item.medicine_name}</td>
+      <td>${item.batch_no || '-'}</td>
+      <td>${item.expiry_date || '-'}</td>
+      <td>${item.quantity}</td>
+      <td>৳${item.unit_price.toFixed(2)}</td>
+      <td>${item.mrp > 0 ? '৳'+item.mrp.toFixed(2) : '-'}</td>
+      <td>৳${item.total.toFixed(2)}</td>
+      <td><button class="btn btn-sm btn-outline-danger" onclick="removeItem(${i})"><i class="ri-close-line"></i></button></td>
+    </tr>`;
+  });
+
+  if (items.length === 0) {
+    html = '<tr id="noItemsRow"><td colspan="8" class="text-center text-muted py-3">No items added</td></tr>';
+    footer.classList.add('d-none');
+  } else {
+    footer.classList.remove('d-none');
+    document.getElementById('grandTotal').textContent = '৳' + grandTotal.toFixed(2);
+  }
+
+  tbody.innerHTML = html;
+}
+
+function submitPurchase() {
+  const supplierId = document.getElementById('supplier_id').value;
+  const invoiceNo = document.getElementById('invoice_no').value.trim();
+  const purchaseDate = document.getElementById('purchase_date').value;
+  const notes = document.getElementById('notes').value.trim();
+
+  if (!invoiceNo) { alert('Enter invoice number'); return; }
+  if (items.length === 0) { alert('Add at least one item'); return; }
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/pharmacy/purchases/add';
+
+  const fields = {
+    supplier_id: supplierId,
+    invoice_no: invoiceNo,
+    purchase_date: purchaseDate,
+    notes: notes,
+    items: JSON.stringify(items),
+  };
+
+  for (const [key, value] of Object.entries(fields)) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = value;
+    form.appendChild(input);
+  }
+
+  document.body.appendChild(form);
+  form.submit();
+}
+</script>
+
+<%- include ('../../template/alfooter') %>

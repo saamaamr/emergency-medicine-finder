@@ -1,0 +1,269 @@
+/* MapLibre Custom Styles */
+
+/* Custom markers */
+.marker-pharmacy {
+  width: 36px;
+  height: 44px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  transform: translate(-50%, -100%);
+}
+
+.marker-pharmacy:hover {
+  transform: translate(-50%, -100%) scale(1.15);
+  z-index: 100;
+}
+
+.marker-pharmacy img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.marker-selected {
+  width: 44px;
+  height: 56px;
+}
+
+.marker-selected:hover {
+  transform: translate(-50%, -100%) scale(1.1);
+}
+
+.marker-user {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.marker-user img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* User location pulse animation */
+.user-marker-container {
+  position: relative;
+}
+
+.user-pulse {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.3);
+  animation: user-pulse 2s ease-in-out infinite;
+  transform: translate(-50%, -50%);
+  left: 50%;
+  top: 50%;
+}
+
+@keyframes user-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* Stock indicator glow effects */
+.marker-stock-high img {
+  filter: drop-shadow(0 0 4px #22c55e);
+}
+
+.marker-stock-low img {
+  filter: drop-shadow(0 0 4px #f59e0b);
+}
+
+.marker-stock-out img {
+  filter: drop-shadow(0 0 4px #ef4444);
+}
+
+/* Geolocate control styling */
+.maplibregl-ctrl-geolocate {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.maplibregl-ctrl-geolocate:hover {
+  background: #f8fafc;
+}
+
+/* Navigation control styling adjustments */
+.maplibregl-ctrl-group button {
+  width: 36px;
+  height: 36px;
+}
+
+/* Popup animations */
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: #fff;
+}
+
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: #fff;
+}
+
+/* Popup action button */
+.popup-action-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  background: #0284C7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s ease;
+}
+
+.popup-action-btn:hover {
+  background: #0369A1;
+}
+
+/* Directions button */
+.popup-directions-btn {
+  background: #0EA5E9;
+}
+
+.popup-directions-btn:hover {
+  background: #0284C7;
+}
+
+/* Result card active state */
+.result-card.active {
+  border-color: #0284C7;
+  box-shadow: 0 2px 12px rgba(2,132,199,0.15);
+  background: #E0F2FE;
+}
+
+/* Loading state for markers */
+.marker-loading {
+  opacity: 0.5;
+  animation: marker-loading 1s ease-in-out infinite;
+}
+
+@keyframes marker-loading {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .marker-pharmacy {
+    width: 30px;
+    height: 38px;
+  }
+  
+  .marker-selected {
+    width: 36px;
+    height: 48px;
+  }
+  
+  .maplibregl-popup-content {
+    max-width: 280px !important;
+  }
+}
+
+/* Route styling */
+.route-info-panel {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  font-family: 'Figtree', sans-serif;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.route-info-panel .route-distance {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0891B2;
+}
+
+.route-info-panel .route-duration {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.route-info-panel .route-close {
+  background: #f3f4f6;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 18px;
+}
+
+.route-info-panel .route-close:hover {
+  background: #e5e7eb;
+}
+
+/* Route line animation */
+@keyframes route-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.route-line-animated {
+  animation: route-pulse 2s ease-in-out infinite;
+}
+
+/* Live tracking panel */
+#live-tracking-panel {
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateX(-50%) translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Live tracking button pulse */
+@keyframes live-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+}
+
+.live-tracking-active {
+  animation: live-pulse 2s ease-in-out infinite;
+}

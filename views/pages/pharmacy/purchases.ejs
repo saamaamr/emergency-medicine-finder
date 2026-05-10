@@ -1,0 +1,80 @@
+<%- include ('../../template/aheader') %>
+
+<section class="main">
+  <div class="sidebar">
+    <div class="sidebar--profile mb-4 pb-3 border-bottom">
+      <div class="text-center">
+        <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" class="rounded-circle mb-2" width="60" height="60">
+        <h6 class="mb-0"><%= shopkeeperData[0].shopname %></h6>
+        <small class="text-muted"><%= shopkeeperData[0].email %></small>
+      </div>
+    </div>
+    <ul class="sidebar--items">
+      <li><a href="/shopkeeperdesh"><span class="icon icon-1"><i class="ri-layout-grid-line"></i></span><span class="sidebar--item">Dashboard</span></a></li>
+      <li><a href="/pharmacy/dashboard"><span class="icon icon-2"><i class="ri-store-2-line"></i></span><span class="sidebar--item">Pharmacy</span></a></li>
+      <li><a href="/pharmacy/suppliers"><span class="icon icon-3"><i class="ri-truck-line"></i></span><span class="sidebar--item">Suppliers</span></a></li>
+      <li><a href="/pharmacy/purchases" id="active--link"><span class="icon icon-4"><i class="ri-shopping-cart-line"></i></span><span class="sidebar--item">Purchases</span></a></li>
+      <li><a href="/pharmacy/sales"><span class="icon icon-5"><i class="ri-handbag-line"></i></span><span class="sidebar--item">Sales</span></a></li>
+      <li><a href="/pharmacy/expenses"><span class="icon icon-6"><i class="ri-bill-line"></i></span><span class="sidebar--item">Expenses</span></a></li>
+      <li><a href="/pharmacy/reports"><span class="icon icon-7"><i class="ri-bar-chart-line"></i></span><span class="sidebar--item">Reports</span></a></li>
+      <li><a href="/servicereq"><span class="icon icon-8"><i class="ri-git-repository-line"></i></span><span class="sidebar--item">Med Requests</span></a></li>
+      <li><a href="/shopprofile"><span class="icon icon-9"><i class="ri-user-settings-line"></i></span><span class="sidebar--item">My Profile</span></a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/shopkeeperlogout"><span class="icon icon-10"><i class="ri-logout-box-r-line"></i></span><span class="sidebar--item">Logout</span></a></li>
+    </ul>
+  </div>
+
+  <div class="main--content">
+    <% if (messages.added === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="ri-check-circle-line me-2"></i>Purchase recorded!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (messages.deleted === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="ri-check-circle-line me-2"></i>Purchase deleted!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (messages.error === 'true') { %>
+      <div class="alert alert-danger alert-dismissible fade show"><i class="ri-error-warning-line me-2"></i>Something went wrong.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0"><i class="ri-shopping-cart-line me-2"></i>Purchases</h4>
+      <a href="/pharmacy/purchases/add" class="btn btn-primary btn-sm"><i class="ri-add-line me-1"></i>New Purchase</a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>Invoice</th><th>Date</th><th>Supplier</th><th>Total</th><th>Paid</th><th>Due</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <% if (purchases.length === 0) { %>
+              <tr><td colspan="8" class="text-center text-muted py-4">No purchases yet</td></tr>
+            <% } %>
+            <% purchases.forEach(p => { %>
+              <tr>
+                <td><a href="/pharmacy/purchases/view/<%= p.purchase_id %>"><%= p.invoice_no %></a></td>
+                <td><%= new Date(p.purchase_date).toLocaleDateString() %></td>
+                <td><%= p.supplier_name || 'N/A' %></td>
+                <td class="fw-bold">৳<%= parseFloat(p.total_amount).toFixed(2) %></td>
+                <td>৳<%= parseFloat(p.paid_amount).toFixed(2) %></td>
+                <td class="text-danger">৳<%= parseFloat(p.due_amount).toFixed(2) %></td>
+                <td>
+                  <span class="badge <%= p.payment_status === 'paid' ? 'bg-success' : p.payment_status === 'partial' ? 'bg-warning' : 'bg-danger' %>">
+                    <%= p.payment_status %>
+                  </span>
+                </td>
+                <td>
+                  <a href="/pharmacy/purchases/view/<%= p.purchase_id %>" class="btn btn-sm btn-outline-info"><i class="ri-eye-line"></i></a>
+                  <a href="/pharmacy/purchases/delete/<%= p.purchase_id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this purchase and restore stock?')"><i class="ri-delete-bin-line"></i></a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include ('../../template/alfooter') %>

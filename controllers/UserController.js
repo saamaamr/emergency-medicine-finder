@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { validationResult } = require('express-validator');
 const UserModels = require('../models/UserModels');
@@ -7,6 +8,25 @@ const UserModels = require('../models/UserModels');
 require('dotenv').config();
 
 const maxAge = 3 * 24 * 60 * 60 * 1000;
+const sessionExpiryHours = parseInt(process.env.SESSION_EXPIRY_HOURS) || 8;
+
+const hashBrowserKey = (browserKey) => {
+  return crypto.createHash('sha256').update(browserKey + (process.env.BROWSER_SECRET || 'default_secret')).digest('hex');
+};
+
+const getExpiryTime = () => {
+  const expiry = new Date();
+  expiry.setHours(expiry.getHours() + sessionExpiryHours);
+  return expiry;
+};
+
+const getDeviceInfo = (req) => {
+  return req.headers['user-agent'] || 'Unknown Device';
+};
+
+const getClientIP = (req) => {
+  return req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.ip || 'Unknown';
+};
 
 /*= ==== Mail Confirmation ===== */
 const transporter = nodemailer.createTransport({
@@ -60,6 +80,9 @@ const UserController = {
   },
   // Admin Related
   getAdmin: async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.render('pages/adminlogin')
+    }
     const allUser = await UserModels.getallUser()
     const allService = await UserModels.getaService()
     const allShopkeeper = await UserModels.getallWorker()
@@ -104,6 +127,30 @@ const UserController = {
     })
   },
 
+  getShopProfile: async (req, res) => {
+    const uId = req.user ? req.user.mail : null;
+    const shopkeeperData = uId ? await UserModels.workermailCatchM(uId) : null;
+    res.render('pages/shopprofile', { uId, shopkeeperData });
+  },
+
+  updateShopProfile: async (req, res) => {
+    try {
+      const { firstName, lastName, gender, phone, house, road, division, zila, upazila, lat, lng } = req.body;
+      const email = req.user.mail;
+      
+      let propic = null;
+      if (req.file) {
+        propic = '/uploads/' + req.file.filename;
+      }
+      
+      await UserModels.updateWorkerProfile(firstName, lastName, gender, phone, house, road, division, zila, upazila, lat || null, lng || null, propic, email);
+      res.redirect('/shopprofile?updated=true');
+    } catch (err) {
+      console.error('Profile update error:', err);
+      res.redirect('/shopprofile?error=true');
+    }
+  },
+
   getServiceData: async (req, res) => {
     const allService = await UserModels.getaService()
     res.render('pages/service', { allService })
@@ -135,17 +182,39 @@ const UserController = {
       if (servie.errno) {
         res.send('Something went wrong')
       } else {
-        res.redirect('/shopkeeperdesh')
+        res.redirect('/shopkeeperdesh?added=true')
       }
     } catch (e) {
-      res.send('Wrong')
+      res.redirect('/shopkeeperdesh?error=true')
+    }
+  },
+
+  updateStock: async (req, res) => {
+    try {
+      const { shopemail, mediname, updateType, quantity } = req.body;
+      const qty = parseInt(quantity);
+      
+      if (updateType === 'decrease') {
+        const result = await UserModels.updateShopMedicineStock(shopemail, mediname, qty);
+        if (result.affectedRows === 0) {
+          res.redirect('/shopkeeperdesh?error=true');
+          return;
+        }
+      } else {
+        await UserModels.addShopMedicineStock(shopemail, mediname, qty);
+      }
+      
+      res.redirect('/shopkeeperdesh?updated=true');
+    } catch (err) {
+      console.error('Stock update error:', err);
+      res.redirect('/shopkeeperdesh?error=true');
     }
   },
 
   /* User login controller */
   loginC: async (req, res) => {
     try {
-      const { email, pass } = req.body;
+      const { email, pass, browserKey } = req.body;
 
       const errors = validationResult(req).formatWith((error) => error.msg);
 
@@ -168,6 +237,31 @@ const UserController = {
         const isValidPassword = await bcrypt.compare(pass, password);
         if (isValidPassword) {
           if (user[0].status == 1) {
+            if (browserKey) {
+              const hashedBrowserKey = hashBrowserKey(browserKey);
+              const existingSession = await UserModels.getActiveSession(userMail, 'user');
+
+              if (existingSession) {
+                if (existingSession.browser_key !== hashedBrowserKey) {
+                  return res.render('pages/login', {
+                    auth: true,
+                    error: 'You are already logged in on another browser. Please logout from that browser first.',
+                  });
+                } else {
+                  await UserModels.deleteSession(userMail, 'user');
+                }
+              }
+
+              await UserModels.createSession(
+                userMail,
+                'user',
+                hashedBrowserKey,
+                getDeviceInfo(req),
+                getClientIP(req),
+                getExpiryTime()
+              );
+            }
+
             const token = jwt.sign(
               {
                 name: userName,
@@ -179,7 +273,7 @@ const UserController = {
             )
 
             res.clearCookie(process.env.COOKIE_NAME);
-            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String });
+            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
 
             const allService = await UserModels.getaService()
             const userData = await UserModels.getUser(userMail)
@@ -212,7 +306,7 @@ const UserController = {
   shopkeeperloginC: async (req, res) => {
     try {
       const {
-        email, pass,
+        email, pass, browserKey,
       } = req.body;
 
       if (email && pass) {
@@ -225,6 +319,28 @@ const UserController = {
                 const userMail = login[i].email;
                 const shopName = login[i].shopname;
 
+                if (browserKey) {
+                  const hashedBrowserKey = hashBrowserKey(browserKey);
+                  const existingSession = await UserModels.getActiveSession(userMail, 'shopkeeper');
+
+                  if (existingSession) {
+                    if (existingSession.browser_key !== hashedBrowserKey) {
+                      return res.send('You are already logged in on another browser. Please logout from that browser first.');
+                    } else {
+                      await UserModels.deleteSession(userMail, 'shopkeeper');
+                    }
+                  }
+
+                  await UserModels.createSession(
+                    userMail,
+                    'shopkeeper',
+                    hashedBrowserKey,
+                    getDeviceInfo(req),
+                    getClientIP(req),
+                    getExpiryTime()
+                  );
+                }
+
                 const token = jwt.sign(
                   {
                     name: shopName,
@@ -236,7 +352,7 @@ const UserController = {
                 )
 
                 res.clearCookie(process.env.COOKIE_NAME);
-                res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String });
+                res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
 
                 res.redirect('/shopkeeperdesh');
                 return;
@@ -319,7 +435,7 @@ const UserController = {
   adminLoginData: async (req, res) => {
     try {
       const {
-        userid, pass,
+        userid, pass, browserKey,
       } = req.body;
 
       if (userid && pass) {
@@ -328,6 +444,28 @@ const UserController = {
         if (alogin.length > 0) {
           const validPass = await bcrypt.compare(pass, alogin[0].pass);
           if (validPass) {
+            if (browserKey) {
+              const hashedBrowserKey = hashBrowserKey(browserKey);
+              const existingSession = await UserModels.getActiveSession(userid, 'admin');
+
+              if (existingSession) {
+                if (existingSession.browser_key !== hashedBrowserKey) {
+                  return res.send('You are already logged in on another browser. Please logout from that browser first.');
+                } else {
+                  await UserModels.deleteSession(userid, 'admin');
+                }
+              }
+
+              await UserModels.createSession(
+                userid,
+                'admin',
+                hashedBrowserKey,
+                getDeviceInfo(req),
+                getClientIP(req),
+                getExpiryTime()
+              );
+            }
+
             const token = jwt.sign(
               {
                 name: 'Admin',
@@ -339,19 +477,20 @@ const UserController = {
             )
 
             res.clearCookie(process.env.COOKIE_NAME);
-            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String });
+            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
 
             res.redirect('/admin');
+            return;
           } else {
             res.send('Incorrect Password');
+            return;
           }
         } else {
           res.send('Incorrect User ID');
+          return;
         }
-        res.end();
       } else {
         res.send('Please enter your Id, password.')
-        res.end();
       }
     } catch (e) {
       res.send('Wrong')
@@ -382,6 +521,14 @@ const UserController = {
       const errors = validationResult(req).formatWith((error) => error.msg);
       const images = req.files || {};
       const propicFilename = images.propic && images.propic[0] ? images.propic[0].filename : 'default-user.png';
+
+      const emailExists = await UserModels.checkEmailAcrossRoles(email);
+      if (emailExists) {
+        return res.render('pages/signup', {
+          error: { email: 'This email is already registered. Please use a different email or login.' },
+          value: { firstName, lastName, gender, email, phone, propicFilename, house, road, division, zila, upazila, pass },
+        });
+      }
 
       if (!errors.isEmpty()) {
         return res.render('pages/signup', {
@@ -437,6 +584,14 @@ const UserController = {
       const propicFilename = images.propic && images.propic[0] ? images.propic[0].filename : 'default-shop.png';
       const nid1Filename = images.nid1 && images.nid1[0] ? images.nid1[0].filename : 'default-nid.jpg';
       const nid2Filename = images.nid2 && images.nid2[0] ? images.nid2[0].filename : 'default-nid.jpg';
+
+      const emailExists = await UserModels.checkEmailAcrossRoles(email);
+      if (emailExists) {
+        return res.render('pages/shopkeepersignup', {
+          error: { email: 'This email is already registered. Please use a different email or login.' },
+          value: { firstName, lastName, gender, shopname, email, phone, house, road, division, zila, upazila },
+        });
+      }
 
       const hashPassword = await bcrypt.hash(pass, 10);
       const registerData = await UserModels.insertWorkerRegisterM(
@@ -562,16 +717,25 @@ const UserController = {
 
   /* ====== Logout Controller  ====== */
   logout: async (req, res) => {
+    if (req.user) {
+      await UserModels.deleteSession(req.user.mail, 'user');
+    }
     res.clearCookie(process.env.COOKIE_NAME);
     res.redirect('/');
   },
 
   shopkeeperLogout: async (req, res) => {
+    if (req.user) {
+      await UserModels.deleteSession(req.user.mail, 'shopkeeper');
+    }
     res.clearCookie(process.env.COOKIE_NAME);
     res.redirect('/shopkeeperlogin');
   },
 
   adminLogout: async (req, res) => {
+    if (req.user) {
+      await UserModels.deleteSession(req.user.mail, 'admin');
+    }
     res.clearCookie(process.env.COOKIE_NAME);
     res.redirect('/admin');
   },
@@ -622,22 +786,35 @@ const UserController = {
     res.redirect('/shopkeeper')
   },
   medicineReqVerify: async (req, res) => {
-    const reqId = req.params.id
-    const isUpdate = await UserModels.requestUpdateStatus(reqId)
-    if (isUpdate.affectedRows) {
-      res.redirect('/servicereq')
-    } else {
+    try {
+      const reqId = req.params.id
+      console.log('Accept request - reqId:', reqId, 'shopkeeper:', req.user.mail)
+      const isUpdate = await UserModels.requestUpdateStatus(reqId)
+      console.log('Update result:', isUpdate)
+      if (isUpdate.affectedRows) {
+        res.redirect('/servicereq')
+      } else {
+        res.redirect('/servicereq')
+      }
+    } catch (err) {
+      console.error('Error in medicineReqVerify:', err)
       res.redirect('/servicereq')
     }
   },
 
   medicineReqHold: async (req, res) => {
-    const reqId = req.params.id
-
-    const isUpdate = await UserModels.requestHoldUpdateStatus(reqId)
-    if (isUpdate.affectedRows) {
-      res.redirect('/servicereq')
-    } else {
+    try {
+      const reqId = req.params.id
+      console.log('Hold request - reqId:', reqId, 'shopkeeper:', req.user.mail)
+      const isUpdate = await UserModels.requestHoldUpdateStatus(reqId)
+      console.log('Hold result:', isUpdate)
+      if (isUpdate.affectedRows) {
+        res.redirect('/servicereq')
+      } else {
+        res.redirect('/servicereq')
+      }
+    } catch (err) {
+      console.error('Error in medicineReqHold:', err)
       res.redirect('/servicereq')
     }
   },

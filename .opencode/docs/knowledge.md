@@ -19,10 +19,15 @@
 | Jargon without context | Technical terms | Always define on first use | Add inline definition or link to glossary |
 | Outdated screenshots | Visual docs | Avoid stale visuals — flag outdated ones to user | Re-capture or remove, never leave misleading visuals |
 | Passive voice | Writing style | Avoid — use active voice and address reader directly | Rewrite: "Click the button" not "The button should be clicked" |
+| Missing env variables | SMTP config not documented | Document all env vars with examples | Add SMTP variables to .env.sample and README |
+| Role-based auth scattered | Three login pages (user/shopkeeper/admin) | Document auth flow per role | Create dedicated ROLES.md guide |
+| Single controller file | All logic in one 758-line controller | Document structure clearly in README | Add project structure tree |
 
 ## Fixes Applied
 > Log every completed fix. Read to understand what has already been done in this project.
 
 | Date | Issue | Severity | File | Outcome |
 |------|-------|----------|------|---------|
-| _none_ | | | | |
+| 2026-05-10 | README incomplete — missing SMTP, roles, admin endpoints | High | README.md | Rewrote with full structure, roles, API table, sample accounts |
+| 2026-05-10 | No documentation for user roles and permissions | High | docs/ROLES.md | Created new guide with auth flow and status codes |
+| 2026-05-10 | No API reference document | High | docs/API.md | Created comprehensive endpoint reference |

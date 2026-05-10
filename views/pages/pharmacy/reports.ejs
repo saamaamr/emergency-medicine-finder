@@ -1,0 +1,182 @@
+<%- include ('../../template/aheader') %>
+
+<section class="main">
+  <div class="sidebar">
+    <div class="sidebar--profile mb-4 pb-3 border-bottom">
+      <div class="text-center">
+        <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" class="rounded-circle mb-2" width="60" height="60">
+        <h6 class="mb-0"><%= shopkeeperData[0].shopname %></h6>
+        <small class="text-muted"><%= shopkeeperData[0].email %></small>
+      </div>
+    </div>
+    <ul class="sidebar--items">
+      <li><a href="/shopkeeperdesh"><span class="icon icon-1"><i class="ri-layout-grid-line"></i></span><span class="sidebar--item">Dashboard</span></a></li>
+      <li><a href="/pharmacy/dashboard"><span class="icon icon-2"><i class="ri-store-2-line"></i></span><span class="sidebar--item">Pharmacy</span></a></li>
+      <li><a href="/pharmacy/suppliers"><span class="icon icon-3"><i class="ri-truck-line"></i></span><span class="sidebar--item">Suppliers</span></a></li>
+      <li><a href="/pharmacy/purchases"><span class="icon icon-4"><i class="ri-shopping-cart-line"></i></span><span class="sidebar--item">Purchases</span></a></li>
+      <li><a href="/pharmacy/sales"><span class="icon icon-5"><i class="ri-handbag-line"></i></span><span class="sidebar--item">Sales</span></a></li>
+      <li><a href="/pharmacy/expenses"><span class="icon icon-6"><i class="ri-bill-line"></i></span><span class="sidebar--item">Expenses</span></a></li>
+      <li><a href="/pharmacy/reports" id="active--link"><span class="icon icon-7"><i class="ri-bar-chart-line"></i></span><span class="sidebar--item">Reports</span></a></li>
+      <li><a href="/servicereq"><span class="icon icon-8"><i class="ri-git-repository-line"></i></span><span class="sidebar--item">Med Requests</span></a></li>
+      <li><a href="/shopprofile"><span class="icon icon-9"><i class="ri-user-settings-line"></i></span><span class="sidebar--item">My Profile</span></a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/shopkeeperlogout"><span class="icon icon-10"><i class="ri-logout-box-r-line"></i></span><span class="sidebar--item">Logout</span></a></li>
+    </ul>
+  </div>
+
+  <div class="main--content">
+    <h4 class="mb-3"><i class="ri-bar-chart-line me-2"></i>Profit / Loss Report</h4>
+
+    <form method="GET" action="/pharmacy/reports" class="row g-2 mb-4">
+      <div class="col-auto">
+        <label class="form-label visually-hidden">Start Date</label>
+        <input type="date" class="form-control form-control-sm" name="start" value="<%= startDate %>">
+      </div>
+      <div class="col-auto">
+        <label class="form-label visually-hidden">End Date</label>
+        <input type="date" class="form-control form-control-sm" name="end" value="<%= endDate %>">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary btn-sm"><i class="ri-filter-line me-1"></i>Filter</button>
+      </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center p-3">
+            <h6 class="text-muted mb-2">Total Sales</h6>
+            <h4 class="text-success mb-0">৳<%= parseFloat(report.total_sales).toFixed(2) %></h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center p-3">
+            <h6 class="text-muted mb-2">Total Purchases</h6>
+            <h4 class="text-primary mb-0">৳<%= parseFloat(report.total_purchases).toFixed(2) %></h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center p-3">
+            <h6 class="text-muted mb-2">Total Expenses</h6>
+            <h4 class="text-danger mb-0">৳<%= parseFloat(report.total_expenses).toFixed(2) %></h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center p-3">
+            <h6 class="text-muted mb-2">Net Profit</h6>
+            <h4 class="<%= netProfit >= 0 ? 'text-success' : 'text-danger' %> mb-0">৳<%= netProfit.toFixed(2) %></h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom p-3">
+            <h6 class="mb-0"><i class="ri-handbag-line me-1"></i>Sales (<%= sales.length %>)</h6>
+          </div>
+          <div class="table-responsive" style="max-height: 300px">
+            <table class="table table-sm table-hover mb-0">
+              <thead><tr><th>Invoice</th><th>Customer</th><th>Amount</th><th>Profit</th></tr></thead>
+              <tbody>
+                <% if (sales.length === 0) { %>
+                  <tr><td colspan="4" class="text-center text-muted py-2">No sales</td></tr>
+                <% } %>
+                <% sales.forEach(s => { %>
+                  <tr>
+                    <td><%= s.invoice_no %></td>
+                    <td><%= s.customer_name || 'Walk-in' %></td>
+                    <td>৳<%= parseFloat(s.total_amount).toFixed(2) %></td>
+                    <td class="text-success">৳<%= parseFloat(s.profit_amount).toFixed(2) %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom p-3">
+            <h6 class="mb-0"><i class="ri-bill-line me-1"></i>Expenses by Category</h6>
+          </div>
+          <div class="table-responsive" style="max-height: 300px">
+            <table class="table table-sm table-hover mb-0">
+              <thead><tr><th>Category</th><th>Type</th><th>Total</th></tr></thead>
+              <tbody>
+                <% if (expenseStats.length === 0) { %>
+                  <tr><td colspan="3" class="text-center text-muted py-2">No expenses</td></tr>
+                <% } %>
+                <% expenseStats.forEach(c => { %>
+                  <tr>
+                    <td><%= c.name %></td>
+                    <td><span class="badge bg-light text-dark"><%= c.type %></span></td>
+                    <td class="text-danger">৳<%= parseFloat(c.total).toFixed(2) %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom p-3">
+            <h6 class="mb-0"><i class="ri-shopping-cart-line me-1"></i>Purchases (<%= purchases.length %>)</h6>
+          </div>
+          <div class="table-responsive" style="max-height: 300px">
+            <table class="table table-sm table-hover mb-0">
+              <thead><tr><th>Invoice</th><th>Supplier</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody>
+                <% if (purchases.length === 0) { %>
+                  <tr><td colspan="4" class="text-center text-muted py-2">No purchases</td></tr>
+                <% } %>
+                <% purchases.forEach(p => { %>
+                  <tr>
+                    <td><%= p.invoice_no %></td>
+                    <td><%= p.supplier_name || 'N/A' %></td>
+                    <td>৳<%= parseFloat(p.total_amount).toFixed(2) %></td>
+                    <td><span class="badge <%= p.payment_status === 'paid' ? 'bg-success' : 'bg-warning' %>"><%= p.payment_status %></span></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom p-3">
+            <h6 class="mb-0"><i class="ri-calendar-line me-1"></i>This Month Summary (<%= year %>-<%= month %>)</h6>
+          </div>
+          <div class="card-body">
+            <table class="table table-sm table-borderless mb-0">
+              <tr><td>Total Sales:</td><td class="fw-bold">৳<%= parseFloat(monthlySales.total_sales).toFixed(2) %></td></tr>
+              <tr><td>Total Profit:</td><td class="fw-bold text-success">৳<%= parseFloat(monthlySales.total_profit).toFixed(2) %></td></tr>
+              <tr><td>Total Expenses:</td><td class="fw-bold text-danger">৳<%= parseFloat(monthlyExpense.total_expenses).toFixed(2) %></td></tr>
+              <tr><td>Sale Count:</td><td class="fw-bold"><%= monthlySales.sale_count %> transactions</td></tr>
+              <% const monthlyNet = parseFloat(monthlySales.total_profit) - parseFloat(monthlyExpense.total_expenses); %>
+              <tr class="border-top">
+                <td class="fw-bold">Net Income:</td>
+                <td class="fw-bold <%= monthlyNet >= 0 ? 'text-success' : 'text-danger' %>">৳<%= monthlyNet.toFixed(2) %></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include ('../../template/alfooter') %>

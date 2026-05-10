@@ -1,0 +1,104 @@
+<%- include ('../../template/aheader') %>
+
+<section class="main">
+  <div class="sidebar">
+    <div class="sidebar--profile mb-4 pb-3 border-bottom">
+      <div class="text-center">
+        <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" class="rounded-circle mb-2" width="60" height="60">
+        <h6 class="mb-0"><%= shopkeeperData[0].shopname %></h6>
+        <small class="text-muted"><%= shopkeeperData[0].email %></small>
+      </div>
+    </div>
+    <ul class="sidebar--items">
+      <li><a href="/shopkeeperdesh"><span class="icon icon-1"><i class="ri-layout-grid-line"></i></span><span class="sidebar--item">Dashboard</span></a></li>
+      <li><a href="/pharmacy/dashboard"><span class="icon icon-2"><i class="ri-store-2-line"></i></span><span class="sidebar--item">Pharmacy</span></a></li>
+      <li><a href="/pharmacy/suppliers"><span class="icon icon-3"><i class="ri-truck-line"></i></span><span class="sidebar--item">Suppliers</span></a></li>
+      <li><a href="/pharmacy/purchases" id="active--link"><span class="icon icon-4"><i class="ri-shopping-cart-line"></i></span><span class="sidebar--item">Purchases</span></a></li>
+      <li><a href="/pharmacy/sales"><span class="icon icon-5"><i class="ri-handbag-line"></i></span><span class="sidebar--item">Sales</span></a></li>
+      <li><a href="/pharmacy/expenses"><span class="icon icon-6"><i class="ri-bill-line"></i></span><span class="sidebar--item">Expenses</span></a></li>
+      <li><a href="/pharmacy/reports"><span class="icon icon-7"><i class="ri-bar-chart-line"></i></span><span class="sidebar--item">Reports</span></a></li>
+      <li><a href="/servicereq"><span class="icon icon-8"><i class="ri-git-repository-line"></i></span><span class="sidebar--item">Med Requests</span></a></li>
+      <li><a href="/shopprofile"><span class="icon icon-9"><i class="ri-user-settings-line"></i></span><span class="sidebar--item">My Profile</span></a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/shopkeeperlogout"><span class="icon icon-10"><i class="ri-logout-box-r-line"></i></span><span class="sidebar--item">Logout</span></a></li>
+    </ul>
+  </div>
+
+  <div class="main--content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0"><i class="ri-shopping-cart-line me-2"></i>Purchase Details</h4>
+      <a href="/pharmacy/purchases" class="btn btn-outline-secondary btn-sm"><i class="ri-arrow-left-line me-1"></i>Back</a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-4">
+        <div class="row">
+          <div class="col-md-6">
+            <table class="table table-sm table-borderless">
+              <tr><td class="text-muted">Invoice No:</td><td class="fw-bold"><%= purchase.invoice_no %></td></tr>
+              <tr><td class="text-muted">Date:</td><td><%= new Date(purchase.purchase_date).toLocaleDateString() %></td></tr>
+              <tr><td class="text-muted">Supplier:</td><td><%= purchase.supplier_name || 'N/A' %></td></tr>
+              <tr><td class="text-muted">Supplier Phone:</td><td><%= purchase.supplier_phone || '-' %></td></tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <table class="table table-sm table-borderless">
+              <tr><td class="text-muted">Supplier Address:</td><td><%= purchase.supplier_address || 'N/A' %></td></tr>
+              <tr><td class="text-muted">Payment Status:</td>
+                <td><span class="badge <%= purchase.payment_status === 'paid' ? 'bg-success' : purchase.payment_status === 'partial' ? 'bg-warning' : 'bg-danger' %>"><%= purchase.payment_status %></span></td>
+              </tr>
+              <tr><td class="text-muted">Notes:</td><td><%= purchase.notes || '-' %></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom p-3">
+        <h6 class="mb-0"><i class="ri-list-check me-1"></i>Items</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>Medicine</th><th>Batch No</th><th>Expiry</th><th>Qty</th><th>Unit Price</th><th>MRP</th><th>Total</th></tr>
+          </thead>
+          <tbody>
+            <% items.forEach(item => { %>
+              <tr>
+                <td class="fw-500"><%= item.medicine_name %></td>
+                <td><%= item.batch_no || '-' %></td>
+                <td><%= item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : '-' %></td>
+                <td><%= item.quantity %></td>
+                <td>৳<%= parseFloat(item.unit_price).toFixed(2) %></td>
+                <td><%= item.mrp ? '৳'+parseFloat(item.mrp).toFixed(2) : '-' %></td>
+                <td class="fw-bold">৳<%= parseFloat(item.total).toFixed(2) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot class="table-light">
+            <tr>
+              <td colspan="6" class="text-end fw-bold">Subtotal:</td>
+              <td class="fw-bold">৳<%= parseFloat(purchase.subtotal).toFixed(2) %></td>
+            </tr>
+            <tr>
+              <td colspan="6" class="text-end fw-bold">Paid:</td>
+              <td class="text-success fw-bold">৳<%= parseFloat(purchase.paid_amount).toFixed(2) %></td>
+            </tr>
+            <tr>
+              <td colspan="6" class="text-end fw-bold">Due:</td>
+              <td class="text-danger fw-bold">৳<%= parseFloat(purchase.due_amount).toFixed(2) %></td>
+            </tr>
+            <tr>
+              <td colspan="6" class="text-end fw-bold">Total:</td>
+              <td class="fw-bold">৳<%= parseFloat(purchase.total_amount).toFixed(2) %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include ('../../template/alfooter') %>

@@ -263,6 +263,20 @@ const UserModels = {
     return rows;
   },
 
+  /* ====== Shopkeeper Profile Update ====== */
+  updateWorkerProfile: async (firstName, lastName, gender, phone, house, road, division, zila, upazila, lat, lng, propic, email) => {
+    let sql, values;
+    if (propic) {
+      sql = 'UPDATE worker SET first_name=?, last_name=?, gender=?, phone=?, house=?, road=?, division=?, zila=?, upazila=?, lat=?, lng=?, propic=? WHERE email=?';
+      values = [firstName, lastName, gender, phone, house, road, division, zila, upazila, lat, lng, propic, email];
+    } else {
+      sql = 'UPDATE worker SET first_name=?, last_name=?, gender=?, phone=?, house=?, road=?, division=?, zila=?, upazila=?, lat=?, lng=? WHERE email=?';
+      values = [firstName, lastName, gender, phone, house, road, division, zila, upazila, lat, lng, email];
+    }
+    const [rows] = await dbConnect.promise().execute(sql, values);
+    return rows;
+  },
+
   /* ====== Contact form submission ====== */
   insertContactMessage: async (name, email, subject, message) => {
     const sql = 'CREATE TABLE IF NOT EXISTS contact_messages (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), subject VARCHAR(255), message TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)';
@@ -270,6 +284,332 @@ const UserModels = {
     const insertSql = 'INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)';
     const [rows] = await dbConnect.promise().execute(insertSql, [name, email, subject, message]);
     return rows;
+  },
+
+  /* ====== Session Management ====== */
+  createSession: async (email, role, browserKey, deviceInfo, ipAddress, expiresAt) => {
+    const sql = 'INSERT INTO active_sessions (user_email, user_role, browser_key, device_info, ip_address, expires_at) VALUES (?, ?, ?, ?, ?, ?)';
+    const [rows] = await dbConnect.promise().execute(sql, [email, role, browserKey, deviceInfo, ipAddress, expiresAt]);
+    return rows;
+  },
+
+  getActiveSession: async (email, role) => {
+    const sql = 'SELECT * FROM active_sessions WHERE user_email = ? AND user_role = ?';
+    const [rows] = await dbConnect.promise().execute(sql, [email, role]);
+    return rows[0] || null;
+  },
+
+  getSessionByBrowserKey: async (browserKey) => {
+    const sql = 'SELECT * FROM active_sessions WHERE browser_key = ?';
+    const [rows] = await dbConnect.promise().execute(sql, [browserKey]);
+    return rows[0] || null;
+  },
+
+  deleteSession: async (email, role) => {
+    const sql = 'DELETE FROM active_sessions WHERE user_email = ? AND user_role = ?';
+    const [rows] = await dbConnect.promise().execute(sql, [email, role]);
+    return rows;
+  },
+
+  deleteSessionByBrowserKey: async (browserKey) => {
+    const sql = 'DELETE FROM active_sessions WHERE browser_key = ?';
+    const [rows] = await dbConnect.promise().execute(sql, [browserKey]);
+    return rows;
+  },
+
+  cleanupExpiredSessions: async () => {
+    const sql = 'DELETE FROM active_sessions WHERE expires_at < NOW()';
+    const [rows] = await dbConnect.promise().execute(sql);
+    return rows;
+  },
+
+  deleteAllUserSessions: async (email) => {
+    const sql = 'DELETE FROM active_sessions WHERE user_email = ?';
+    const [rows] = await dbConnect.promise().execute(sql, [email]);
+    return rows;
+  },
+
+  getUserSessions: async (email) => {
+    const sql = 'SELECT session_id, user_role, device_info, ip_address, created_at, expires_at, last_activity FROM active_sessions WHERE user_email = ? ORDER BY created_at DESC';
+    const [rows] = await dbConnect.promise().execute(sql, [email]);
+    return rows;
+  },
+
+  checkEmailAcrossRoles: async (email) => {
+    const [users] = await dbConnect.promise().execute('SELECT email FROM users WHERE email = ?', [email]);
+    const [workers] = await dbConnect.promise().execute('SELECT email FROM worker WHERE email = ?', [email]);
+    const [admins] = await dbConnect.promise().execute('SELECT admin_uid FROM admin WHERE admin_uid = ?', [email]);
+    return users.length > 0 || workers.length > 0 || admins.length > 0;
+  },
+
+  /* ====== Supplier CRUD ====== */
+  getAllSuppliers: async (shopEmail) => {
+    const sql = 'SELECT * FROM suppliers WHERE shop_email = ? ORDER BY name ASC';
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail]);
+    return rows;
+  },
+
+  getSupplier: async (supplierId) => {
+    const sql = 'SELECT * FROM suppliers WHERE supplier_id = ?';
+    const [rows] = await dbConnect.promise().execute(sql, [supplierId]);
+    return rows[0] || null;
+  },
+
+  createSupplier: async (shopEmail, name, company, email, phone, address, city) => {
+    const sql = 'INSERT INTO suppliers (shop_email, name, company, email, phone, address, city) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail, name, company, email, phone, address, city]);
+    return rows;
+  },
+
+  updateSupplier: async (supplierId, shopEmail, name, company, email, phone, address, city) => {
+    const sql = 'UPDATE suppliers SET name=?, company=?, email=?, phone=?, address=?, city=? WHERE supplier_id=? AND shop_email=?';
+    const [rows] = await dbConnect.promise().execute(sql, [name, company, email, phone, address, city, supplierId, shopEmail]);
+    return rows;
+  },
+
+  deleteSupplier: async (supplierId, shopEmail) => {
+    const sql = 'DELETE FROM suppliers WHERE supplier_id=? AND shop_email=?';
+    const [rows] = await dbConnect.promise().execute(sql, [supplierId, shopEmail]);
+    return rows;
+  },
+
+  /* ====== Expense Category CRUD ====== */
+  getAllExpenseCategories: async (shopEmail) => {
+    const sql = 'SELECT * FROM expense_categories WHERE shop_email = ? ORDER BY name ASC';
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail]);
+    return rows;
+  },
+
+  createExpenseCategory: async (shopEmail, name, type) => {
+    const sql = 'INSERT INTO expense_categories (shop_email, name, type) VALUES (?, ?, ?)';
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail, name, type]);
+    return rows;
+  },
+
+  /* ====== Expense CRUD ====== */
+  getAllExpenses: async (shopEmail) => {
+    const sql = `SELECT e.*, ec.name as category_name, ec.type as category_type 
+      FROM expenses e 
+      JOIN expense_categories ec ON e.category_id = ec.category_id 
+      WHERE e.shop_email = ? 
+      ORDER BY e.expense_date DESC, e.created_at DESC`;
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail]);
+    return rows;
+  },
+
+  getExpense: async (expenseId) => {
+    const sql = 'SELECT e.*, ec.name as category_name FROM expenses e JOIN expense_categories ec ON e.category_id=ec.category_id WHERE e.expense_id = ?';
+    const [rows] = await dbConnect.promise().execute(sql, [expenseId]);
+    return rows[0] || null;
+  },
+
+  createExpense: async (shopEmail, categoryId, description, amount, expenseDate, paymentMethod, referenceNo) => {
+    const sql = 'INSERT INTO expenses (shop_email, category_id, description, amount, expense_date, payment_method, reference_no) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail, categoryId, description, amount, expenseDate, paymentMethod, referenceNo || null]);
+    return rows;
+  },
+
+  updateExpense: async (expenseId, categoryId, description, amount, expenseDate, paymentMethod, referenceNo) => {
+    const sql = 'UPDATE expenses SET category_id=?, description=?, amount=?, expense_date=?, payment_method=?, reference_no=? WHERE expense_id=?';
+    const [rows] = await dbConnect.promise().execute(sql, [categoryId, description, amount, expenseDate, paymentMethod, referenceNo || null, expenseId]);
+    return rows;
+  },
+
+  deleteExpense: async (expenseId) => {
+    const sql = 'DELETE FROM expenses WHERE expense_id=?';
+    const [rows] = await dbConnect.promise().execute(sql, [expenseId]);
+    return rows;
+  },
+
+  /* ====== Purchase CRUD ====== */
+  getAllPurchases: async (shopEmail) => {
+    const sql = `SELECT p.*, s.name as supplier_name 
+      FROM purchases p 
+      LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id 
+      WHERE p.shop_email = ? 
+      ORDER BY p.purchase_date DESC, p.created_at DESC`;
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail]);
+    return rows;
+  },
+
+  getPurchase: async (purchaseId) => {
+    const sql = `SELECT p.*, s.name as supplier_name, s.phone as supplier_phone, s.address as supplier_address
+      FROM purchases p 
+      LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id 
+      WHERE p.purchase_id = ?`;
+    const [rows] = await dbConnect.promise().execute(sql, [purchaseId]);
+    return rows[0] || null;
+  },
+
+  getPurchaseItems: async (purchaseId) => {
+    const sql = 'SELECT * FROM purchase_items WHERE purchase_id = ? ORDER BY item_id ASC';
+    const [rows] = await dbConnect.promise().execute(sql, [purchaseId]);
+    return rows;
+  },
+
+  createPurchase: async (shopEmail, supplierId, invoiceNo, purchaseDate, subtotal, discount, vat, totalAmount, paidAmount, dueAmount, paymentStatus, notes) => {
+    const sql = `INSERT INTO purchases 
+      (shop_email, supplier_id, invoice_no, purchase_date, subtotal, discount, vat, total_amount, paid_amount, due_amount, payment_status, notes) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const [rows] = await dbConnect.promise().execute(sql, [
+      shopEmail, supplierId || null, invoiceNo, purchaseDate, subtotal, discount || 0, vat || 0,
+      totalAmount, paidAmount, dueAmount, paymentStatus, notes || null
+    ]);
+    return rows;
+  },
+
+  createPurchaseItem: async (purchaseId, medicineName, batchNo, expiryDate, quantity, unitPrice, mrp, total) => {
+    const sql = 'INSERT INTO purchase_items (purchase_id, medicine_name, batch_no, expiry_date, quantity, unit_price, mrp, total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+    const [rows] = await dbConnect.promise().execute(sql, [purchaseId, medicineName, batchNo || null, expiryDate || null, quantity, unitPrice, mrp || null, total]);
+    return rows;
+  },
+
+  deletePurchase: async (purchaseId) => {
+    const sql = 'DELETE FROM purchases WHERE purchase_id = ?';
+    const [rows] = await dbConnect.promise().execute(sql, [purchaseId]);
+    return rows;
+  },
+
+  updatePurchasePayment: async (purchaseId, paidAmount, dueAmount, paymentStatus) => {
+    const sql = 'UPDATE purchases SET paid_amount=?, due_amount=?, payment_status=? WHERE purchase_id=?';
+    const [rows] = await dbConnect.promise().execute(sql, [paidAmount, dueAmount, paymentStatus, purchaseId]);
+    return rows;
+  },
+
+  /* ====== Sale CRUD ====== */
+  getAllSales: async (shopEmail) => {
+    const sql = 'SELECT * FROM sales WHERE shop_email = ? ORDER BY sale_date DESC, created_at DESC';
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail]);
+    return rows;
+  },
+
+  getSale: async (saleId) => {
+    const sql = 'SELECT * FROM sales WHERE sale_id = ?';
+    const [rows] = await dbConnect.promise().execute(sql, [saleId]);
+    return rows[0] || null;
+  },
+
+  getSaleItems: async (saleId) => {
+    const sql = 'SELECT * FROM sale_items WHERE sale_id = ? ORDER BY item_id ASC';
+    const [rows] = await dbConnect.promise().execute(sql, [saleId]);
+    return rows;
+  },
+
+  createSale: async (shopEmail, invoiceNo, saleDate, customerName, customerPhone, subtotal, discount, vat, totalAmount, paidAmount, dueAmount, profitAmount, paymentMethod, saleType) => {
+    const sql = `INSERT INTO sales 
+      (shop_email, invoice_no, sale_date, customer_name, customer_phone, subtotal, discount, vat, total_amount, paid_amount, due_amount, profit_amount, payment_method, sale_type) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const [rows] = await dbConnect.promise().execute(sql, [
+      shopEmail, invoiceNo, saleDate, customerName || null, customerPhone || null,
+      subtotal, discount || 0, vat || 0, totalAmount, paidAmount, dueAmount, profitAmount, paymentMethod, saleType || 'retail'
+    ]);
+    return rows;
+  },
+
+  createSaleItem: async (saleId, medicineName, batchNo, quantity, unitPrice, costPrice, mrp, total, profit) => {
+    const sql = 'INSERT INTO sale_items (sale_id, medicine_name, batch_no, quantity, unit_price, cost_price, mrp, total, profit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const [rows] = await dbConnect.promise().execute(sql, [saleId, medicineName, batchNo || null, quantity, unitPrice, costPrice, mrp || null, total, profit]);
+    return rows;
+  },
+
+  deleteSale: async (saleId) => {
+    const sql = 'DELETE FROM sales WHERE sale_id = ?';
+    const [rows] = await dbConnect.promise().execute(sql, [saleId]);
+    return rows;
+  },
+
+  /* ====== Reports & Dashboard ====== */
+  getDashboardSummary: async (shopEmail) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const sql = `SELECT 
+      (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE shop_email = ? AND DATE(sale_date) = ?) as today_sales,
+      (SELECT COALESCE(SUM(profit_amount), 0) FROM sales WHERE shop_email = ? AND DATE(sale_date) = ?) as today_profit,
+      (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE shop_email = ? AND expense_date = ?) as today_expenses,
+      (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE shop_email = ?) as total_sales,
+      (SELECT COALESCE(SUM(profit_amount), 0) FROM sales WHERE shop_email = ?) as total_profit,
+      (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE shop_email = ?) as total_expenses,
+      (SELECT COALESCE(SUM(due_amount), 0) FROM purchases WHERE shop_email = ? AND payment_status IN ('partial', 'due')) as total_purchase_due,
+      (SELECT COALESCE(SUM(due_amount), 0) FROM sales WHERE shop_email = ? AND due_amount > 0) as total_sale_due,
+      (SELECT COUNT(*) FROM suppliers WHERE shop_email = ?) as total_suppliers,
+      (SELECT COUNT(*) FROM shopmedicine WHERE shop_email = ? AND stock <= 10) as low_stock_count`;
+    const [rows] = await dbConnect.promise().execute(sql, [
+      shopEmail, today, shopEmail, today, shopEmail, today,
+      shopEmail, shopEmail, shopEmail, shopEmail, shopEmail, shopEmail, shopEmail
+    ]);
+    return rows[0];
+  },
+
+  getProfitLossReport: async (shopEmail, startDate, endDate) => {
+    const sql = `SELECT 
+      (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE shop_email = ? AND DATE(sale_date) BETWEEN ? AND ?) as total_sales,
+      (SELECT COALESCE(SUM(profit_amount), 0) FROM sales WHERE shop_email = ? AND DATE(sale_date) BETWEEN ? AND ?) as total_profit,
+      (SELECT COALESCE(SUM(total_amount), 0) FROM purchases WHERE shop_email = ? AND purchase_date BETWEEN ? AND ?) as total_purchases,
+      (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE shop_email = ? AND expense_date BETWEEN ? AND ?) as total_expenses`;
+    const [rows] = await dbConnect.promise().execute(sql, [
+      shopEmail, startDate, endDate,
+      shopEmail, startDate, endDate,
+      shopEmail, startDate, endDate,
+      shopEmail, startDate, endDate
+    ]);
+    return rows[0];
+  },
+
+  getSalesByDateRange: async (shopEmail, startDate, endDate) => {
+    const sql = 'SELECT * FROM sales WHERE shop_email = ? AND DATE(sale_date) BETWEEN ? AND ? ORDER BY sale_date DESC';
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail, startDate, endDate]);
+    return rows;
+  },
+
+  getPurchasesByDateRange: async (shopEmail, startDate, endDate) => {
+    const sql = `SELECT p.*, s.name as supplier_name FROM purchases p 
+      LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id 
+      WHERE p.shop_email = ? AND p.purchase_date BETWEEN ? AND ? ORDER BY p.purchase_date DESC`;
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail, startDate, endDate]);
+    return rows;
+  },
+
+  getExpensesByDateRange: async (shopEmail, startDate, endDate) => {
+    const sql = `SELECT e.*, ec.name as category_name, ec.type as category_type 
+      FROM expenses e JOIN expense_categories ec ON e.category_id=ec.category_id 
+      WHERE e.shop_email = ? AND e.expense_date BETWEEN ? AND ? ORDER BY e.expense_date DESC`;
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail, startDate, endDate]);
+    return rows;
+  },
+
+  getLowStockMedicines: async (shopEmail, threshold) => {
+    const sql = 'SELECT * FROM shopmedicine WHERE shop_email = ? AND stock <= ? ORDER BY stock ASC';
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail, threshold || 10]);
+    return rows;
+  },
+
+  getExpenseStatsByCategory: async (shopEmail, startDate, endDate) => {
+    const sql = `SELECT ec.name, ec.type, COALESCE(SUM(e.amount), 0) as total
+      FROM expense_categories ec
+      LEFT JOIN expenses e ON ec.category_id = e.category_id AND e.expense_date BETWEEN ? AND ?
+      WHERE ec.shop_email = ?
+      GROUP BY ec.category_id, ec.name, ec.type
+      ORDER BY total DESC`;
+    const [rows] = await dbConnect.promise().execute(sql, [startDate, endDate, shopEmail]);
+    return rows;
+  },
+
+  getMonthlySalesSummary: async (shopEmail, year, month) => {
+    const sql = `SELECT 
+      COALESCE(SUM(total_amount), 0) as total_sales,
+      COALESCE(SUM(profit_amount), 0) as total_profit,
+      COUNT(*) as sale_count
+      FROM sales 
+      WHERE shop_email = ? AND YEAR(sale_date) = ? AND MONTH(sale_date) = ?`;
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail, year, month]);
+    return rows[0];
+  },
+
+  getMonthlyExpenseSummary: async (shopEmail, year, month) => {
+    const sql = `SELECT COALESCE(SUM(amount), 0) as total_expenses
+      FROM expenses 
+      WHERE shop_email = ? AND YEAR(expense_date) = ? AND MONTH(expense_date) = ?`;
+    const [rows] = await dbConnect.promise().execute(sql, [shopEmail, year, month]);
+    return rows[0];
   },
 };
 

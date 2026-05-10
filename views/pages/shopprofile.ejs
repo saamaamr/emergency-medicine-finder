@@ -1,0 +1,187 @@
+<%- include ('../template/aheader') %>
+
+<section class="main">
+  <div class="sidebar">
+    <div class="sidebar--profile mb-4 pb-3 border-bottom">
+      <div class="text-center">
+        <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" alt="Shop" class="rounded-circle mb-2" width="60" height="60">
+        <h6 class="mb-0"><%= shopkeeperData[0].shopname %></h6>
+        <small class="text-muted"><%= shopkeeperData[0].email %></small>
+      </div>
+    </div>
+    <ul class="sidebar--items">
+      <li><a href="/shopkeeperdesh">
+        <span class="icon icon-1"><i class="ri-layout-grid-line"></i></span>
+        <span class="sidebar--item">Dashboard</span>
+      </a></li>
+      <li><a href="/pharmacy/dashboard">
+        <span class="icon icon-2"><i class="ri-store-2-line"></i></span>
+        <span class="sidebar--item">Pharmacy Mgmt</span>
+      </a></li>
+      <li><a href="/pharmacy/suppliers">
+        <span class="icon icon-3"><i class="ri-truck-line"></i></span>
+        <span class="sidebar--item">Suppliers</span>
+      </a></li>
+      <li><a href="/pharmacy/purchases">
+        <span class="icon icon-4"><i class="ri-shopping-cart-line"></i></span>
+        <span class="sidebar--item">Purchases</span>
+      </a></li>
+      <li><a href="/pharmacy/sales">
+        <span class="icon icon-5"><i class="ri-handbag-line"></i></span>
+        <span class="sidebar--item">Sales</span>
+      </a></li>
+      <li><a href="/pharmacy/expenses">
+        <span class="icon icon-6"><i class="ri-bill-line"></i></span>
+        <span class="sidebar--item">Expenses</span>
+      </a></li>
+      <li><a href="/pharmacy/reports">
+        <span class="icon icon-7"><i class="ri-bar-chart-line"></i></span>
+        <span class="sidebar--item">Reports</span>
+      </a></li>
+      <li><a href="/servicereq">
+        <span class="icon icon-8"><i class="ri-git-repository-line"></i></span>
+        <span class="sidebar--item">Medicine Requests</span>
+      </a></li>
+      <li><a href="/shopprofile" id="active--link">
+        <span class="icon icon-9"><i class="ri-user-settings-line"></i></span>
+        <span class="sidebar--item">My Profile</span>
+      </a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/shopkeeperlogout">
+        <span class="icon icon-8"><i class="ri-logout-box-r-line"></i></span>
+        <span class="sidebar--item">Logout</span>
+      </a></li>
+    </ul>
+  </div>
+
+  <div class="main--content">
+    <% if (typeof updated !== 'undefined' && updated === 'true') { %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-check-circle-line me-2"></i>Profile updated successfully!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+    
+    <% if (typeof error !== 'undefined' && error === 'true') { %>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="ri-error-warning-line me-2"></i>Something went wrong. Please try again.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+        <h5 class="section--title mb-4"><i class="ri-user-settings-line me-2"></i>My Profile</h5>
+        
+        <div class="row g-4">
+          <div class="col-md-4 text-center">
+            <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" alt="Profile" id="previewImage" class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover; border: 3px solid var(--primary);">
+            <h5 class="mb-1"><%= shopkeeperData[0].shopname %></h5>
+            <p class="text-muted mb-2"><%= shopkeeperData[0].email %></p>
+            <span class="badge <%= shopkeeperData[0].status === 1 ? 'bg-success' : 'bg-warning' %>">
+              <%= shopkeeperData[0].status === 1 ? 'Active' : 'Pending' %>
+            </span>
+          </div>
+          
+          <div class="col-md-8">
+            <form action="/shopprofile" method="POST" enctype="multipart/form-data" id="profileForm">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Profile Picture</label>
+                  <input type="file" class="form-control" name="propic" accept="image/*" id="propicInput">
+                  <small class="text-muted">Click to change photo (JPG, PNG)</small>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Owner First Name</label>
+                  <input type="text" class="form-control" name="firstName" value="<%= shopkeeperData[0].first_name %>" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Owner Last Name</label>
+                  <input type="text" class="form-control" name="lastName" value="<%= shopkeeperData[0].last_name %>" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Gender</label>
+                  <select class="form-select" name="gender" required>
+                    <option value="Male" <%= shopkeeperData[0].gender === 'Male' ? 'selected' : '' %>>Male</option>
+                    <option value="Female" <%= shopkeeperData[0].gender === 'Female' ? 'selected' : '' %>>Female</option>
+                    <option value="Other" <%= shopkeeperData[0].gender === 'Other' ? 'selected' : '' %>>Other</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Phone Number</label>
+                  <input type="text" class="form-control" name="phone" value="<%= shopkeeperData[0].phone %>" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Shop Name</label>
+                  <input type="text" class="form-control" value="<%= shopkeeperData[0].shopname %>" disabled>
+                  <small class="text-muted">Contact admin to change shop name</small>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">House</label>
+                  <input type="text" class="form-control" name="house" value="<%= shopkeeperData[0].house %>" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Road</label>
+                  <input type="text" class="form-control" name="road" value="<%= shopkeeperData[0].road %>" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Division</label>
+                  <select class="form-select" name="division" required>
+                    <option value="Dhaka" <%= shopkeeperData[0].division === 'Dhaka' ? 'selected' : '' %>>Dhaka</option>
+                    <option value="Chattogram" <%= shopkeeperData[0].division === 'Chattogram' ? 'selected' : '' %>>Chattogram</option>
+                    <option value="Sylhet" <%= shopkeeperData[0].division === 'Sylhet' ? 'selected' : '' %>>Sylhet</option>
+                    <option value="Khulna" <%= shopkeeperData[0].division === 'Khulna' ? 'selected' : '' %>>Khulna</option>
+                    <option value="Barishal" <%= shopkeeperData[0].division === 'Barishal' ? 'selected' : '' %>>Barishal</option>
+                    <option value="Rajshahi" <%= shopkeeperData[0].division === 'Rajshahi' ? 'selected' : '' %>>Rajshahi</option>
+                    <option value="Rangpur" <%= shopkeeperData[0].division === 'Rangpur' ? 'selected' : '' %>>Rangpur</option>
+                    <option value="Mymensingh" <%= shopkeeperData[0].division === 'Mymensingh' ? 'selected' : '' %>>Mymensingh</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Zila (District)</label>
+                  <input type="text" class="form-control" name="zila" value="<%= shopkeeperData[0].zila %>" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Upazila (Sub-district)</label>
+                  <input type="text" class="form-control" name="upazila" value="<%= shopkeeperData[0].upazila %>" required>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Latitude</label>
+                  <input type="number" step="any" class="form-control" name="lat" value="<%= shopkeeperData[0].lat %>" placeholder="e.g. 23.8223">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Longitude</label>
+                  <input type="number" step="any" class="form-control" name="lng" value="<%= shopkeeperData[0].lng %>" placeholder="e.g. 90.3669">
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-line me-2"></i>Save Changes
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const propicInput = document.getElementById('propicInput');
+  const previewImage = document.getElementById('previewImage');
+  
+  propicInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        previewImage.src = e.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+  });
+</script>
+
+<%- include ('../template/alfooter') %>
