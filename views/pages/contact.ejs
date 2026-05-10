@@ -27,17 +27,21 @@
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body p-4">
             <h4 class="mb-4">Send us a Message</h4>
-            <form>
+            <form action="/contact" method="POST">
               <div class="form-floating mb-3">
-                <input type="text" class="form-control" placeholder="Your Name">
+                <input type="text" class="form-control" name="name" placeholder="Your Name">
                 <label><i class="ri-user-line me-1"></i>Full Name</label>
               </div>
               <div class="form-floating mb-3">
-                <input type="email" class="form-control" placeholder="Email">
+                <input type="email" class="form-control" name="email" placeholder="Email">
                 <label><i class="ri-mail-line me-1"></i>Email Address</label>
               </div>
               <div class="form-floating mb-3">
-                <textarea class="form-control" placeholder="Message" style="height: 120px;"></textarea>
+                <input type="text" class="form-control" name="subject" placeholder="Subject">
+                <label><i class="ri-question-answer-line me-1"></i>Subject</label>
+              </div>
+              <div class="form-floating mb-3">
+                <textarea class="form-control" name="message" placeholder="Message" style="height: 120px;"></textarea>
                 <label><i class="ri-message-2-line me-1"></i>Your Message</label>
               </div>
               <button type="submit" class="btn btn-primary w-100">Send Message</button>

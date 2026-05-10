@@ -1,0 +1,188 @@
+<%- include ('../template/aheader') %>
+
+<section class="main">
+  <div class="sidebar">
+    <ul class="sidebar--items">
+      <li><a href="/admin">
+        <span class="icon icon-1"><i class="ri-layout-grid-line"></i></span>
+        <span class="sidebar--item">Dashboard</span>
+      </a></li>
+      <li><a href="/service">
+        <span class="icon icon-2"><i class="ri-git-repository-line"></i></span>
+        <span class="sidebar--item">Medicine</span>
+      </a></li>
+      <li><a href="/admin/inventory">
+        <span class="icon icon-3"><i class="ri-store-2-line"></i></span>
+        <span class="sidebar--item">Inventory</span>
+      </a></li>
+      <li><a href="/admin/transfers" id="active--link">
+        <span class="icon icon-4"><i class="ri-exchange-line"></i></span>
+        <span class="sidebar--item">Transfers</span>
+      </a></li>
+      <li><a href="/user">
+        <span class="icon icon-5"><i class="ri-user-line"></i></span>
+        <span class="sidebar--item">User</span>
+      </a></li>
+      <li><a href="/shopkeeper">
+        <span class="icon icon-6"><i class="ri-user-2-line"></i></span>
+        <span class="sidebar--item">Shopkeeper</span>
+      </a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/adminlogout">
+        <span class="icon icon-8"><i class="ri-logout-box-r-line"></i></span>
+        <span class="sidebar--item">Logout</span>
+      </a></li>
+    </ul>
+  </div>
+
+  <div class="main--content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="section--title mb-0"><i class="ri-exchange-line me-1"></i>Stock Transfer Requests</h4>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTransferModal">
+        <i class="ri-add-line me-1"></i>New Transfer Request
+      </button>
+    </div>
+
+    <!-- Transfer Requests Table -->
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>From Shop</th>
+                <th>To Shop</th>
+                <th>Medicine</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if(transfers.length === 0) { %>
+                <tr><td colspan="8" class="text-center py-4 text-muted">No transfer requests yet</td></tr>
+              <% } %>
+              <% transfers.forEach(t => { %>
+                <tr>
+                  <td><%= t.transfer_id %></td>
+                  <td><%= t.from_shop_name %></td>
+                  <td><%= t.to_shop_name %></td>
+                  <td><%= t.medicine_name %></td>
+                  <td><strong><%= t.quantity %></strong></td>
+                  <td>
+                    <% if(t.status === 'pending') { %>
+                      <span class="badge bg-warning text-dark">Pending</span>
+                    <% } else if(t.status === 'approved') { %>
+                      <span class="badge bg-success">Approved</span>
+                    <% } else { %>
+                      <span class="badge bg-danger">Rejected</span>
+                    <% } %>
+                  </td>
+                  <td class="small text-muted"><%= t.created_at %></td>
+                  <td>
+                    <% if(t.status === 'pending') { %>
+                      <a href="/admin/approve-transfer/<%= t.transfer_id %>" class="btn btn-sm btn-success me-1" onclick="return confirm('Approve this transfer? Stock will be moved.')">
+                        <i class="ri-check-line"></i> Approve
+                      </a>
+                      <a href="/admin/reject-transfer/<%= t.transfer_id %>" class="btn btn-sm btn-danger" onclick="return confirm('Reject this transfer?')">
+                        <i class="ri-close-line"></i> Reject
+                      </a>
+                    <% } else { %>
+                      <span class="text-muted small">-</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Note -->
+    <div class="alert alert-info mt-3">
+      <i class="ri-information-line me-1"></i> Stock transfer requests move inventory between shops. Only pending transfers can be approved or rejected. Approved transfers automatically update stock quantities.
+    </div>
+  </div>
+</section>
+
+<!-- Create Transfer Modal -->
+<div class="modal fade" id="createTransferModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="ri-exchange-line me-1"></i>New Stock Transfer Request</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="/admin/create-transfer" method="post">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">From Shop <span class="text-danger">*</span></label>
+              <select class="form-select" name="from_shop" id="fromShop" required>
+                <option value="">Select source shop</option>
+                <% shops.forEach(shop => { %>
+                  <option value="<%= shop.email %>"><%= shop.shopname %> - <%= shop.division %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">To Shop <span class="text-danger">*</span></label>
+              <select class="form-select" name="to_shop" id="toShop" required>
+                <option value="">Select destination shop</option>
+                <% shops.forEach(shop => { %>
+                  <option value="<%= shop.email %>"><%= shop.shopname %> - <%= shop.division %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Medicine <span class="text-danger">*</span></label>
+              <select class="form-select" name="medicine_name" id="medicineName" required>
+                <option value="">First select source shop</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Quantity <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="quantity" min="1" required placeholder="Enter quantity">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="ri-send-plane-line me-1"></i>Create Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('fromShop').addEventListener('change', function() {
+    const email = this.value;
+    const select = document.getElementById('medicineName');
+    select.innerHTML = '<option value="">Loading...</option>';
+    if (!email) {
+      select.innerHTML = '<option value="">First select source shop</option>';
+      return;
+    }
+    fetch(`/admin/shop-inventory-json?email=${encodeURIComponent(email)}`)
+      .then(res => res.json())
+      .then(data => {
+        select.innerHTML = '<option value="">Select medicine</option>';
+        data.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.mediname;
+          opt.textContent = `${item.mediname} (${item.medistrength}) - Stock: ${item.stock}`;
+          select.appendChild(opt);
+        });
+      })
+      .catch(() => {
+        select.innerHTML = '<option value="">Error loading medicines</option>';
+      });
+  });
+</script>
+
+<%- include('../template/alfooter') %>

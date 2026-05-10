@@ -143,5 +143,6 @@ const redirectLoggedIn = (req, res, next) => {
   }
 };
 
-// exports function
-module.exports = { requireAuth, requireUser, requireShopkeeper, requireAdmin, checkUser, checkCurrentLogin, redirectLoggedIn };
+module.exports = {
+  requireAuth, requireUser, requireShopkeeper, requireAdmin, checkUser, checkCurrentLogin, redirectLoggedIn,
+};

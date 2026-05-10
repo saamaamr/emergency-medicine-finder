@@ -207,7 +207,7 @@ emergency-medicine-finder/
 ├── views/                 # EJS templates
 │   ├── pages/             # Main page templates
 │   └── template/          # Reusable template components (header, footer, etc.)
-└── scratch/               # LocalStorage data (for server-side localStorage)
+
 ```
 
 ## Contributing
@@ -245,6 +245,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Run `npm install` to install all required packages
 - If bcrypt installation fails, ensure you have build tools installed
 
-### LocalStorage Errors
-- The application uses node-localstorage for server-side localStorage simulation
-- Data is stored in the `scratch/` directory

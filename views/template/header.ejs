@@ -6,11 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <meta name="description" content="Emergency Medicine Finder - Find medicines near you" />
   <meta name="author" content="Emergency Medicine Finder" />
-  <link rel="shortcut icon" href="images/favicon.png" type="image/x-icon">
+  <link rel="shortcut icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
   <title>EMF - Emergency Medicine Finder</title>
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Google Fonts: Figtree + Noto Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Bootstrap 5 CSS (single version) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -25,4 +26,4 @@
   <!-- Custom Styles -->
   <link href="css/style.css" rel="stylesheet" />
 </head>
-<body class="sub_page">
+<body class="sub_page" data-logged-in="<%= typeof uId !== 'undefined' && uId ? 'true' : 'false' %>">

@@ -1,19 +1,19 @@
 :root {
-  --primary: #0d6efd;
-  --primary-dark: #0b5ed7;
-  --secondary: #198754;
-  --accent: #0dcaf0;
-  --dark: #212529;
-  --light: #f8f9fa;
+  --primary: #15803D;
+  --primary-dark: #166534;
+  --secondary: #22C55E;
+  --accent: #0369A1;
+  --dark: #14532D;
+  --light: #F0FDF4;
   --white: #ffffff;
-  --gray: #6c757d;
+  --gray: #6b7280;
   --danger: #dc3545;
-  --warning: #ffc107;
-  --shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-  --shadow-sm: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+  --warning: #f59e0b;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
   --radius: 0.5rem;
-  --transition: all 0.3s ease;
-  --font-sans: 'Inter', 'Popins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --transition: all 0.2s ease;
+  --font-sans: 'Figtree', 'Noto Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -164,6 +164,95 @@ img { max-width: 100%; height: auto; }
 
 /* ===== Map ===== */
 #shopmap { height: 400px; width: 100%; border-radius: var(--radius); margin: 1rem 0; }
+#shopmap { z-index: 1; }
+
+/* ===== Suggestions Dropdown ===== */
+.suggestions-dropdown::-webkit-scrollbar { width: 4px; }
+.suggestions-dropdown::-webkit-scrollbar-track { background: transparent; }
+.suggestions-dropdown::-webkit-scrollbar-thumb { background: #15803D; border-radius: 2px; }
+.suggestion-item:last-child { border-bottom: none !important; }
+.suggestion-item:hover { background: #F0FDF4 !important; }
+.suggestion-item:active { background: #DCFCE7 !important; }
+
+/* ===== Search Results Sidebar ===== */
+#results-sidebar::-webkit-scrollbar { width: 6px; }
+#results-sidebar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+#results-sidebar::-webkit-scrollbar-thumb { background: #15803D; border-radius: 3px; }
+#results-sidebar::-webkit-scrollbar-thumb:hover { background: #166534; }
+
+/* ===== Result Cards ===== */
+.result-card:hover { border-color: #15803D !important; box-shadow: 0 2px 12px rgba(21,128,61,0.15) !important; }
+.result-card:focus-within { border-color: #15803D; box-shadow: 0 0 0 3px rgba(21,128,61,0.2); }
+.result-card.highlighted { background: #F0FDF4 !important; border-color: #15803D !important; box-shadow: 0 2px 12px rgba(21,128,61,0.15) !important; }
+.result-card .nearest-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  background: #15803D;
+  color: white;
+  padding: 1px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ===== Leaflet Popup Overrides ===== */
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+  padding: 6px !important;
+  border: 1px solid rgba(21,128,61,0.1) !important;
+}
+.leaflet-popup-content { margin: 12px 16px !important; font-size: 14px; }
+.leaflet-popup-tip { box-shadow: none !important; border: 1px solid rgba(21,128,61,0.1) !important; }
+.leaflet-popup-close-button {
+  font-size: 18px !important;
+  padding: 6px 8px !important;
+  color: #6b7280 !important;
+  font-weight: 700 !important;
+}
+
+/* ===== User Location Pulse Animation ===== */
+.user-location-pulse {
+  animation: pulse-location 2s ease-out infinite;
+}
+@keyframes pulse-location {
+  0% { opacity: 0.3; r: 14px; }
+  50% { opacity: 0.1; }
+  100% { opacity: 0.3; r: 24px; }
+}
+
+/* ===== Pharmacy Popup Mobile ===== */
+.pharmacy-popup .leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+}
+@media (max-width: 575.98px) {
+  .pharmacy-popup .leaflet-popup-content {
+    margin: 8px 10px !important;
+    font-size: 12px !important;
+  }
+  .pharmacy-popup { min-width: unset !important; }
+  .pharmacy-popup .leaflet-popup-content-wrapper { padding: 4px !important; }
+  .pharmacy-popup .leaflet-popup-content > div { min-width: unset !important; max-width: 240px !important; }
+}
+
+/* ===== Leaflet Marker Animation ===== */
+.leaflet-marker-icon {
+  transition: filter 0.2s ease;
+}
+.leaflet-marker-icon:hover {
+  filter: brightness(1.15) drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+}
+
+/* ===== Responsive: Map + Sidebar Stack on Mobile ===== */
+@media (max-width: 991.98px) {
+  #shopmap { height: 350px !important; }
+  #results-sidebar { height: 400px !important; margin-top: 1rem; }
+}
+@media (max-width: 575.98px) {
+  #shopmap { height: 280px !important; border-radius: 12px !important; }
+  #results-sidebar { height: 350px !important; border-radius: 12px !important; }
+  .hero-section .display-5 { font-size: 1.75rem; }
+}
 
 /* ===== Utility ===== */
 .text-danger { color: var(--danger) !important; }

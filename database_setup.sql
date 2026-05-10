@@ -6,6 +6,7 @@ CREATE DATABASE IF NOT EXISTS emergency_medicine;
 USE emergency_medicine;
 
 -- Drop existing tables in reverse dependency order (clean slate)
+DROP TABLE IF EXISTS stock_transfer;
 DROP TABLE IF EXISTS medicine_request;
 DROP TABLE IF EXISTS shopmedicine;
 DROP TABLE IF EXISTS worker;
@@ -118,6 +119,21 @@ CREATE TABLE IF NOT EXISTS admin (
     admin_uid VARCHAR(255) UNIQUE NOT NULL,
     pass VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Stock transfer requests from admin to shops
+CREATE TABLE IF NOT EXISTS stock_transfer (
+    transfer_id INT AUTO_INCREMENT PRIMARY KEY,
+    from_shop_email VARCHAR(255) NOT NULL,
+    to_shop_email VARCHAR(255) NOT NULL,
+    medicine_name VARCHAR(255) NOT NULL,
+    quantity INT NOT NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    requested_by VARCHAR(255) NOT NULL COMMENT 'admin email',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (from_shop_email) REFERENCES worker(email) ON DELETE CASCADE,
+    FOREIGN KEY (to_shop_email) REFERENCES worker(email) ON DELETE CASCADE
 );
 
 -- ============================

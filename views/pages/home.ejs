@@ -3,43 +3,175 @@
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 <%- include ('../template/nav') %>
 
-<% if(uId) { %>
-<section class="hero-section py-5" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+<!-- Hero -->
+<section class="hero-section py-5" style="background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 50%, #BBF7D0 100%);">
   <div class="container">
-    <div class="row align-items-center">
+    <div class="row align-items-center g-4">
       <div class="col-lg-6">
-        <h1 class="display-5 fw-bold mb-3">Find Medicines <span class="text-primary">Near You</span></h1>
-        <p class="lead text-muted mb-4">Emergency Medicine Finder connects you with local pharmacies for fast access to essential medicines. Search, locate, and order medicines in minutes.</p>
+        <span class="badge bg-green px-3 py-2 mb-3" style="background: #15803D; color: white; font-weight: 500;">Emergency Service</span>
+        <h1 class="display-5 fw-bold mb-3" style="color: #14532D; font-family: 'Figtree', sans-serif;">Find Medicines <span style="color: #15803D;">Near You</span></h1>
+        <p class="lead mb-4" style="color: #166534;">Emergency Medicine Finder connects you with local pharmacies for fast access to essential medicines. Search, locate, and order medicines in minutes.</p>
         <div class="d-flex gap-3 flex-wrap">
-          <a href="/service" class="btn btn-primary btn-lg">Browse Medicines</a>
-          <a href="/contact" class="btn btn-outline-primary btn-lg">Contact Us</a>
+          <a href="/service" class="btn btn-lg px-4" style="background: #15803D; color: white; border: none; font-weight: 600;">Browse Medicines</a>
+          <a href="/contact" class="btn btn-lg px-4" style="background: white; color: #15803D; border: 2px solid #15803D; font-weight: 600;">Contact Us</a>
         </div>
       </div>
-      <div class="col-lg-6">
-        <img src="images/hero-img.svg" alt="" class="img-fluid" style="max-height: 400px;">
+      <div class="col-lg-6 text-center position-relative">
+        <img src="images/hero-img.svg" alt="Emergency Medicine Finder" class="img-fluid" style="max-height: 380px; filter: drop-shadow(0 8px 24px rgba(21,128,61,0.12));">
       </div>
     </div>
   </div>
 </section>
 
-<section class="layout_padding">
+<!-- Stats Strip -->
+<section style="background: #15803D; padding: 20px 0;">
   <div class="container">
-    <div class="heading_container heading_center mb-5">
-      <h2>Available <span>Medicines</span></h2>
-      <p class="text-muted">Search from our catalog of medicines available at nearby pharmacies</p>
+    <div class="row text-center g-3">
+      <div class="col-4 col-md-3 col-lg">
+        <div style="color: white; opacity: 0.9;">
+          <div style="font-size: 1.75rem; font-weight: 800;">500+</div>
+          <div style="font-size: 0.8rem; opacity: 0.75;">Medicines</div>
+        </div>
+      </div>
+      <div class="col-4 col-md-3 col-lg">
+        <div style="color: white; opacity: 0.9;">
+          <div style="font-size: 1.75rem; font-weight: 800;">100+</div>
+          <div style="font-size: 0.8rem; opacity: 0.75;">Pharmacies</div>
+        </div>
+      </div>
+      <div class="col-4 col-md-3 col-lg">
+        <div style="color: white; opacity: 0.9;">
+          <div style="font-size: 1.75rem; font-weight: 800;">50+</div>
+          <div style="font-size: 0.8rem; opacity: 0.75;">Cities</div>
+        </div>
+      </div>
+      <div class="col-4 col-md-3 col-lg mt-2 mt-md-0">
+        <div style="color: white; opacity: 0.9;">
+          <div style="font-size: 1.75rem; font-weight: 800;">10K+</div>
+          <div style="font-size: 0.8rem; opacity: 0.75;">Orders</div>
+        </div>
+      </div>
+      <div class="col-4 col-md-3 col-lg mt-2 mt-md-0">
+        <div style="color: white; opacity: 0.9;">
+          <div style="font-size: 1.75rem; font-weight: 800;">4.8★</div>
+          <div style="font-size: 0.8rem; opacity: 0.75;">Rating</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Search + Map Section -->
+<section class="py-5" style="background: #FAFAFA;">
+  <div class="container">
+    <div class="text-center mb-4">
+      <h2 class="fw-bold" style="color: #14532D; font-family: 'Figtree', sans-serif;">Search <span style="color: #15803D;">Medicines</span> Near You</h2>
+      <p class="text-muted">Type a medicine name to instantly find it at nearby pharmacies</p>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row justify-content-center mb-4">
+      <div class="col-md-8 col-lg-6">
+        <div class="input-group input-group-lg" style="box-shadow: 0 2px 12px rgba(21, 128, 61, 0.15); border-radius: 12px; overflow: hidden;">
+          <span class="input-group-text" style="background: #15803D; color: white; border: none; padding: 0 20px;">
+            <i class="ri-search-line" style="font-size: 1.2rem;"></i>
+          </span>
+          <input class="form-control" id="searchmedi-page" type="search" placeholder="Search Medicine by name..." aria-label="Search Medicine" style="border: 2px solid #15803D; border-left: none; padding: 14px 20px; font-size: 1rem;">
+        </div>
+        <div id="search-suggestions" class="mt-1" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- Map + Results Layout -->
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div id="shopmap" style="height: 520px; width: 100%; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;"></div>
+      </div>
+      <div class="col-lg-4">
+        <div id="results-sidebar" style="background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); border: 1px solid #e5e7eb; height: 520px; overflow-y: auto;">
+          <div class="p-3" style="border-bottom: 1px solid #e5e7eb; background: #F0FDF4; border-radius: 16px 16px 0 0;">
+            <h6 class="mb-0 fw-bold" style="color: #14532D;"><i class="ri-store-2-line me-1" style="color: #15803D;"></i> <span id="result-count">0</span> Pharmacies Found</h6>
+          </div>
+          <div id="results-list" class="p-3">
+            <div class="text-center py-5 text-muted" id="empty-state">
+              <i class="ri-search-line" style="font-size: 2.5rem; color: #ccc;"></i>
+              <p class="mt-2 mb-0">Type a medicine name above<br>to see nearby pharmacies</p>
+            </div>
+            <div id="no-results-state" style="display: none;" class="text-center py-5 text-muted">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" style="display:block;margin:0 auto 8px;"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              <p class="mt-2 mb-0 fw-bold" style="color: #14532D;">No nearby pharmacies have this medicine</p>
+              <p class="small mb-0">Try searching with a different medicine name</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it Works -->
+<section class="py-5" style="background: white;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold" style="color: #14532D; font-family: 'Figtree', sans-serif;">How It <span style="color: #15803D;">Works</span></h2>
+    </div>
+    <div class="row g-4 text-center">
+      <div class="col-md-4">
+        <div class="card h-100 border-0" style="background: #F0FDF4; border-radius: 16px; transition: transform 0.2s;">
+          <div class="card-body p-4">
+            <div class="mb-3" style="width: 64px; height: 64px; background: #15803D; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <h5 class="fw-bold" style="color: #14532D;">Search Medicine</h5>
+            <p class="text-muted small mb-0">Enter the medicine name and find all nearby pharmacies instantly on the map</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 border-0" style="background: #F0FDF4; border-radius: 16px; transition: transform 0.2s;">
+          <div class="card-body p-4">
+            <div class="mb-3" style="width: 64px; height: 64px; background: #15803D; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <h5 class="fw-bold" style="color: #14532D;">Locate Pharmacy</h5>
+            <p class="text-muted small mb-0">See all shops with medicine on the map with distance and pricing</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 border-0" style="background: #F0FDF4; border-radius: 16px; transition: transform 0.2s;">
+          <div class="card-body p-4">
+            <div class="mb-3" style="width: 64px; height: 64px; background: #15803D; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <h5 class="fw-bold" style="color: #14532D;">Place Order</h5>
+            <p class="text-muted small mb-0">Upload prescription and request medicines for pickup or home delivery</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Available Medicines -->
+<section class="py-5" style="background: #FAFAFA;">
+  <div class="container">
+    <div class="text-center mb-4">
+      <h2 class="fw-bold" style="color: #14532D; font-family: 'Figtree', sans-serif;">Available <span style="color: #15803D;">Medicines</span></h2>
+      <p class="text-muted">Browse our catalog of medicines available at nearby pharmacies</p>
     </div>
     <div class="row g-4" id="data">
       <% if(typeof allService !== 'undefined') { %>
         <% allService.slice(0, 6).forEach(function(medi) { %>
           <div class="col-lg-4 col-md-6">
-            <div class="card h-100 border-0 shadow-sm">
-              <div class="card-body text-center p-4">
-                <div class="mb-3">
-                  <i class="ri-medicine-bottle-line fs-1 text-primary"></i>
+            <div class="card h-100 border-0" style="box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-radius: 12px; transition: box-shadow 0.2s;">
+              <div class="card-body p-4">
+                <div class="mb-3" style="width: 48px; height: 48px; background: #F0FDF4; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4.5v10.5M6.5 10.5h8"/><path d="M18 20a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h12z"/></svg>
                 </div>
-                <h5 class="card-title"><%= medi.name %></h5>
-                <p class="card-text text-muted small"><%= medi.generic %> | <%= medi.strength %></p>
-                <p class="card-text text-muted small"><%= medi.company %></p>
+                <h5 class="fw-bold mb-1" style="color: #14532D;"><%= medi.name %></h5>
+                <p class="mb-1" style="color: #166534; font-size: 0.9rem;"><%= medi.generic %> | <%= medi.strength %></p>
+                <p class="mb-0 text-muted small"><%= medi.company %></p>
               </div>
             </div>
           </div>
@@ -47,91 +179,11 @@
       <% } %>
     </div>
     <div class="text-center mt-4">
-      <a href="/service" class="btn btn-outline-primary">View All Medicines</a>
+      <a href="/service" class="btn btn-lg px-4" style="background: white; color: #15803D; border: 2px solid #15803D; font-weight: 600;">View All Medicines</a>
     </div>
   </div>
 </section>
-
-<div class="container"><hr class="my-0"></div>
-
-<section class="layout_padding">
-  <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-md-6">
-        <img src="images/about-img.jpg" alt="About EMF" class="img-fluid rounded-4 shadow">
-      </div>
-      <div class="col-md-6">
-        <div class="heading_container mb-4">
-          <h2>Find <span>Medicine</span> Fast</h2>
-        </div>
-        <p class="mb-3">Emergency Medicine Finder is a web application that allows users to quickly and easily find the medicine they need in the nearest pharmacy. This project aims to simplify the process of finding emergency medicine, which can often be a time-sensitive and stressful situation.</p>
-        <p class="mb-4">Our web application provides a user-friendly interface where users can search for the medicine they need and see a list of nearby pharmacies that carry the medicine. The system uses real-time data to ensure that the information displayed is accurate and up-to-date.</p>
-        <div class="d-flex gap-3">
-          <a href="/about" class="btn btn-primary">Learn More</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<% } else { %>
-
-<section class="layout_padding">
-  <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-md-6">
-        <img src="images/about-img.jpg" alt="About EMF" class="img-fluid rounded-4 shadow">
-      </div>
-      <div class="col-md-6">
-        <div class="heading_container mb-4">
-          <h2>Find <span>Medicine</span> Fast</h2>
-        </div>
-        <p class="mb-3">Emergency Medicine Finder is a web application that allows users to quickly and easily find the medicine they need in the nearest pharmacy.</p>
-        <div class="d-flex gap-3 flex-wrap">
-          <a href="/login" class="btn btn-primary btn-lg">Login to Search</a>
-          <a href="/signup" class="btn btn-outline-primary btn-lg">Sign Up</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="layout_padding2 bg-light">
-  <div class="container">
-    <div class="heading_container heading_center mb-5">
-      <h2>How It <span>Works</span></h2>
-    </div>
-    <div class="row g-4 text-center">
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-4">
-          <div class="mb-3"><i class="ri-search-line fs-1 text-primary"></i></div>
-          <h5>Search Medicine</h5>
-          <p class="text-muted small">Enter the medicine name and find all nearby pharmacies</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-4">
-          <div class="mb-3"><i class="ri-map-pin-line fs-1 text-primary"></i></div>
-          <h5>Locate Pharmacy</h5>
-          <p class="text-muted small">See shops on map with distance and directions</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-4">
-          <div class="mb-3"><i class="ri-file-list-3-line fs-1 text-primary"></i></div>
-          <h5>Place Request</h5>
-          <p class="text-muted small">Upload prescription and request medicines instantly</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-<% } %>
 
 <%- include ('../template/footer') %>
 
-<% if(uId) { %>
 <script src="/js/home.js"></script>
-<% } else { %>
-<script src="/js/home.js"></script>
-<% } %>

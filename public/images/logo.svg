@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 50" fill="none">
+  <defs>
+    <linearGradient id="logo-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#15803D"/>
+    </linearGradient>
+  </defs>
+  <!-- Cross + Pill icon -->
+  <rect x="2" y="12" width="6" height="22" rx="3" fill="url(#logo-grad)"/>
+  <rect x="7" y="17" width="6" height="12" rx="3" fill="url(#logo-grad)" transform="rotate(90 10 23)"/>
+  <!-- Map pin dot -->
+  <circle cx="10" cy="36" r="3" fill="#15803D" opacity="0.6"/>
+  <!-- Text -->
+  <text x="22" y="30" font-family="'Figtree','Inter',system-ui,sans-serif" font-weight="800" font-size="22" fill="#14532D" letter-spacing="-0.5">EMF</text>
+  <text x="22" y="44" font-family="'Figtree','Inter',system-ui,sans-serif" font-weight="500" font-size="9" fill="#15803D" letter-spacing="1.2">MEDICINE FINDER</text>
+</svg>

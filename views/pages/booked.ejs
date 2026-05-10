@@ -4,8 +4,8 @@
 <section class="layout_padding">
   <div class="container">
     <div class="heading_container heading_center mb-5">
-      <h2>My <span>Bookings</span></h2>
-      <p class="text-muted">View your booked services</p>
+      <h2>My <span>Orders</span></h2>
+      <p class="text-muted">View your medicine requests and orders</p>
     </div>
 
     <% if (userBooking && userBooking.length > 0) { %>
@@ -16,14 +16,22 @@
               <div class="card-body p-4">
                 <div class="d-flex align-items-center gap-3 mb-3">
                   <div class="bg-primary bg-opacity-10 p-3 rounded-3">
-                    <i class="ri-calendar-check-line fs-3 text-primary"></i>
+                    <i class="ri-medicine-bottle-line fs-3 text-primary"></i>
                   </div>
                   <div>
-                    <h5 class="card-title mb-1"><%= booking.service_name %></h5>
-                    <small class="text-muted"><i class="ri-time-line me-1"></i><%= booking.created_at %></small>
+                    <h5 class="card-title mb-1"><%= booking.medi_name %></h5>
+                    <small class="text-muted"><i class="ri-store-2-line me-1"></i><%= booking.shopname %></small>
                   </div>
                 </div>
-                <span class="badge bg-success"><i class="ri-check-line me-1"></i>Confirmed</span>
+                <p class="mb-2">Quantity: <strong><%= booking.quantity %></strong></p>
+                <p class="mb-2">Phone: <strong><%= booking.phone %></strong></p>
+                <p class="mb-2 small text-muted"><%= booking.created_at %></p>
+                <span class="badge <%= booking.status == 1 ? 'bg-success' : booking.status == 2 ? 'bg-warning text-dark' : 'bg-info' %>">
+                  <%= booking.status == 1 ? 'Approved' : booking.status == 2 ? 'On Hold' : 'Pending' %>
+                </span>
+                <a href="/delete-medicine-request/<%= booking.req_id %>" class="btn btn-sm btn-outline-danger ms-2" onclick="return confirm('Cancel this request?')">
+                  <i class="ri-close-line"></i>
+                </a>
               </div>
             </div>
           </div>
@@ -32,8 +40,8 @@
     <% } else { %>
       <div class="text-center py-5">
         <i class="ri-calendar-line fs-1 text-muted"></i>
-        <p class="mt-3 text-muted">You have no bookings yet.</p>
-        <a href="/home" class="btn btn-primary mt-2">Browse Services</a>
+        <p class="mt-3 text-muted">You have no orders yet.</p>
+        <a href="/home" class="btn btn-primary mt-2">Browse Medicines</a>
       </div>
     <% } %>
   </div>
