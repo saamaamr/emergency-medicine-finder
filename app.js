@@ -7,7 +7,7 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 env.config();
 
-app.use(cookieParser(process.env.COOKIE_SECRET))
+app.use(cookieParser())
 app.use(express.static(`${__dirname}/public`));
 app.set('view engine', 'ejs');
 app.use(express.json());

@@ -238,8 +238,8 @@ const UserController = {
                   { expiresIn: maxAge },
                 )
 
-                res.clearCookie(process.env.COOKIE_NAME);
-                res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
+res.clearCookie(process.env.COOKIE_NAME);
+            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, path: '/' });
 
                 res.redirect('/shopkeeperdesh');
                 return;
@@ -345,7 +345,7 @@ const UserController = {
             )
 
             res.clearCookie(process.env.COOKIE_NAME);
-            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
+            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, path: '/' });
 
             res.redirect('/admin');
             return;

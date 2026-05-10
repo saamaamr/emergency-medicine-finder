@@ -5,7 +5,7 @@ require('dotenv').config();
 
 /* ==== Require auth - any logged in user ==== */
 const requireAuth = (req, res, next) => {
-  const token = req.signedCookies[process.env.COOKIE_NAME];
+  const token = req.cookies[process.env.COOKIE_NAME];
 
   if (token) {
     jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
@@ -24,7 +24,7 @@ const requireAuth = (req, res, next) => {
 
 /* ==== Require user role ==== */
 const requireUser = (req, res, next) => {
-  const token = req.signedCookies[process.env.COOKIE_NAME];
+  const token = req.cookies[process.env.COOKIE_NAME];
 
   if (token) {
     jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
@@ -43,7 +43,7 @@ const requireUser = (req, res, next) => {
 
 /* ==== Require shopkeeper role ==== */
 const requireShopkeeper = (req, res, next) => {
-  const token = req.signedCookies[process.env.COOKIE_NAME];
+  const token = req.cookies[process.env.COOKIE_NAME];
 
   if (token) {
     jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
@@ -62,7 +62,7 @@ const requireShopkeeper = (req, res, next) => {
 
 /* ==== Require admin role ==== */
 const requireAdmin = (req, res, next) => {
-  const token = req.signedCookies[process.env.COOKIE_NAME];
+  const token = req.cookies[process.env.COOKIE_NAME];
 
   if (token) {
     jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
@@ -81,7 +81,7 @@ const requireAdmin = (req, res, next) => {
 
 /* ===== check user for templates ====== */
 const checkUser = (req, res, next) => {
-  const token = req.signedCookies[process.env.COOKIE_NAME];
+  const token = req.cookies[process.env.COOKIE_NAME];
 
   if (token) {
     jwt.verify(token, process.env.JWT_SECRET, async (err, decodedToken) => {
@@ -112,7 +112,7 @@ const checkUser = (req, res, next) => {
 
 /* ==== check login - redirect if already logged in ==== */
 const checkCurrentLogin = (req, res, next) => {
-  const token = req.signedCookies[process.env.COOKIE_NAME];
+  const token = req.cookies[process.env.COOKIE_NAME];
 
   if (token) {
     jwt.verify(token, process.env.JWT_SECRET, (err) => {
@@ -129,7 +129,7 @@ const checkCurrentLogin = (req, res, next) => {
 
 /* ==== redirect if already logged in (for login pages) ==== */
 const redirectLoggedIn = (req, res, next) => {
-  const token = req.signedCookies[process.env.COOKIE_NAME];
+  const token = req.cookies[process.env.COOKIE_NAME];
   if (!token) {
     next();
   } else {
