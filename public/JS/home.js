@@ -203,6 +203,274 @@ function addUserLocation(lat, lng) {
   userMarker.setPopup(popup)
 }
 
+// ==================== ROUTING FUNCTIONS ====================
+
+let currentRouteLayer = null
+let routeInfo = null
+
+// Get route from OSRM and draw on map
+async function getRoute(startLng, startLat, endLng, endLat, pharmacyName) {
+  log('info', 'Calculating route', { from: [startLng, startLat], to: [endLng, endLat] })
+  
+  // Remove existing route
+  clearRoute()
+  
+  // Show loading state
+  showRouteLoading(pharmacyName)
+  
+  try {
+    // OSRM routing API - use public demo server
+    const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&steps=true`
+    
+    const response = await fetch(url)
+    
+    if (!response.ok) {
+      throw new Error('Route API error: ' + response.status)
+    }
+    
+    const data = await response.json()
+    
+    if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+      log('warn', 'No route found, falling back to Google Maps')
+      openGoogleMapsDirections(endLat, endLng, pharmacyName)
+      return
+    }
+    
+    const route = data.routes[0]
+    const geometry = route.geometry
+    routeInfo = {
+      distance: route.distance, // in meters
+      duration: route.duration, // in seconds
+      geometry: geometry
+    }
+    
+    log('info', 'Route found', { 
+      distance: (route.distance / 1000).toFixed(1) + ' km',
+      duration: formatDuration(route.duration)
+    })
+    
+    // Draw route on map
+    drawRoute(geometry, pharmacyName)
+    
+  } catch (err) {
+    log('error', 'Route calculation failed', err.message)
+    // Fallback to Google Maps
+    openGoogleMapsDirections(endLat, endLng, pharmacyName)
+  }
+}
+
+// Clear existing route from map
+function clearRoute() {
+  if (currentRouteLayer) {
+    if (map.getLayer('route-line')) {
+      map.removeLayer('route-line')
+    }
+    if (map.getSource('route')) {
+      map.removeSource('route')
+    }
+    currentRouteLayer = null
+  }
+  routeInfo = null
+}
+
+// Draw route polyline on map
+function drawRoute(geometry, pharmacyName) {
+  // Add route source
+  map.addSource('route', {
+    type: 'geojson',
+    data: {
+      type: 'Feature',
+      properties: {},
+      geometry: geometry
+    }
+  })
+  
+  // Add route line layer (outer glow)
+  map.addLayer({
+    id: 'route-line-glow',
+    type: 'line',
+    source: 'route',
+    layout: {
+      'line-join': 'round',
+      'line-cap': 'round'
+    },
+    paint: {
+      'line-color': '#0891B2',
+      'line-width': 8,
+      'line-opacity': 0.3,
+      'line-blur': 3
+    }
+  })
+  
+  // Add main route line
+  map.addLayer({
+    id: 'route-line',
+    type: 'line',
+    source: 'route',
+    layout: {
+      'line-join': 'round',
+      'line-cap': 'round'
+    },
+    paint: {
+      'line-color': '#06b6d4',
+      'line-width': 5,
+      'line-opacity': 1
+    }
+  })
+  
+  currentRouteLayer = 'route-line'
+  
+  // Fit map to show entire route
+  const coordinates = geometry.coordinates
+  const bounds = new maplibregl.LngLatBounds()
+  coordinates.forEach(coord => bounds.extend(coord))
+  
+  map.fitBounds(bounds, {
+    padding: { top: 100, bottom: 100, left: 100, right: 100 },
+    duration: 1000
+  })
+  
+  // Update popup with route info
+  updatePopupWithRoute(pharmacyName)
+}
+
+// Format distance in human readable form
+function formatDistance(meters) {
+  if (meters < 1000) {
+    return Math.round(meters) + ' m'
+  }
+  return (meters / 1000).toFixed(1) + ' km'
+}
+
+// Format duration in human readable form
+function formatDuration(seconds) {
+  if (seconds < 60) {
+    return Math.round(seconds) + ' sec'
+  }
+  if (seconds < 3600) {
+    const mins = Math.round(seconds / 60)
+    return mins + ' min'
+  }
+  const hours = Math.floor(seconds / 3600)
+  const mins = Math.round((seconds % 3600) / 60)
+  return hours + ' hr ' + mins + ' min'
+}
+
+// Show route loading state
+function showRouteLoading(pharmacyName) {
+  log('info', 'Calculating route to ' + pharmacyName + '...')
+  // Could add a toast/notification here
+}
+
+// Update popup with route info
+function updatePopupWithRoute(pharmacyName) {
+  if (!routeInfo) return
+  
+  const distance = formatDistance(routeInfo.distance)
+  const duration = formatDuration(routeInfo.duration)
+  
+  log('info', `Route: ${distance}, ${duration} to ${pharmacyName}`)
+  
+  // Show route info in a toast or notification
+  showNotification(`Route to ${pharmacyName}: ${distance} (${duration})`, 'info')
+}
+
+// Open Google Maps directions (fallback)
+function openGoogleMapsDirections(lat, lng, name) {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${encodeURIComponent(name)}`
+  window.open(url, '_blank')
+}
+
+// Show notification toast
+function showNotification(message, type = 'info') {
+  // Check if notification container exists
+  let container = document.getElementById('notification-container')
+  if (!container) {
+    container = document.createElement('div')
+    container.id = 'notification-container'
+    container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:10000;max-width:350px;'
+    document.body.appendChild(container)
+  }
+  
+  const colors = {
+    info: { bg: '#0891B2', text: '#fff' },
+    success: { bg: '#15803D', text: '#fff' },
+    warning: { bg: '#D97706', text: '#fff' },
+    error: { bg: '#DC2626', text: '#fff' }
+  }
+  
+  const color = colors[type] || colors.info
+  
+  const toast = document.createElement('div')
+  toast.style.cssText = `
+    background:${color.bg};
+    color:${color.text};
+    padding:12px 20px;
+    border-radius:8px;
+    margin-bottom:10px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    font-family:'Figtree',sans-serif;
+    font-size:0.9rem;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    animation:slideIn 0.3s ease;
+  `
+  toast.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      ${type === 'success' ? '<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' : 
+        type === 'warning' ? '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' :
+        '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'}
+    </svg>
+    ${message}
+  `
+  
+  container.appendChild(toast)
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease'
+    setTimeout(() => toast.remove(), 300)
+  }, 5000)
+}
+
+// Add CSS animations for notifications
+const style = document.createElement('style')
+style.textContent = `
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+`
+document.head.appendChild(style)
+
+// Route button click handler - called from popup
+function showRouteToPharmacy(lat, lng, name, address) {
+  if (!curentlat || !curentlng) {
+    log('warn', 'User location not available')
+    showNotification('Please enable location to get directions', 'warning')
+    // Fall back to Google Maps
+    openGoogleMapsDirections(lat, lng, name || address)
+    return
+  }
+  
+  // Show loading
+  showNotification(`Calculating route to ${name || 'pharmacy'}...`, 'info')
+  
+  // Get and display route
+  getRoute(curentlng, curentlat, lng, lat, name || address)
+}
+
+// Clear route button
+function clearRouteOnMap() {
+  clearRoute()
+  log('info', 'Route cleared')
+}
+
 // Legacy locateUser function for compatibility
 function locateUser() {
   const geolocate = document.querySelector('.maplibregl-ctrl-geolocate')
@@ -288,21 +556,22 @@ function generatePopupHTML(item, isNearest) {
       <button onclick="handleRequestFromPopup('${item.id}','${item.email}')"
         style="width:100%;padding:10px;margin-top:8px;background:#15803D;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;gap:6px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-        Request This Medicine
+        Request Medicine
       </button>
-      <button onclick="openDirections(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}')"
-        style="width:100%;padding:10px;margin-top:6px;background:#0891B2;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;gap:6px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
-        Get Directions
-      </button>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <button onclick="showRouteToPharmacy(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}', '${(addr || '').replace(/'/g, "\\'")}')"
+          style="flex:1;padding:10px;background:#0891B2;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;gap:4px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16"/><path d="M16 6v16"/></svg>
+          Show Route
+        </button>
+        <button onclick="openGoogleMapsDirections(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}')"
+          style="flex:1;padding:10px;background:#6b7280;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;gap:4px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+          Google Maps
+        </button>
+      </div>
     </div>
   `
-}
-
-// Open Google Maps directions
-function openDirections(lat, lng, name) {
-  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
-  window.open(url, '_blank')
 }
 
 // Create pharmacy marker

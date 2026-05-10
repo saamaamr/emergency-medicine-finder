@@ -175,3 +175,63 @@
     max-width: 280px !important;
   }
 }
+
+/* Route styling */
+.route-info-panel {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  font-family: 'Figtree', sans-serif;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.route-info-panel .route-distance {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0891B2;
+}
+
+.route-info-panel .route-duration {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.route-info-panel .route-close {
+  background: #f3f4f6;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 18px;
+}
+
+.route-info-panel .route-close:hover {
+  background: #e5e7eb;
+}
+
+/* Route line animation */
+@keyframes route-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.route-line-animated {
+  animation: route-pulse 2s ease-in-out infinite;
+}
