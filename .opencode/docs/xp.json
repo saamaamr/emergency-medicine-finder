@@ -1,8 +1,8 @@
 {
-  "xp": 100,
+  "xp": 135,
   "level": 1,
   "title": "Novice",
-  "docsWritten": { "sections": 4, "tutorials": 0, "apiDocs": 1 },
+  "docsWritten": { "sections": 6, "tutorials": 0, "apiDocs": 1 },
   "mistakes": { "total": 0, "totalPenaltyXP": 0 },
   "mistakeHistory": [],
   "levelThresholds": [

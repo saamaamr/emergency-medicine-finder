@@ -1,10 +1,11 @@
 # Emergency Medicine Finder
 
-A web application for finding emergency medicines and medical services in Bangladesh. Users can search for medicines across local pharmacies, request them from nearby shops, and manage their healthcare needs.
+A full-stack web application for finding emergency medicines and managing pharmacy operations in Bangladesh. Users search medicines across local pharmacies, shopkeepers manage inventory/sales/expenses, and admins oversee the entire platform.
 
 ## Contents
 
 - [Features](#features)
+- [Tech Stack](#tech-stack)
 - [Quick Start](#quick-start)
 - [User Roles](#user-roles)
 - [Project Structure](#project-structure)
@@ -13,7 +14,6 @@ A web application for finding emergency medicines and medical services in Bangla
 - [Configuration](#configuration)
 - [Testing](#testing)
 - [Sample Accounts](#sample-accounts)
-- [Contributing](#contributing)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -22,13 +22,36 @@ A web application for finding emergency medicines and medical services in Bangla
 
 | Category | Description |
 |----------|-------------|
-| **Authentication** | User, shopkeeper, and admin registration with email verification |
-| **Medicine Search** | Search medicines across shops with autocomplete suggestions |
-| **Medicine Requests** | Users request medicines from specific shops with prescription upload |
-| **Inventory Management** | Shopkeepers manage their medicine stock and pricing |
-| **Admin Dashboard** | Overview of users, shops, inventory, and stock transfers |
+| **Authentication** | Three-role auth (user/shopkeeper/admin) with JWT cookies, email verification, single-session-per-browser enforcement |
+| **Medicine Search** | Search across shops with autocomplete suggestions |
+| **Medicine Requests** | Users request medicines from shops with prescription photo upload |
+| **Stock Management** | Shopkeepers manage inventory stock levels and pricing |
+| **Pharmacy Management** | Full buy/sell cycle: suppliers, purchases (with batch/expiry), sales (with profit calc), expenses/categories, profit/loss reports |
+| **Data Export** | Shopkeepers export their data as JSON or per-table CSV files |
 | **Stock Transfers** | Admin-initiated medicine transfers between shops |
+| **Automated Backups** | Daily cron `mysqldump` to gzipped SQL files with configurable retention |
+| **Manual Backups** | Admin can trigger, download, and delete database backups on demand |
+| **Admin Dashboard** | Users, shops, inventory, transfers, and backup management |
 | **Contact System** | Contact form for user inquiries |
+| **Location Tracking** | Shopkeepers can set their latitude/longitude on their profile |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Runtime** | Node.js v14+ |
+| **Framework** | Express 4 |
+| **Template Engine** | EJS |
+| **Database** | MySQL (via mysql2 driver with connection pool) |
+| **Auth** | JSON Web Tokens (jsonwebtoken) stored in signed HTTP-only cookies |
+| **Validation** | express-validator |
+| **File Uploads** | Multer |
+| **Password Hashing** | bcryptjs |
+| **Email** | Nodemailer (SMTP) |
+| **Scheduling** | node-cron (daily backup) |
+| **Testing** | Jest + Supertest |
 
 ---
 
@@ -50,17 +73,24 @@ Edit `.env` with your settings (see [Configuration](#configuration)).
 
 ### 3. Setup Database
 
+Option A — MySQL CLI:
 ```bash
 mysql -u root -p < database_setup.sql
+```
+
+Option B — Node.js runner:
+```bash
+node run-sql.js database_setup.sql
 ```
 
 ### 4. Start Server
 
 ```bash
-npm start
+npm start          # production
+npm run dev        # development (nodemon + auto-kill-port)
 ```
 
-Access at `http://localhost:3440`
+Access at `http://localhost:3000`
 
 ---
 
@@ -71,10 +101,10 @@ The application has three distinct user roles:
 | Role | Description | Dashboard |
 |------|-------------|-----------|
 | **User** | Patients seeking medicines | `/profile`, `/req` |
-| **Shopkeeper** | Pharmacy owners managing inventory | `/shopkeeperdesh`, `/servicereq` |
-| **Admin** | System administrators | `/admin`, `/admin/inventory` |
+| **Shopkeeper** | Pharmacy owners managing inventory, sales, purchases, expenses | `/shopkeeperdesh`, `/pharmacy/dashboard` |
+| **Admin** | System administrators overseeing everything | `/admin`, `/admin/backups` |
 
-### Quick Reference — Login URLs
+### Login URLs
 
 | Role | Login Page | After Login |
 |------|-----------|-------------|
@@ -86,14 +116,34 @@ The application has three distinct user roles:
 
 | Action | User | Shopkeeper | Admin |
 |--------|------|-----------|-------|
-| View services | Yes | Yes | Yes |
-| Request medicines | Yes | — | — |
-| Manage own inventory | — | Yes | — |
-| View all inventories | — | — | Yes |
-| Approve requests | — | Yes | Yes |
-| Create stock transfers | — | — | Yes |
-| Manage users | — | — | Yes |
-| Verify accounts | — | — | Yes |
+| Browse medicines & services | Yes | Yes | Yes |
+| Search medicines with autocomplete | Yes | Yes | Yes |
+| Request medicines from shops | Yes | — | — |
+| Upload prescription with requests | Yes | — | — |
+| View own request history | Yes | — | — |
+| Delete own requests | Yes | — | — |
+| Update own profile | Yes | — | — |
+| View incoming medicine requests | — | Yes | Yes |
+| Approve / hold medicine requests | — | Yes | Yes |
+| Manage own inventory (add/view/update stock) | — | Yes | — |
+| Manage medicine catalog (shop-level) | — | Yes | — |
+| **Pharmacy: Manage suppliers** | — | Yes | — |
+| **Pharmacy: Record purchases (multi-item with batch/expiry)** | — | Yes | — |
+| **Pharmacy: Record sales (multi-item with profit calc)** | — | Yes | — |
+| **Pharmacy: Record expenses by category** | — | Yes | — |
+| **Pharmacy: View profit/loss reports** | — | Yes | — |
+| **Pharmacy: View monthly summary** | — | Yes | — |
+| **Pharmacy: Export data (JSON / CSV)** | — | Yes | — |
+| Update shop location (lat/lng) | — | Yes | — |
+| Update shop profile picture | — | Yes | — |
+| View all shop inventories | — | — | Yes |
+| Filter inventory by shop | — | — | Yes |
+| Manage stock transfers between shops | — | — | Yes |
+| Manage all users & shopkeepers | — | — | Yes |
+| Verify / hold / block shopkeeper accounts | — | — | Yes |
+| Add master medicine catalog | — | — | Yes |
+| Trigger / download / delete database backups | — | — | Yes |
+| Submit contact form | Yes | Yes | Yes |
 
 ---
 
@@ -101,46 +151,69 @@ The application has three distinct user roles:
 
 ```
 emergency-medicine-finder/
-├── app.js                    # Application entry point
+├── app.js                    # Application entry point (Express)
 ├── package.json              # Dependencies and scripts
 ├── .env                      # Environment variables
 ├── .env.sample               # Environment template
 ├── jest.config.js            # Jest configuration
+├── database_setup.sql        # Full DB schema + seed data (18 tables)
+├── run-sql.js                # SQL file runner (Node.js)
 │
 ├── config/
 │   └── database.js           # MySQL connection pool
 │
 ├── controllers/
-│   └── UserController.js      # All business logic handlers
+│   ├── UserController.js     # User, shopkeeper, admin business logic (935 lines)
+│   ├── PharmacyController.js # Pharmacy management CRUD (369 lines)
+│   └── BackupController.js   # Backup & data export (128 lines)
 │
 ├── middleware/
-│   ├── AuthMiddleware.js      # JWT auth & role guards
-│   ├── errorHandler.js        # Global error handling
-│   ├── decoratorHtmlResponse.js
+│   ├── AuthMiddleware.js      # JWT auth, role guards, session enforcement
+│   ├── errorHandler.js        # Global Express error handler
 │   ├── decorateHtmlResponse.js
 │   └── validator/
-│       └── userValidator.js   # Input validation rules
+│       └── userValidator.js   # express-validator rules
 │
 ├── models/
-│   └── UserModels.js          # Database query functions
+│   └── UserModels.js          # All database query functions (616 lines, 65+ methods)
 │
 ├── routers/
-│   └── routes.js              # All route definitions
+│   └── routes.js              # All route definitions (82 routes)
+│
+├── cron/
+│   ├── index.js               # Cron job registration (node-cron)
+│   └── backup.js              # Backup engine (mysqldump, export, listing)
 │
 ├── public/
-│   ├── CSS/                   # Stylesheets
-│   ├── JS/                    # Client-side scripts
-│   └── uploads/               # Uploaded files (profiles, prescriptions, NIDs)
+│   ├── CSS/                   # Stylesheets (7 files)
+│   ├── JS/                    # Client-side scripts (9 files)
+│   ├── images/                # Logos, icons, map markers (18 files)
+│   └── uploads/               # Uploaded photos, NIDs, prescriptions
 │
 ├── views/
-│   ├── pages/                 # Page templates (home, login, dashboard, etc.)
-│   └── template/              # Reusable components (header, footer, navbar)
+│   ├── pages/                 # 23 page templates
+│   │   └── pharmacy/          # 11 pharmacy management sub-pages
+│   └── template/              # 7 reusable partials (header, footer, nav)
 │
-├── database_setup.sql         # Complete schema and seed data
-├── test_data_dhaka.sql        # Sample data for Dhaka region
-├── test_data_chattogram.sql   # Sample data for Chattogram region
+├── docs/
+│   ├── API.md                 # Full API reference
+│   ├── ROLES.md               # User roles & permissions guide
+│   └── SECURITY.md            # Security architecture & hardening guide
 │
-└── tests/                     # Test suite
+├── tests/
+│   ├── controllers/           # UserController tests
+│   ├── middleware/            # AuthMiddleware tests
+│   ├── models/                # UserModels + edge case tests
+│   ├── routes/                # Route/validator tests
+│   ├── integration/           # Full user journey tests
+│   ├── security/              # Security tests
+│   └── __mocks__/             # Nodemailer mock
+│
+├── backups/                   # Backup .sql.gz files (gitignored)
+├── scripts/
+│   └── kill-port.js           # Utility to kill port process
+└── utils/
+    └── emailUtils.js          # Nodemailer email utilities
 ```
 
 ---
@@ -152,13 +225,13 @@ emergency-medicine-finder/
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | `GET` | `/login` | User login page | — |
-| `POST` | `/login` | User login (email, pass) | — |
+| `POST` | `/login` | User login (email, pass, browserKey) | — |
 | `GET` | `/logout` | User logout | User |
 | `GET` | `/shopkeeperlogin` | Shopkeeper login page | — |
 | `POST` | `/shopkeeperlogin` | Shopkeeper login | — |
 | `GET` | `/shopkeeperlogout` | Shopkeeper logout | Shopkeeper |
 | `GET` | `/admin` | Admin dashboard | Admin |
-| `POST` | `/alogin` | Admin login | — |
+| `POST` | `/alogin` | Admin login (userid, pass) | — |
 | `GET` | `/adminlogout` | Admin logout | Admin |
 
 ### User Management
@@ -166,104 +239,158 @@ emergency-medicine-finder/
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | `GET` | `/signup` | User registration page | — |
-| `POST` | `/signup` | User registration | — |
+| `POST` | `/signup` | Register new user (multipart) | — |
 | `GET` | `/profile` | User profile page | User |
 | `GET` | `/userupdate` | Edit profile page | User |
-| `POST` | `/userupdate` | Update profile | User |
+| `POST` | `/userupdate` | Update profile (multipart) | User |
+| `GET` | `/verify-account/:id` | Verify email (activates user) | — |
 
 ### Shopkeeper Management
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| `GET` | `/shopkeepersignup` | Shopkeeper registration | — |
-| `POST` | `/shopkeepersignup` | Shopkeeper registration | — |
-| `GET` | `/shopkeeperdesh` | Shopkeeper dashboard | Shopkeeper |
-| `GET` | `/mediupdate` | Inventory update page | Shopkeeper |
+| `GET` | `/shopkeepersignup` | Shopkeeper registration page | — |
+| `POST` | `/shopkeepersignup` | Register shop (multipart) | — |
+| `GET` | `/shopkeeperdesh` | Main dashboard + inventory | Shopkeeper |
+| `GET` | `/shopprofile` | Profile page with lat/lng | Shopkeeper |
+| `POST` | `/shopprofile` | Update profile (multipart) | Shopkeeper |
 | `POST` | `/add-medicine` | Add medicine to inventory | Shopkeeper |
-
-### Medicine & Services
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `GET` | `/service` | View all services/medicines | — |
-| `GET` | `/medicine` | Get medicine details by ID | — |
-| `GET` | `/searchmedicine` | Search medicines across shops | — |
-| `GET` | `/medicine-suggestions` | Autocomplete suggestions | — |
-| `POST` | `/book-service` | Book a service | User |
-| `POST` | `/admin/add-medi` | Add master medicine catalog | Admin |
+| `POST` | `/update-stock` | Increase/decrease stock | Shopkeeper |
 
 ### Medicine Requests
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| `GET` | `/req` | User's medicine requests | User |
-| `GET` | `/request/:service_id` | Request specific medicine | User |
-| `POST` | `/request` | Submit medicine request | User |
+| `GET` | `/req` | User's request history | User |
+| `GET` | `/request/:service_id` | Request a specific medicine | User |
+| `POST` | `/request` | Submit request (multipart) | User |
 | `GET` | `/delete-medicine-request/:id` | Delete own request | User |
-| `GET` | `/servicereq` | Incoming requests for shop | Shopkeeper |
+| `GET` | `/servicereq` | Incoming requests (shopkeeper) | Shopkeeper |
 | `GET` | `/verify-medicine-request/:id` | Approve request | Shopkeeper |
 | `GET` | `/hold-medicine-request/:id` | Hold request | Shopkeeper |
 
-### Admin & Inventory
+### Pharmacy Management (Shopkeeper)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/pharmacy/dashboard` | Pharmacy overview (today sales, profit, expenses) |
+| `GET` | `/pharmacy/suppliers` | Supplier list |
+| `POST` | `/pharmacy/suppliers/add` | Add supplier |
+| `POST` | `/pharmacy/suppliers/update/:id` | Update supplier |
+| `GET` | `/pharmacy/suppliers/delete/:id` | Delete supplier |
+| `GET` | `/pharmacy/expenses` | Expense list with categories |
+| `POST` | `/pharmacy/expenses/add` | Add expense |
+| `POST` | `/pharmacy/expenses/update/:id` | Update expense |
+| `GET` | `/pharmacy/expenses/delete/:id` | Delete expense |
+| `POST` | `/pharmacy/expense-categories/add` | Add expense category |
+| `GET` | `/pharmacy/purchases` | Purchase order list |
+| `GET` | `/pharmacy/purchases/add` | Add purchase form |
+| `POST` | `/pharmacy/purchases/add` | Create purchase (multi-item, auto-stock) |
+| `GET` | `/pharmacy/purchases/view/:id` | Purchase detail |
+| `GET` | `/pharmacy/purchases/delete/:id` | Delete purchase |
+| `GET` | `/pharmacy/sales` | Sales list |
+| `GET` | `/pharmacy/sales/add` | Add sale form |
+| `POST` | `/pharmacy/sales/add` | Create sale (multi-item, auto-profit) |
+| `GET` | `/pharmacy/sales/view/:id` | Sale detail |
+| `GET` | `/pharmacy/sales/delete/:id` | Delete sale |
+| `GET` | `/pharmacy/reports` | Profit/loss with date range |
+
+### Data Export (Shopkeeper)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/pharmacy/export` | Export page with format options |
+| `GET` | `/pharmacy/export/download/json` | Download all shop data as JSON |
+| `GET` | `/pharmacy/export/download/csv/suppliers` | Download suppliers CSV |
+| `GET` | `/pharmacy/export/download/csv/purchases` | Download purchases CSV |
+| `GET` | `/pharmacy/export/download/csv/purchase-items` | Download purchase items CSV |
+| `GET` | `/pharmacy/export/download/csv/sales` | Download sales CSV |
+| `GET` | `/pharmacy/export/download/csv/sale-items` | Download sale items CSV |
+| `GET` | `/pharmacy/export/download/csv/expenses` | Download expenses CSV |
+| `GET` | `/pharmacy/export/download/csv/inventory` | Download inventory CSV |
+
+### Admin — Inventory & Transfers
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | `GET` | `/admin/inventory` | View all shop inventories | Admin |
 | `GET` | `/admin/shop-inventory` | Filter inventory by shop | Admin |
+| `GET` | `/admin/shop-inventory-json` | JSON inventory by shop | Admin |
 | `GET` | `/admin/transfers` | View stock transfers | Admin |
 | `POST` | `/admin/create-transfer` | Create stock transfer | Admin |
-| `GET` | `/admin/approve-transfer/:id` | Approve transfer | Admin |
+| `GET` | `/admin/approve-transfer/:id` | Approve transfer (moves stock) | Admin |
 | `GET` | `/admin/reject-transfer/:id` | Reject transfer | Admin |
 
-### Account Verification
+### Admin — Backup Management
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/admin/backups` | List backups with stats |
+| `POST` | `/admin/backups/trigger` | Run manual mysqldump now |
+| `GET` | `/admin/backups/download/:file` | Download backup .sql.gz |
+| `GET` | `/admin/backups/delete/:file` | Delete backup file |
+
+### Admin — Account Management
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| `GET` | `/verify-account/:id` | Verify user account | — |
-| `GET` | `/verify-shopkeeper-account/:id` | Verify shopkeeper | Admin |
-| `GET` | `/hold-shopkeeper-account/:id` | Hold shopkeeper account | Admin |
+| `GET` | `/user` | List all users | Admin |
+| `GET` | `/shopkeeper` | List all shopkeepers | Admin |
+| `POST` | `/add-medi` | Add to master medicine catalog | Admin |
+| `GET` | `/verify-shopkeeper-account/:id` | Activate shopkeeper | Admin |
+| `GET` | `/hold-shopkeeper-account/:id` | Hold/block shopkeeper | Admin |
 
-### Pages
+### Public Pages
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/` | Home page |
 | `GET` | `/home` | Home page |
 | `GET` | `/about` | About page |
-| `GET` | `/contact` | Contact page |
+| `GET` | `/contact` | Contact form page |
 | `POST` | `/contact` | Submit contact form |
-| `GET` | `/offer` | Special offers page |
-| `GET` | `/booked` | User's booked services |
-| `GET` | `/user` | View all users (admin) |
-| `GET` | `/shopkeeper` | View all shopkeepers (admin) |
+| `GET` | `/offer` | Offers page |
+| `GET` | `/service` | Services / medicine catalog |
+| `GET` | `/medicine` | Medicine detail by `?mid=` |
+| `GET` | `/searchmedicine` | Search by `?mname=` |
+| `GET` | `/medicine-suggestions` | Autocomplete by `?q=` |
 
 ### Query Parameters (GET APIs)
 
 | Endpoint | Parameters | Description |
 |----------|------------|-------------|
-| `/medicine` | `mid` | Get medicine by ID |
-| `/searchmedicine` | `mname` | Search medicine name |
-| `/medicine-suggestions` | `q` | Prefix for autocomplete |
-| `/admin/shop-inventory` | `email` | Filter by shop email |
-| `/admin/shop-inventory-json` | `email` | JSON view of shop inventory |
+| `/medicine` | `mid` | Get medicine by ID (JSON) |
+| `/searchmedicine` | `mname` | Search medicine name across shops (JSON) |
+| `/medicine-suggestions` | `q` | Prefix string (min 1 char, limit 10) |
+| `/admin/shop-inventory` | `email` | Filter inventory by shop email |
+| `/admin/shop-inventory-json` | `email` | JSON of shop inventory |
+| `/pharmacy/reports` | `start`, `end` | Date range for report |
 
 ---
 
 ## Database Schema
 
-### Tables
+### Tables (17 total)
 
 | Table | Description |
 |-------|-------------|
 | `users` | Patient/user accounts with address and profile |
-| `worker` | Shopkeeper accounts with shop details and location |
+| `worker` | Shopkeeper accounts with shop details, lat/lng |
 | `medicine` | Master medicine catalog (name, type, strength, generic, company) |
 | `shopmedicine` | Shop-specific inventory (stock, price per shop) |
-| `medicine_request` | User requests to shops (status: pending/approved/on hold) |
-| `org_service` | Available services (medicine delivery, consultation, etc.) |
+| `medicine_request` | User requests to shops (pending/approved/hold) |
+| `org_service` | Available services |
 | `admin` | Administrator accounts |
-| `stock_transfer` | Inter-shop medicine transfer records |
-| `contact_messages` | Contact form submissions |
+| `active_sessions` | Browser session tracking (single-session enforcement) |
+| `stock_transfer` | Inter-shop medicine transfers |
+| `suppliers` | Pharmacy supplier records |
+| `expense_categories` | Expense categories per shop (rent, utility, salary, etc.) |
+| `expenses` | Shop expense transactions |
+| `purchases` | Purchase orders from suppliers |
+| `purchase_items` | Purchase line items (batch no, expiry, qty, price) |
+| `sales` | Sales transactions (retail/wholesale/prescription) |
+| `sale_items` | Sale line items with cost price and profit |
+| `daily_summary` | Daily profit/loss summary |
 
 ### Status Codes
 
@@ -273,6 +400,7 @@ emergency-medicine-finder/
 | `worker` | `status` | `0` = pending, `1` = active, `2` = held |
 | `medicine_request` | `status` | `0` = pending, `1` = approved, `2` = on hold |
 | `stock_transfer` | `status` | `pending`, `approved`, `rejected` |
+| `purchases` | `payment_status` | `paid`, `partial`, `due` |
 
 ---
 
@@ -280,28 +408,45 @@ emergency-medicine-finder/
 
 ### Environment Variables
 
-Create a `.env` file based on `.env.sample`:
+Create a `.env` file from `.env.sample`:
 
-| Variable | Description | Example |
+| Variable | Description | Default |
 |----------|-------------|---------|
 | `DB_HOST` | MySQL host | `localhost` |
 | `DB_USER` | MySQL username | `root` |
 | `DB_NAME` | Database name | `emergency_medicine` |
-| `DB_PASS` | MySQL password | `your_password` |
-| `PORT` | Server port | `3440` |
-| `JWT_SECRET` | JWT signing secret | `your_secret_key` |
+| `DB_PASS` | MySQL password | _(empty)_ |
+| `PORT` | Server port | `3000` |
+| `JWT_SECRET` | JWT signing secret | |
 | `COOKIE_NAME` | Session cookie name | `token` |
-| `COOKIE_SECRET` | Cookie signing secret | `your_cookie_secret` |
-| `BASE_URL` | Application base URL | `http://localhost:3440` |
-| `SMTP_HOST` | SMTP server host | `smtp.gmail.com` |
-| `SMTP_PORT` | SMTP server port | `465` |
-| `SMTP_USER` | SMTP username | `your_email@gmail.com` |
-| `SMTP_PASS` | SMTP password | `your_app_password` |
+| `COOKIE_SECRET` | Cookie signing secret | |
+| `BASE_URL` | App base URL (for email links) | `http://localhost:3000` |
+| `SESSION_EXPIRY_HOURS` | Active session lifetime | `8` |
+| `BROWSER_SECRET` | Secret for browser key hashing | |
+| `SMTP_HOST` | SMTP server for emails | `smtp.gmail.com` |
+| `SMTP_PORT` | SMTP port | `465` |
+| `SMTP_USER` | SMTP username | |
+| `SMTP_PASS` | SMTP password | |
+| `BACKUP_DIR` | Directory for backup files | `./backups` |
+| `BACKUP_SCHEDULE` | Cron expression for auto-backup | `0 2 * * *` (daily 2 AM) |
+| `BACKUP_RETENTION_DAYS` | Keep backups for N days | `30` |
 
 ### Required Dependencies
 
 - Node.js v14 or higher
-- MySQL Server
+- MySQL Server 5.7+
+- `mysqldump` CLI (for backup functionality — included with MySQL)
+
+### Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm start` | Start production server |
+| `npm run dev` | Development with auto-restart + port kill |
+| `npm run dev:force` | Nodemon without port kill |
+| `npm test` | Run Jest test suite |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run kill` | Kill process on the configured port |
 
 ---
 
@@ -313,23 +458,30 @@ Create a `.env` file based on `.env.sample`:
 npm test
 ```
 
-### Watch Mode
+### Test Structure
 
-```bash
-npm run test:watch
-```
+| File | Lines | Coverage |
+|------|-------|----------|
+| `tests/controllers/UserController.test.js` | 614 | Controller logic |
+| `tests/middleware/AuthMiddleware.test.js` | 240 | Auth guards |
+| `tests/models/UserModels.test.js` | 353 | Database queries |
+| `tests/models/ModelEdgeCases.test.js` | 169 | Edge cases |
+| `tests/routes/routes.test.js` | 72 | Route validation |
+| `tests/integration/userJourney.test.js` | 349 | Full user flow |
+| `tests/security/security.test.js` | 306 | Security tests |
 
 ### Test Configuration
 
-Jest is configured via `jest.config.js`. The test suite uses:
-- `supertest` for HTTP assertions
-- `jest` as the test runner
+Jest is configured via `jest.config.js`:
+- Uses `supertest` for HTTP assertions
+- `__mocks__/nodemailer.js` mails mock SMTP calls
+- Tests set their own `process.env` values in `tests/setup.js`
 
 ---
 
 ## Sample Accounts
 
-The database seed includes the following test accounts:
+The database seed includes the following test accounts (all `status = 1`, no email verification needed):
 
 ### Admin
 
@@ -353,34 +505,6 @@ The database seed includes the following test accounts:
 | `shahida@medical.com` | `worker123` | Shahida Medical Store | Chattogram, Agrabad |
 | `alam@pharma.com` | `worker123` | Alam Brothers Pharma | Dhaka, Uttara |
 
-> All seed accounts have `status = 1` (active). No email verification required for login.
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch:
-
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-3. Make your changes
-4. Run tests:
-
-   ```bash
-   npm test
-   ```
-
-5. Commit with a clear message:
-
-   ```bash
-   git commit -m "Add: brief description of changes"
-   ```
-
-6. Push and open a pull request
-
 ---
 
 ## Troubleshooting
@@ -389,28 +513,30 @@ The database seed includes the following test accounts:
 
 1. Ensure MySQL service is running
 2. Verify credentials in `.env`
-3. Confirm database `emergency_medicine` exists:
-
-   ```sql
-   SHOW DATABASES;
-   USE emergency_medicine;
-   SHOW TABLES;
-   ```
-
-4. Check user permissions:
-
-   ```sql
-   SHOW GRANTS FOR 'root'@'localhost';
-   ```
+3. Confirm database exists: `SHOW DATABASES;`
+4. Run the full setup: `node run-sql.js database_setup.sql`
 
 ### Port Already in Use
 
 ```bash
 # Windows
-netstat -ano | findstr :3440
-
-# Stop the process or change PORT in .env
+netstat -ano | findstr :3000
+# or use the kill script
+npm run kill
 ```
+
+### Backup Fails
+
+- Ensure `mysqldump` is installed and accessible via PATH
+- Verify `BACKUP_DIR` is writable (default `./backups`)
+- Check the cron schedule expression in `BACKUP_SCHEDULE`
+- Backups folder is gitignored — files won't appear in version control
+
+### Session / Cookie Issues
+
+- Clear browser cookies for localhost
+- Verify `COOKIE_SECRET` and `BROWSER_SECRET` are set in `.env`
+- The app enforces single-session-per-browser using `localStorage` UUID
 
 ### Missing Dependencies
 
@@ -418,17 +544,10 @@ netstat -ano | findstr :3440
 npm install
 ```
 
-If bcrypt fails, ensure build tools are installed:
-
+If bcrypt fails on Windows:
 ```bash
 npm install --global windows-build-tools
 ```
-
-### Session/Cookie Issues
-
-- Clear browser cookies for localhost
-- Verify `COOKIE_SECRET` is set in `.env`
-- Ensure browser allows cookies
 
 ---
 

@@ -5,9 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js",
+    "dev": "node scripts/kill-port.js && nodemon app.js",
+    "dev:force": "nodemon app.js",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "kill": "node scripts/kill-port.js"
   },
   "author": "",
   "license": "ISC",

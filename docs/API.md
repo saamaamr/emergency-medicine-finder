@@ -722,6 +722,419 @@ Submits a contact message.
 
 ---
 
+## Pharmacy Management (Shopkeeper)
+
+### Dashboard
+
+`GET /pharmacy/dashboard`
+
+Pharmacy overview showing today's sales/profit/expenses, totals, purchase due, supplier count, low stock count, recent sales, and recent purchases.
+
+**Auth:** Shopkeeper
+
+**Response:** HTML page with summary cards and recent transaction tables
+
+---
+
+### Suppliers
+
+`GET /pharmacy/suppliers`
+
+Lists all suppliers for the logged-in shopkeeper.
+
+**Auth:** Shopkeeper
+
+**Response:** HTML page with supplier table and add/edit modals
+
+---
+
+`POST /pharmacy/suppliers/add`
+
+Adds a new supplier.
+
+**Auth:** Shopkeeper
+
+**Request Body:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Supplier name |
+| `company` | string | No | Company name |
+| `email` | string | No | Supplier email |
+| `phone` | string | No | Phone number |
+| `address` | string | No | Full address |
+| `city` | string | No | City |
+
+**Response:** Redirects to `/pharmacy/suppliers?added=true`
+
+---
+
+`POST /pharmacy/suppliers/update/:id`
+
+Updates an existing supplier.
+
+**Auth:** Shopkeeper
+
+**Request Body:** Same fields as add
+
+**Response:** Redirects to `/pharmacy/suppliers?updated=true`
+
+---
+
+`GET /pharmacy/suppliers/delete/:id`
+
+Deletes a supplier.
+
+**Auth:** Shopkeeper
+
+**Response:** Redirects to `/pharmacy/suppliers?deleted=true`
+
+---
+
+### Expenses
+
+`GET /pharmacy/expenses`
+
+Lists all expenses with category info for the shop.
+
+**Auth:** Shopkeeper
+
+**Response:** HTML page with expense table and add/edit modals, plus category management
+
+---
+
+`POST /pharmacy/expenses/add`
+
+Adds a new expense.
+
+**Auth:** Shopkeeper
+
+**Request Body:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `category_id` | number | Yes | Expense category ID |
+| `description` | string | Yes | Description |
+| `amount` | number | Yes | Amount (Taka) |
+| `expense_date` | date | Yes | Date of expense |
+| `payment_method` | string | No | cash / bank / mobile_banking |
+| `reference_no` | string | No | Reference number |
+
+**Response:** Redirects to `/pharmacy/expenses?added=true`
+
+---
+
+`POST /pharmacy/expenses/update/:id`
+
+Updates an expense.
+
+**Auth:** Shopkeeper
+
+**Request Body:** Same fields as add
+
+**Response:** Redirects to `/pharmacy/expenses?updated=true`
+
+---
+
+`GET /pharmacy/expenses/delete/:id`
+
+Deletes an expense.
+
+**Auth:** Shopkeeper
+
+**Response:** Redirects to `/pharmacy/expenses?deleted=true`
+
+---
+
+`POST /pharmacy/expense-categories/add`
+
+Adds a new expense category.
+
+**Auth:** Shopkeeper
+
+**Request Body:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Category name |
+| `type` | string | No | utility / rent / salary / maintenance / marketing / other |
+
+**Response:** Redirects to `/pharmacy/expenses?cat_added=true`
+
+---
+
+### Purchases
+
+`GET /pharmacy/purchases`
+
+Lists all purchase orders for the shop.
+
+**Auth:** Shopkeeper
+
+**Response:** HTML page with purchase table and status badges
+
+---
+
+`GET /pharmacy/purchases/add`
+
+Shows the multi-item purchase order form.
+
+**Auth:** Shopkeeper
+
+**Response:** HTML form with supplier select, dynamic item rows (medicine name, batch, expiry, qty, unit price, MRP, total)
+
+---
+
+`POST /pharmacy/purchases/add`
+
+Creates a new purchase order with multiple items.
+
+**Auth:** Shopkeeper
+
+**Request Body:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `supplier_id` | number | Supplier (optional) |
+| `invoice_no` | string | Purchase invoice number |
+| `purchase_date` | date | Date of purchase |
+| `notes` | string | Optional notes |
+| `items` | JSON string | Array of `{medicine_name, batch_no, expiry_date, quantity, unit_price, mrp, total}` |
+
+**Side Effects:** Each item's quantity is added to `shopmedicine` stock.
+
+**Response:** Redirects to `/pharmacy/purchases?added=true`
+
+---
+
+`GET /pharmacy/purchases/view/:id`
+
+Shows purchase order details with all items.
+
+**Auth:** Shopkeeper
+
+**Response:** HTML page with purchase header info + items table + totals
+
+---
+
+`GET /pharmacy/purchases/delete/:id`
+
+Deletes a purchase order and its items.
+
+**Auth:** Shopkeeper
+
+**Response:** Redirects to `/pharmacy/purchases?deleted=true`
+
+---
+
+### Sales
+
+`GET /pharmacy/sales`
+
+Lists all sales transactions.
+
+**Auth:** Shopkeeper
+
+**Response:** HTML page with sales table (invoice, customer, type, total, profit, payment method)
+
+---
+
+`GET /pharmacy/sales/add`
+
+Shows the multi-item sale form.
+
+**Auth:** Shopkeeper
+
+**Response:** HTML form with customer info, dynamic item rows with cost/price/profit calculation
+
+---
+
+`POST /pharmacy/sales/add`
+
+Creates a new sale with multiple items.
+
+**Auth:** Shopkeeper
+
+**Request Body:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `customer_name` | string | Customer name (optional) |
+| `customer_phone` | string | Customer phone (optional) |
+| `sale_date` | datetime | Date/time of sale |
+| `sale_type` | string | retail / wholesale / prescription |
+| `payment_method` | string | cash / card / mobile_banking |
+| `items` | JSON string | Array of `{medicine_name, batch_no, quantity, unit_price, cost_price, mrp, total, profit}` |
+
+**Side Effects:** Each item's quantity is deducted from `shopmedicine` stock.
+
+**Response:** Redirects to `/pharmacy/sales?added=true`
+
+---
+
+`GET /pharmacy/sales/view/:id`
+
+Shows sale invoice details with all items and profit breakdown.
+
+**Auth:** Shopkeeper
+
+**Response:** HTML page with sale header + items table + totals + profit
+
+---
+
+`GET /pharmacy/sales/delete/:id`
+
+Deletes a sale and its items.
+
+**Auth:** Shopkeeper
+
+**Response:** Redirects to `/pharmacy/sales?deleted=true`
+
+---
+
+### Reports
+
+`GET /pharmacy/reports`
+
+Profit/loss report with date range filter.
+
+**Auth:** Shopkeeper
+
+**Query Parameters:**
+| Param | Type | Description |
+|-------|------|-------------|
+| `start` | date | Start date (default: first of current month) |
+| `end` | date | End date (default: today) |
+
+**Response:** HTML page with:
+- Summary cards: Total Sales, Purchases, Expenses, Net Profit
+- Sales table for the period
+- Purchases table for the period
+- Expense breakdown by category
+- Current month summary (sales, profit, expenses, transaction count)
+
+---
+
+## Backup Management (Admin)
+
+`GET /admin/backups`
+
+Lists all database backup files with stats.
+
+**Auth:** Admin
+
+**Response:** HTML page with:
+- Total backup count, total size, last backup date
+- File list with filename, size, creation date
+- Download and delete buttons per file
+- "Backup Now" button
+
+---
+
+`POST /admin/backups/trigger`
+
+Triggers an immediate full database backup via `mysqldump | gzip`.
+
+**Auth:** Admin
+
+**Response:** Redirects to `/admin/backups?backup_ok=true`
+
+**Error:** Redirects to `/admin/backups?backup_err=true` (e.g., mysqldump not installed)
+
+---
+
+`GET /admin/backups/download/:file`
+
+Downloads a backup `.sql.gz` file.
+
+**Auth:** Admin
+
+**URL Parameters:**
+| Param | Type | Description |
+|-------|------|-------------|
+| `file` | string | Backup filename (e.g., `emergency_medicine_2026-05-10_020000.sql.gz`) |
+
+**Response:** File download with `Content-Disposition: attachment`
+
+**Security:** Path traversal is blocked — only files within `BACKUP_DIR` can be downloaded.
+
+---
+
+`GET /admin/backups/delete/:file`
+
+Deletes a backup file from the filesystem.
+
+**Auth:** Admin
+
+**Response:** Redirects to `/admin/backups?deleted=true`
+
+---
+
+## Data Export (Shopkeeper)
+
+### Export Page
+
+`GET /pharmacy/export`
+
+Shows the data export page with format options.
+
+**Auth:** Shopkeeper
+
+**Response:** HTML page with download buttons for JSON and individual CSVs
+
+---
+
+### JSON Export
+
+`GET /pharmacy/export/download/json`
+
+Downloads all shop data as a single JSON file.
+
+**Auth:** Shopkeeper
+
+**Response:** JSON file download containing:
+```json
+{
+  "exported_at": "2026-05-10T12:00:00.000Z",
+  "shop": { "shopname": "...", "email": "...", "phone": "..." },
+  "suppliers": [ ... ],
+  "purchases": [ ... ],
+  "purchase_items": [ { "purchase_id": 1, "items": [...] }, ... ],
+  "sales": [ ... ],
+  "sale_items": [ { "sale_id": 1, "items": [...] }, ... ],
+  "expenses": [ ... ],
+  "inventory": [ ... ]
+}
+```
+
+**Filename:** `{shopname}_export_YYYY-MM-DD.json`
+
+---
+
+### CSV Exports
+
+`GET /pharmacy/export/download/csv/:type`
+
+Downloads a specific table as CSV.
+
+**Auth:** Shopkeeper
+
+**URL Parameters:**
+| Param | Type | Valid Values |
+|-------|------|-------------|
+| `type` | string | `suppliers`, `purchases`, `purchase-items`, `sales`, `sale-items`, `expenses`, `inventory` |
+
+**Response:** CSV file download with UTF-8 BOM header for Excel compatibility.
+
+**Column Sets:**
+
+| Type | Columns |
+|------|---------|
+| `suppliers` | supplier_id, name, company, email, phone, address, city, created_at |
+| `purchases` | purchase_id, supplier_id, supplier_name, invoice_no, purchase_date, subtotal, discount, vat, total_amount, paid_amount, due_amount, payment_status, notes |
+| `purchase-items` | item_id, purchase_id, medicine_name, batch_no, expiry_date, quantity, unit_price, mrp, total |
+| `sales` | sale_id, invoice_no, sale_date, customer_name, customer_phone, subtotal, discount, vat, total_amount, paid_amount, due_amount, profit_amount, payment_method, sale_type |
+| `sale-items` | item_id, sale_id, medicine_name, batch_no, quantity, unit_price, cost_price, mrp, total, profit |
+| `expenses` | expense_id, category_id, category_name, description, amount, expense_date, payment_method, reference_no |
+| `inventory` | id, mediname, meditype, medistrength, medigeneric, medicompany, stock, price |
+
+---
+
 ## Error Responses
 
 All endpoints return HTML pages on error with appropriate status codes.

@@ -31,3 +31,15 @@
 | 2026-05-10 | README incomplete — missing SMTP, roles, admin endpoints | High | README.md | Rewrote with full structure, roles, API table, sample accounts |
 | 2026-05-10 | No documentation for user roles and permissions | High | docs/ROLES.md | Created new guide with auth flow and status codes |
 | 2026-05-10 | No API reference document | High | docs/API.md | Created comprehensive endpoint reference |
+| 2026-05-11 | No security documentation despite complex auth system | High | docs/SECURITY.md | Created security guide with auth architecture, cookie config, vulnerabilities, hardening checklist |
+| 2026-05-11 | README table count said 18 tables but DB has 17 | Low | README.md | Corrected table count; removed non-existent contact_messages; added SECURITY.md to doc list |
+| 2026-05-11 | Role permissions table incomplete — missing contact, requests, search, profile | Low | README.md | Expanded permissions table with 30+ rows covering all features per role |
+
+## Project Documentation Map
+
+| Document | Purpose | Last Updated |
+|----------|---------|-------------|
+| README.md | Project overview, quick start, installation | 2026-05-11 |
+| docs/API.md | All 82+ endpoint references | 2026-05-10 |
+| docs/ROLES.md | Role permissions, auth flows, session enforcement | 2026-05-10 |
+| docs/SECURITY.md | Security architecture, vulnerabilities, hardening | 2026-05-11 |
