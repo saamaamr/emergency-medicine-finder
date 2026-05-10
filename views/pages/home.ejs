@@ -1,6 +1,7 @@
 <%- include ('../template/header') %>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<link href="/css/map-style.css" rel="stylesheet" />
 <%- include ('../template/nav') %>
 
 <style>
@@ -255,14 +256,42 @@
   }
 
   #shopmap {
-    height: 100% !important;
-    width: 100% !important;
+    height: 100%;
+    width: 100%;
     z-index: 1;
   }
 
-  .leaflet-container {
-    height: 100% !important;
-    width: 100% !important;
+  .maplibregl-map {
+    height: 100%;
+    width: 100%;
+  }
+
+  .maplibregl-popup-content {
+    font-family: 'Figtree', sans-serif;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .maplibregl-popup-close-button {
+    font-size: 18px;
+    padding: 4px 8px;
+    color: #6b7280;
+  }
+
+  .maplibregl-ctrl-group {
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  }
+
+  .maplibregl-ctrl-attrib {
+    background: rgba(255,255,255,0.7) !important;
+    font-size: 10px;
+  }
+
+  .maplibregl-ctrl-attrib a {
+    color: #6b7280;
   }
 
   /* Results Sidebar */

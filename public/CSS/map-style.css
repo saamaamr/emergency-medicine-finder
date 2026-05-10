@@ -1,0 +1,177 @@
+/* MapLibre Custom Styles */
+
+/* Custom markers */
+.marker-pharmacy {
+  width: 36px;
+  height: 44px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  transform: translate(-50%, -100%);
+}
+
+.marker-pharmacy:hover {
+  transform: translate(-50%, -100%) scale(1.15);
+  z-index: 100;
+}
+
+.marker-pharmacy img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.marker-selected {
+  width: 44px;
+  height: 56px;
+}
+
+.marker-selected:hover {
+  transform: translate(-50%, -100%) scale(1.1);
+}
+
+.marker-user {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.marker-user img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* User location pulse animation */
+.user-marker-container {
+  position: relative;
+}
+
+.user-pulse {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.3);
+  animation: user-pulse 2s ease-in-out infinite;
+  transform: translate(-50%, -50%);
+  left: 50%;
+  top: 50%;
+}
+
+@keyframes user-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* Stock indicator glow effects */
+.marker-stock-high img {
+  filter: drop-shadow(0 0 4px #22c55e);
+}
+
+.marker-stock-low img {
+  filter: drop-shadow(0 0 4px #f59e0b);
+}
+
+.marker-stock-out img {
+  filter: drop-shadow(0 0 4px #ef4444);
+}
+
+/* Geolocate control styling */
+.maplibregl-ctrl-geolocate {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.maplibregl-ctrl-geolocate:hover {
+  background: #f8fafc;
+}
+
+/* Navigation control styling adjustments */
+.maplibregl-ctrl-group button {
+  width: 36px;
+  height: 36px;
+}
+
+/* Popup animations */
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: #fff;
+}
+
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: #fff;
+}
+
+/* Popup action button */
+.popup-action-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  background: #15803D;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s ease;
+}
+
+.popup-action-btn:hover {
+  background: #166534;
+}
+
+/* Directions button */
+.popup-directions-btn {
+  background: #0891B2;
+}
+
+.popup-directions-btn:hover {
+  background: #0e7490;
+}
+
+/* Result card active state */
+.result-card.active {
+  border-color: #15803D;
+  box-shadow: 0 2px 12px rgba(21,128,61,0.15);
+  background: #F0FDF4;
+}
+
+/* Loading state for markers */
+.marker-loading {
+  opacity: 0.5;
+  animation: marker-loading 1s ease-in-out infinite;
+}
+
+@keyframes marker-loading {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .marker-pharmacy {
+    width: 30px;
+    height: 38px;
+  }
+  
+  .marker-selected {
+    width: 36px;
+    height: 48px;
+  }
+  
+  .maplibregl-popup-content {
+    max-width: 280px !important;
+  }
+}

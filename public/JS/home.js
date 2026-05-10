@@ -1,5 +1,7 @@
+// MapLibre GL JS Implementation for Emergency Medicine Finder
+
 const markers = []
-const markerToIndexMap = {}
+const pharmacyMarkers = new Map()
 let demo = []
 let curentlat = 23.8103
 let curentlng = 90.4125
@@ -8,30 +10,10 @@ let suggestionsTimeout = null
 let userMarker = null
 let userPulse = null
 let userLocationResolved = false
-
-const pharmacyIcon = L.icon({
-  iconUrl: '/images/marker-pharmacy.svg',
-  iconSize: [32, 48],
-  iconAnchor: [16, 48],
-  popupAnchor: [0, -48],
-})
-
-const userIcon = L.icon({
-  iconUrl: '/images/marker-user.svg',
-  iconSize: [32, 48],
-  iconAnchor: [16, 48],
-  popupAnchor: [0, -48],
-})
-
-const selectedIcon = L.icon({
-  iconUrl: '/images/marker-selected.svg',
-  iconSize: [40, 56],
-  iconAnchor: [20, 56],
-  popupAnchor: [0, -56],
-})
+let map = null
 
 function log(level, msg, data) {
-  const prefix = '[EMF]'
+  const prefix = '[EMF-MapLibre]'
   if (data !== undefined) {
     if (level === 'error') console.error(prefix, msg, data)
     else if (level === 'warn') console.warn(prefix, msg, data)
@@ -69,83 +51,280 @@ function getSearchInput() {
   return document.getElementById('searchmedi') || document.getElementById('searchmedi-page')
 }
 
-const map = L.map('shopmap', {
-  doubleClickZoom: false,
-  zoomControl: true
-}).setView([23.8103, 90.4125], 12)
+// Initialize MapLibre map
+function initMap() {
+  log('info', 'Initializing MapLibre map...')
+  
+  map = new maplibregl.Map({
+    container: 'shopmap',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: [90.4125, 23.8103],
+    zoom: 12,
+    attributionControl: true,
+    maxZoom: 19,
+    minZoom: 5,
+  })
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-}).addTo(map)
+  // Add navigation controls
+  map.addControl(new maplibregl.NavigationControl(), 'top-right')
+  
+  // Add scale control
+  map.addControl(new maplibregl.ScaleControl({
+    maxWidth: 100,
+    unit: 'metric'
+  }), 'bottom-left')
 
-function onMapReady() {
-  log('info', 'Map initialized successfully')
+  // Add geolocate control
+  const geolocate = new maplibregl.GeolocateControl({
+    positionOptions: {
+      enableHighAccuracy: true,
+      timeout: 8000,
+    },
+    trackUserLocation: true,
+    showUserHeading: true,
+    showUserAccuracyCircle: true,
+  })
+  map.addControl(geolocate)
+
+  // Map load event
+  map.on('load', () => {
+    log('info', 'MapLibre map loaded successfully')
+    
+    // Request user location after map loads
+    setTimeout(() => {
+      if (navigator.geolocation) {
+        geolocate.trigger()
+      }
+    }, 1000)
+  })
+
+  // Listen for geolocate events
+  geolocate.on('geolocate', (e) => {
+    curentlat = e.coords.latitude
+    curentlng = e.coords.longitude
+    userLocationResolved = true
+    log('info', 'User location detected via GeolocateControl', { lat: curentlat, lng: curentlng })
+  })
+
+  geolocate.on('error', (e) => {
+    log('warn', 'Geolocate error, using fallback', e.message)
+  })
+
+  // Handle map errors
+  map.on('error', (e) => {
+    log('error', 'Map error', e.error || e)
+  })
+
+  return map
 }
-map.whenReady(onMapReady)
 
+// Initialize map when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  initMap()
+})
+
+// Add user location marker
 function addUserLocation(lat, lng) {
   log('info', 'Adding user location marker', { lat, lng })
-  if (userMarker) { map.removeLayer(userMarker); userMarker = null }
-  if (userPulse) { map.removeLayer(userPulse); userPulse = null }
+  
+  // Remove existing user marker and pulse
+  if (userMarker) { userMarker.remove(); userMarker = null }
+  if (userPulse) { userPulse.remove(); userPulse = null }
 
-  var pulseCircle = L.circleMarker([lat, lng], {
-    radius: 14, color: '#15803D', fillColor: '#22C55E',
-    fillOpacity: 0.15, weight: 2, opacity: 0.4,
-    className: 'user-location-pulse',
-  }).addTo(map)
-  userPulse = pulseCircle
-
-  userMarker = L.marker([lat, lng], {
-    icon: userIcon, draggable: false, zIndexOffset: 1000,
-  }).addTo(map)
-  userMarker.bindPopup(`
-    <div style="font-family:'Figtree',sans-serif;text-align:center;">
-      <div style="font-weight:700;color:#0369A1;font-size:0.95rem;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0369A1" stroke-width="2" style="display:inline;vertical-align:-2px;margin-right:4px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="#0369A1"/></svg>
-        Your Location
-      </div>
-      <div style="font-size:0.8rem;color:#6b7280;margin-top:2px;">${lat.toFixed(4)}, ${lng.toFixed(4)}</div>
+  // Create user marker element
+  const userEl = document.createElement('div')
+  userEl.className = 'marker-user'
+  userEl.innerHTML = `
+    <div class="user-marker-container">
+      <div class="user-pulse"></div>
+      <img src="/images/marker-user.svg" alt="Your Location">
     </div>
-  `)
+  `
+
+  // Create accuracy circle
+  userPulse = new maplibregl.Circle({
+    radius: 30,
+    color: '#22c55e',
+    fillColor: '#22c55e',
+    fillOpacity: 0.1,
+    weight: 1,
+  }).setLngLat([lng, lat]).addTo(map)
+
+  // Create marker
+  userMarker = new maplibregl.Marker({ element: userEl })
+    .setLngLat([lng, lat])
+    .addTo(map)
+
+  // Add popup
+  const popup = new maplibregl.Popup({ offset: 25, closeButton: false })
+    .setHTML(`
+      <div style="font-family:'Figtree',sans-serif;text-align:center;padding:8px;">
+        <div style="font-weight:700;color:#0369A1;font-size:0.95rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0369A1" stroke-width="2" style="display:inline;vertical-align:-2px;margin-right:4px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="#0369A1"/></svg>
+          Your Location
+        </div>
+        <div style="font-size:0.8rem;color:#6b7280;margin-top:2px;">${lat.toFixed(4)}, ${lng.toFixed(4)}</div>
+      </div>
+    `)
+  userMarker.setPopup(popup)
 }
 
+// Legacy locateUser function for compatibility
 function locateUser() {
+  const geolocate = document.querySelector('.maplibregl-ctrl-geolocate')
+  if (geolocate) {
+    geolocate.click()
+  }
+}
+
+// Fallback geolocation if GeolocateControl doesn't work
+function fallbackLocateUser() {
   if (!navigator.geolocation) {
     log('warn', 'Geolocation not supported, using default center')
-    map.setView([23.8103, 90.4125], 12)
     return
   }
-  log('info', 'Requesting user location...')
+  
   navigator.geolocation.getCurrentPosition(
     position => {
       const { latitude, longitude } = position.coords
       curentlat = latitude
       curentlng = longitude
       userLocationResolved = true
-      log('info', 'User location resolved', { lat: latitude, lng: longitude })
-      map.setView([latitude, longitude], 13)
-      addUserLocation(latitude, longitude)
+      log('info', 'User location resolved via fallback', { lat: latitude, lng: longitude })
+      
+      // Add marker to map
+      if (map) {
+        map.flyTo({
+          center: [longitude, latitude],
+          zoom: 13,
+          duration: 1000,
+        })
+        addUserLocation(latitude, longitude)
+      }
     },
     err => {
       log('warn', 'Geolocation denied/error, using default', err.message || err)
-      map.setView([23.8103, 90.4125], 12)
     },
     { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
   )
 }
 
-locateUser()
-
+// Clear all markers
 function clearMarkers() {
-  log('info', 'Clearing ' + markers.length + ' old markers')
-  markers.forEach(m => {
-    if (m && m._map) map.removeLayer(m)
-  })
-  markers.length = 0
-  Object.keys(markerToIndexMap).forEach(k => delete markerToIndexMap[k])
+  log('info', 'Clearing markers')
+  pharmacyMarkers.forEach(m => m.remove())
+  pharmacyMarkers.clear()
 }
 
+// Generate popup HTML
+function generatePopupHTML(item, isNearest) {
+  const dist = item.distance ? formatDistance(item.distance) : '--'
+  const distRaw = item.distance || 0
+  const qty = item.stock != null ? parseInt(item.stock) : 0
+  const stockLabel = qty > 10 ? 'In Stock' : qty > 0 ? 'Low Stock' : 'Out of Stock'
+  const stockColor = qty > 10 ? '#15803D' : qty > 0 ? '#D97706' : '#dc2626'
+  const addr = buildAddress(item)
+
+  return `
+    <div style="font-family:'Figtree',sans-serif;min-width:220px;max-width:300px;padding:12px;">
+      ${isNearest ? '<div style="background:#15803D;color:white;font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:6px;">Nearest Pharmacy</div>' : ''}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div style="width:38px;height:38px;background:#F0FDF4;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#15803D"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        </div>
+        <div style="min-width:0;">
+          <div style="font-weight:700;color:#14532D;font-size:1rem;line-height:1.2;word-break:break-word;">${item.shopname}</div>
+          <div style="font-size:0.75rem;color:#6b7280;"><svg width="10" height="10" viewBox="0 0 24 24" fill="#6b7280" style="display:inline;vertical-align:-1px;margin-right:2px;"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.36 11.36 0 003.58.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 00.57 3.58 1 1 0 01-.25 1.01l-2.2 2.2z"/></svg> ${item.phone || '--'}</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #e5e7eb;margin:6px 0;padding-top:6px;">
+        <div style="color:#166534;font-weight:600;font-size:0.9rem;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#15803D" style="display:inline;vertical-align:-2px;margin-right:4px;"><rect x="7" y="3" width="4" height="18" rx="2"/><rect x="12" y="7" width="4" height="10" rx="2" transform="rotate(90 14 12)"/></svg>
+          ${item.mediname} <span style="color:#6b7280;font-weight:400;">${item.medistrength ? '(' + item.medistrength + ')' : ''}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <span style="font-size:1.2rem;font-weight:700;color:#15803D;">BDT ${item.price} <small style="font-size:0.75rem;color:#6b7280;">/pcs</small></span>
+          <span style="font-size:0.75rem;padding:2px 8px;border-radius:20px;background:${stockColor}15;color:${stockColor};font-weight:600;">${stockLabel}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#6b7280;margin-top:6px;">
+          <span><svg width="12" height="12" viewBox="0 0 24 24" fill="#0369A1" style="display:inline;vertical-align:-2px;margin-right:2px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg> ${dist}${distRaw > 0 ? ' from you' : ''}</span>
+        </div>
+        ${addr ? '<div style="font-size:0.75rem;color:#6b7280;margin-top:4px;border-top:1px solid #f3f4f6;padding-top:4px;word-break:break-word;"><svg width="10" height="10" viewBox="0 0 24 24" fill="#6b7280" style="display:inline;vertical-align:-1px;margin-right:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/></svg> ' + addr + '</div>' : ''}
+      </div>
+      <button onclick="handleRequestFromPopup('${item.id}','${item.email}')"
+        style="width:100%;padding:10px;margin-top:8px;background:#15803D;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+        Request This Medicine
+      </button>
+      <button onclick="openDirections(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}')"
+        style="width:100%;padding:10px;margin-top:6px;background:#0891B2;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+        Get Directions
+      </button>
+    </div>
+  `
+}
+
+// Open Google Maps directions
+function openDirections(lat, lng, name) {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+  window.open(url, '_blank')
+}
+
+// Create pharmacy marker
+function createPharmacyMarker(item, index, isSelected) {
+  const el = document.createElement('div')
+  el.className = 'marker-pharmacy'
+  
+  // Add stock class
+  const qty = item.stock != null ? parseInt(item.stock) : 0
+  if (qty > 10) el.classList.add('marker-stock-high')
+  else if (qty > 0) el.classList.add('marker-stock-low')
+  else el.classList.add('marker-stock-out')
+  
+  if (isSelected) el.classList.add('marker-selected')
+  
+  const iconUrl = isSelected ? '/images/marker-selected.svg' : '/images/marker-pharmacy.svg'
+  el.innerHTML = `<img src="${iconUrl}" alt="Pharmacy">`
+  
+  // Create popup
+  const popup = new maplibregl.Popup({
+    offset: [0, -40],
+    maxWidth: 320,
+    closeButton: true,
+    className: 'pharmacy-popup',
+  }).setHTML(generatePopupHTML(item, index === 0))
+  
+  // Create marker
+  const marker = new maplibregl.Marker({ element: el })
+    .setLngLat([parseFloat(item.lng), parseFloat(item.lat)])
+    .setPopup(popup)
+    .addTo(map)
+  
+  // Add click listener
+  el.addEventListener('click', () => {
+    highlightSidebarCard(index)
+    // Update all markers to unselected
+    pharmacyMarkers.forEach((m, i) => {
+      if (i !== index) {
+        const el = m.getElement()
+        if (el) el.querySelector('img').src = '/images/marker-pharmacy.svg'
+      }
+    })
+    // Set selected icon
+    el.querySelector('img').src = '/images/marker-selected.svg'
+  })
+  
+  // Add hover effects
+  el.addEventListener('mouseenter', () => {
+    highlightSidebarCard(index)
+  })
+  
+  pharmacyMarkers.set(index, marker)
+  return marker
+}
+
+// Highlight sidebar card
 function highlightSidebarCard(index) {
   document.querySelectorAll('.result-card').forEach(c => {
     c.style.borderColor = '#e5e7eb'
@@ -157,9 +336,11 @@ function highlightSidebarCard(index) {
     card.style.borderColor = '#15803D'
     card.style.boxShadow = '0 2px 12px rgba(21,128,61,0.15)'
     card.style.background = '#F0FDF4'
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
 }
 
+// Update results UI
 function updateResultsUI(data) {
   const list = document.getElementById('results-list')
   const emptyState = document.getElementById('empty-state')
@@ -237,14 +418,18 @@ function updateResultsUI(data) {
   list.innerHTML = html
 }
 
+// Focus marker
 function focusMarker(index) {
   if (!demo[index]) return
   log('info', 'Focusing marker index', index)
   const item = demo[index]
   
-  map.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 15, { 
-    duration: 0.5,
-    easeLinearity: 0.25
+  // Use MapLibre flyTo (easeTo)
+  map.flyTo({
+    center: [parseFloat(item.lng), parseFloat(item.lat)],
+    zoom: 15,
+    duration: 500,
+    essential: true,
   })
   
   clearMarkers()
@@ -252,122 +437,72 @@ function focusMarker(index) {
   highlightSidebarCard(index)
   
   setTimeout(() => {
-    const marker = markerToIndexMap[index]
+    const marker = pharmacyMarkers.get(index)
     if (marker) {
-      marker.openPopup()
+      marker.togglePopup()
     }
   }, 600)
 }
 
+// Highlight marker on hover
 function highlightMarker(index) {
-  if (!demo[index] || !markerToIndexMap[index]) return
+  if (!demo[index] || !pharmacyMarkers.get(index)) return
   log('info', 'Hover on card ' + index + ' - highlighting marker')
   highlightSidebarCard(index)
-  const marker = markerToIndexMap[index]
-  marker.setIcon(selectedIcon)
-  if (marker._popup && !marker._popup.isOpen()) {
-    marker.openPopup()
+  const marker = pharmacyMarkers.get(index)
+  if (marker) {
+    marker.getElement().querySelector('img').src = '/images/marker-selected.svg'
+    if (!marker.getPopup().isOpen()) {
+      marker.togglePopup()
+    }
   }
 }
 
+// Unhighlight marker
 function unhighlightMarker(index) {
-  if (!demo[index] || !markerToIndexMap[index]) return
-  const marker = markerToIndexMap[index]
-  if (marker._icon && marker._icon.classList.contains('selected-marker')) return
-  marker.setIcon(pharmacyIcon)
+  if (!demo[index] || !pharmacyMarkers.get(index)) return
+  const marker = pharmacyMarkers.get(index)
+  if (marker) {
+    const el = marker.getElement()
+    if (el && !el.classList.contains('marker-selected')) {
+      marker.getElement().querySelector('img').src = '/images/marker-pharmacy.svg'
+    }
+  }
+  
+  // Reset to nearest card highlight
+  const nearest = document.querySelector('.result-card[data-index="0"]')
+  if (nearest) {
+    nearest.style.borderColor = '#15803D'
+    nearest.style.boxShadow = '0 2px 12px rgba(21,128,61,0.15)'
+    nearest.style.background = '#F0FDF4'
+  }
 }
 
+// Place markers on map
 function placeMarkers(data, focusIndex) {
   clearMarkers()
   log('info', 'Placing ' + data.length + ' markers on map')
-  Object.keys(markerToIndexMap).forEach(k => delete markerToIndexMap[k])
 
   data.forEach((item, i) => {
     if (item.lat == null || item.lng == null) {
       log('warn', 'Skipping item without coordinates', item.shopname)
       return
     }
-    var icon = i === focusIndex ? selectedIcon : pharmacyIcon
-    var marker = L.marker([parseFloat(item.lat), parseFloat(item.lng)], {
-      icon: icon, draggable: false,
-    }).addTo(map)
-
-    markerToIndexMap[i] = marker
-
-    const dist = item.distance ? formatDistance(item.distance) : '--'
-    const distRaw = item.distance || 0
-    const qty = item.stock != null ? parseInt(item.stock) : 0
-    const stockLabel = qty > 10 ? 'In Stock' : qty > 0 ? 'Low Stock' : 'Out of Stock'
-    const stockColor = qty > 10 ? '#15803D' : qty > 0 ? '#D97706' : '#dc2626'
-    const addr = buildAddress(item)
-    const isNearest = i === 0
-
-    marker.bindPopup(`
-      <div style="font-family:'Figtree',sans-serif;min-width:220px;max-width:300px;">
-        ${isNearest ? '<div style="background:#15803D;color:white;font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:6px;">Nearest Pharmacy</div>' : ''}
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <div style="width:38px;height:38px;background:#F0FDF4;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#15803D"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-          </div>
-          <div style="min-width:0;">
-            <div style="font-weight:700;color:#14532D;font-size:1rem;line-height:1.2;word-break:break-word;">${item.shopname}</div>
-            <div style="font-size:0.75rem;color:#6b7280;"><svg width="10" height="10" viewBox="0 0 24 24" fill="#6b7280" style="display:inline;vertical-align:-1px;margin-right:2px;"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.36 11.36 0 003.58.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 00.57 3.58 1 1 0 01-.25 1.01l-2.2 2.2z"/></svg> ${item.phone || '--'}</div>
-          </div>
-        </div>
-        <div style="border-top:1px solid #e5e7eb;margin:6px 0;padding-top:6px;">
-          <div style="color:#166534;font-weight:600;font-size:0.9rem;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="#15803D" style="display:inline;vertical-align:-2px;margin-right:4px;"><rect x="7" y="3" width="4" height="18" rx="2"/><rect x="12" y="7" width="4" height="10" rx="2" transform="rotate(90 14 12)"/></svg>
-            ${item.mediname} <span style="color:#6b7280;font-weight:400;">${item.medistrength ? '(' + item.medistrength + ')' : ''}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-            <span style="font-size:1.2rem;font-weight:700;color:#15803D;">BDT ${item.price} <small style="font-size:0.75rem;color:#6b7280;">/pcs</small></span>
-            <span style="font-size:0.75rem;padding:2px 8px;border-radius:20px;background:${stockColor}15;color:${stockColor};font-weight:600;">${stockLabel}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#6b7280;margin-top:6px;">
-            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="#0369A1" style="display:inline;vertical-align:-2px;margin-right:2px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg> ${dist}${distRaw > 0 ? ' from you' : ''}</span>
-          </div>
-          ${addr ? '<div style="font-size:0.75rem;color:#6b7280;margin-top:4px;border-top:1px solid #f3f4f6;padding-top:4px;word-break:break-word;"><svg width="10" height="10" viewBox="0 0 24 24" fill="#6b7280" style="display:inline;vertical-align:-1px;margin-right:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/></svg> ' + addr + '</div>' : ''}
-        </div>
-        <button onclick="handleRequestFromPopup('${item.id}','${item.email}')"
-          style="width:100%;padding:8px;margin-top:6px;background:#15803D;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;gap:6px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-          Request This Medicine
-        </button>
-      </div>
-    `, { maxWidth: 320, className: 'pharmacy-popup' })
-
-    marker.on('mouseover', () => {
-      log('info', 'Hover on marker ' + i)
-      highlightSidebarCard(i)
-    })
-
-    marker.on('mouseout', () => {
-      if (i !== focusIndex) {
-        document.querySelectorAll('.result-card').forEach(c => {
-          c.style.borderColor = '#e5e7eb'
-          c.style.boxShadow = 'none'
-          c.style.background = 'white'
-        })
-        const nearest = document.querySelector('.result-card[data-index="0"]')
-        if (nearest) {
-          nearest.style.borderColor = '#15803D'
-        }
-      }
-    })
-
-    marker.on('click', () => {
-      highlightSidebarCard(i)
-      const cards = document.querySelectorAll('.result-card')
-      cards.forEach(c => c.style.borderColor = '#e5e7eb')
-      if (cards[i]) cards[i].style.borderColor = '#15803D'
-    })
-
-    markers.push(marker)
+    const isSelected = i === focusIndex || i === 0
+    createPharmacyMarker(item, i, isSelected)
   })
 
-  log('info', markers.length + ' markers rendered on map')
+  // Fit bounds to show all markers
+  if (data.length > 0) {
+    const bounds = new maplibregl.LngLatBounds()
+    data.forEach(item => bounds.extend([parseFloat(item.lng), parseFloat(item.lat)]))
+    map.fitBounds(bounds, { padding: 50, maxZoom: 15, duration: 500 })
+  }
+
+  log('info', pharmacyMarkers.size + ' markers rendered on map')
 }
 
+// Perform search
 function performSearch(query) {
   const emptyState = document.getElementById('empty-state')
   const noResults = document.getElementById('no-results-state')
@@ -385,7 +520,7 @@ function performSearch(query) {
     if (resultsList) resultsList.innerHTML = ''
     if (countEl) countEl.textContent = '0'
     clearMarkers()
-    map.setZoom(12, { animate: true })
+    map.flyTo({ zoom: 12, duration: 500 })
     return
   }
 
@@ -448,15 +583,17 @@ function performSearch(query) {
       
       placeMarkers(validData)
       
-      map.flyTo([parseFloat(nearest.lat), parseFloat(nearest.lng)], 16, {
-        duration: 1.0,
-        easeLinearity: 0.25
+      // MapLibre uses different flyTo syntax
+      map.flyTo({
+        center: [parseFloat(nearest.lng), parseFloat(nearest.lat)],
+        zoom: 16,
+        duration: 1000,
       })
 
       setTimeout(() => {
-        const nearestMarker = markerToIndexMap[0]
+        const nearestMarker = pharmacyMarkers.get(0)
         if (nearestMarker) {
-          nearestMarker.openPopup()
+          nearestMarker.togglePopup()
           highlightSidebarCard(0)
         }
       }, 1200)
@@ -479,6 +616,7 @@ function performSearch(query) {
     })
 }
 
+// Fetch suggestions
 function fetchSuggestions(prefix) {
   if (!prefix || prefix.trim().length < 2) {
     hideSuggestions()
@@ -492,6 +630,7 @@ function fetchSuggestions(prefix) {
     .catch(() => hideSuggestions())
 }
 
+// Get suggestions container
 function getSuggestionsContainer(input) {
   if (!input) return null
   const parent = input.closest('.input-group') || input.parentElement
@@ -506,6 +645,7 @@ function getSuggestionsContainer(input) {
   return container
 }
 
+// Show suggestions
 function showSuggestions(items, input) {
   const container = getSuggestionsContainer(input)
   if (!container) return
@@ -524,10 +664,12 @@ function showSuggestions(items, input) {
   container.style.display = 'block'
 }
 
+// Hide suggestions
 function hideSuggestions() {
   document.querySelectorAll('.suggestions-dropdown').forEach(el => el.style.display = 'none')
 }
 
+// Select suggestion
 function selectSuggestion(name) {
   const input = getSearchInput()
   if (input) {
@@ -537,6 +679,7 @@ function selectSuggestion(name) {
   }
 }
 
+// Attach search listeners
 function attachSearchListeners() {
   const mainSearchInput = document.getElementById('searchmedi-page')
   const navSearchInput = document.getElementById('searchmedi')
@@ -595,8 +738,7 @@ function attachSearchListeners() {
   setupBtnEvent(navSearchBtn, navSearchInput)
 }
 
-attachSearchListeners()
-
+// Handle request
 function handleRequest(btn, serviceId, shopEmail) {
   const isLoggedIn = document.body.getAttribute('data-logged-in') === 'true'
   if (!isLoggedIn) { window.location.href = '/login'; return }
@@ -609,6 +751,7 @@ function handleRequest(btn, serviceId, shopEmail) {
   form.submit()
 }
 
+// Handle request from popup
 function handleRequestFromPopup(serviceId, shopEmail) {
   const isLoggedIn = document.body.getAttribute('data-logged-in') === 'true'
   if (!isLoggedIn) { window.location.href = '/login'; return }
@@ -621,4 +764,7 @@ function handleRequestFromPopup(serviceId, shopEmail) {
   form.submit()
 }
 
-log('info', 'Home.js loaded successfully')
+// Initialize search listeners
+attachSearchListeners()
+
+log('info', 'Home.js (MapLibre) loaded successfully')
