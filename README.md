@@ -33,6 +33,7 @@ A full-stack web application for finding emergency medicines and managing pharma
 | **Manual Backups** | Admin can trigger, download, and delete database backups on demand |
 | **Admin Dashboard** | Users, shops, inventory, transfers, and backup management |
 | **Contact System** | Contact form for user inquiries |
+| **Location Tracking** | Shopkeepers can set their latitude/longitude on their profile |
 
 ---
 
@@ -116,23 +117,33 @@ The application has three distinct user roles:
 | Action | User | Shopkeeper | Admin |
 |--------|------|-----------|-------|
 | Browse medicines & services | Yes | Yes | Yes |
-| Request medicines | Yes | — | — |
-| Manage own inventory stock | — | Yes | — |
-| Manage suppliers | — | Yes | — |
-| Record purchases (with batch/expiry) | — | Yes | — |
-| Record sales (with profit calculation) | — | Yes | — |
-| Record expenses (by category) | — | Yes | — |
-| View profit/loss reports | — | Yes | — |
-| Export own data (JSON / CSV) | — | Yes | — |
-| Update profile location (lat/lng) | — | Yes | — |
-| Approve/hold medicine requests | — | Yes | Yes |
-| View all inventories | — | — | Yes |
-| Manage stock transfers | — | — | Yes |
-| Manage users & shopkeepers | — | — | Yes |
-| Verify/hold shopkeeper accounts | — | — | Yes |
+| Search medicines with autocomplete | Yes | Yes | Yes |
+| Request medicines from shops | Yes | — | — |
+| Upload prescription with requests | Yes | — | — |
+| View own request history | Yes | — | — |
+| Delete own requests | Yes | — | — |
+| Update own profile | Yes | — | — |
+| View incoming medicine requests | — | Yes | Yes |
+| Approve / hold medicine requests | — | Yes | Yes |
+| Manage own inventory (add/view/update stock) | — | Yes | — |
+| Manage medicine catalog (shop-level) | — | Yes | — |
+| **Pharmacy: Manage suppliers** | — | Yes | — |
+| **Pharmacy: Record purchases (multi-item with batch/expiry)** | — | Yes | — |
+| **Pharmacy: Record sales (multi-item with profit calc)** | — | Yes | — |
+| **Pharmacy: Record expenses by category** | — | Yes | — |
+| **Pharmacy: View profit/loss reports** | — | Yes | — |
+| **Pharmacy: View monthly summary** | — | Yes | — |
+| **Pharmacy: Export data (JSON / CSV)** | — | Yes | — |
+| Update shop location (lat/lng) | — | Yes | — |
+| Update shop profile picture | — | Yes | — |
+| View all shop inventories | — | — | Yes |
+| Filter inventory by shop | — | — | Yes |
+| Manage stock transfers between shops | — | — | Yes |
+| Manage all users & shopkeepers | — | — | Yes |
+| Verify / hold / block shopkeeper accounts | — | — | Yes |
 | Add master medicine catalog | — | — | Yes |
-| Run manual database backup | — | — | Yes |
-| List / download / delete backups | — | — | Yes |
+| Trigger / download / delete database backups | — | — | Yes |
+| Submit contact form | Yes | Yes | Yes |
 
 ---
 
@@ -187,6 +198,7 @@ emergency-medicine-finder/
 ├── docs/
 │   ├── API.md                 # Full API reference
 │   ├── ROLES.md               # User roles & permissions guide
+│   └── SECURITY.md            # Security architecture & hardening guide
 │
 ├── tests/
 │   ├── controllers/           # UserController tests
@@ -358,7 +370,7 @@ emergency-medicine-finder/
 
 ## Database Schema
 
-### Tables (18 total)
+### Tables (17 total)
 
 | Table | Description |
 |-------|-------------|
@@ -379,7 +391,6 @@ emergency-medicine-finder/
 | `sales` | Sales transactions (retail/wholesale/prescription) |
 | `sale_items` | Sale line items with cost price and profit |
 | `daily_summary` | Daily profit/loss summary |
-| `contact_messages` | Contact form submissions |
 
 ### Status Codes
 
@@ -404,8 +415,8 @@ Create a `.env` file from `.env.sample`:
 | `DB_HOST` | MySQL host | `localhost` |
 | `DB_USER` | MySQL username | `root` |
 | `DB_NAME` | Database name | `emergency_medicine` |
-| `DB_PASS` | MySQL password | |
-| `PORT` | Server port | `3480` |
+| `DB_PASS` | MySQL password | _(empty)_ |
+| `PORT` | Server port | `4000` |
 | `JWT_SECRET` | JWT signing secret | |
 | `COOKIE_NAME` | Session cookie name | `token` |
 | `COOKIE_SECRET` | Cookie signing secret | |
