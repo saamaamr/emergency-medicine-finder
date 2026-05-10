@@ -90,7 +90,7 @@ npm start          # production
 npm run dev        # development (nodemon + auto-kill-port)
 ```
 
-Access at `http://localhost:4000`
+Access at `http://localhost:3000`
 
 ---
 
@@ -416,11 +416,11 @@ Create a `.env` file from `.env.sample`:
 | `DB_USER` | MySQL username | `root` |
 | `DB_NAME` | Database name | `emergency_medicine` |
 | `DB_PASS` | MySQL password | _(empty)_ |
-| `PORT` | Server port | `4000` |
+| `PORT` | Server port | `3000` |
 | `JWT_SECRET` | JWT signing secret | |
 | `COOKIE_NAME` | Session cookie name | `token` |
 | `COOKIE_SECRET` | Cookie signing secret | |
-| `BASE_URL` | App base URL (for email links) | `http://localhost:4000` |
+| `BASE_URL` | App base URL (for email links) | `http://localhost:3000` |
 | `SESSION_EXPIRY_HOURS` | Active session lifetime | `8` |
 | `BROWSER_SECRET` | Secret for browser key hashing | |
 | `SMTP_HOST` | SMTP server for emails | `smtp.gmail.com` |
@@ -520,7 +520,7 @@ The database seed includes the following test accounts (all `status = 1`, no ema
 
 ```bash
 # Windows
-netstat -ano | findstr :4000
+netstat -ano | findstr :3000
 # or use the kill script
 npm run kill
 ```
