@@ -1,162 +1,109 @@
 <%- include ('../template/aheader') %>
 
-    <section class="main">
-        <div class="sidebar">
-            <ul class="sidebar--items">
-                <li>
-                    <a href="/admin">
-                        <span class="icon icon-1"><i class="ri-layout-grid-line"></i></span>
-                        <span class="sidebar--item">Dashboard</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/service" id="active--link">
-                        <span class="icon icon-2"><i class="ri-git-repository-line"></i></span>
-                        <span class="sidebar--item">Medicine</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/user">
-                        <span class="icon icon-4"><i class="ri-user-line"></i></span>
-                        <span class="sidebar--item">User</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/worker">
-                        <span class="icon icon-7"><i class="ri-user-2-line"></i></span>
-                        <span class="sidebar--item" style="white-space: nowrap;">Shopkeeper</span>
-                    </a>
-                </li>
-                
-            </ul>
-            <ul class="sidebar--bottom-items">
+<section class="main">
+  <div class="sidebar">
+    <ul class="sidebar--items">
+      <li><a href="/admin"><span class="icon icon-1"><i class="ri-layout-grid-line"></i></span><span class="sidebar--item">Dashboard</span></a></li>
+      <li><a href="/service" id="active--link"><span class="icon icon-2"><i class="ri-git-repository-line"></i></span><span class="sidebar--item">Medicine</span></a></li>
+      <li><a href="/admin/inventory"><span class="icon icon-3"><i class="ri-store-2-line"></i></span><span class="sidebar--item">Inventory</span></a></li>
+      <li><a href="/admin/transfers"><span class="icon icon-4"><i class="ri-exchange-line"></i></span><span class="sidebar--item">Transfers</span></a></li>
+      <li><a href="/user"><span class="icon icon-5"><i class="ri-user-line"></i></span><span class="sidebar--item">User</span></a></li>
+      <li><a href="/shopkeeper"><span class="icon icon-6"><i class="ri-user-2-line"></i></span><span class="sidebar--item" style="white-space: nowrap;">Shopkeeper</span></a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/adminlogout"><span class="icon icon-8"><i class="ri-logout-box-r-line"></i></span><span class="sidebar--item">Logout</span></a></li>
+    </ul>
+  </div>
 
-                <li>
-                    <a href="/adminlogout">
-                        <span class="icon icon-8"><i class="ri-logout-box-r-line"></i></span>
-                        <span class="sidebar--item">Logout</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <div class="main--content">
-            <div class="service">
-                <div class="title">
-                    <h2 class="section--title">Add Medicine</h2>
-                </div>
-                <div class="container">
-                    <form action="/add-medi" method="post">
-                        <div class="mb-3 col-12">
-                            <div class="md-3 row">
-                                <div class="md-3 col">
-                                    <label for="mediname" class="col-form-label">Medicine Name</label>
-                                    <div>
-                                        <div>
-                                            <input type="text" class="form-control" placeholder="Enter Medicine Title"
-                                                name="mediname">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="md-3 col">
-                                    <label for="type" class="col-form-label">Type of Medicine</label>
-                                    <div>
-                                        <select class="form-select" id="type" aria-label="Default select example" name="meditype">
-                                            <option selected>Select Medicine Type:</option>
-                                            <option value="Tablet">Tablet</option>
-                                            <option value="Capsule">Capsule</option>
-                                            <option value="Suppositorie">Suppositorie</option>
-                                            <option value="Drop">Drop</option>
-                                            <option value="Inhaler">Inhaler</option>
-                                            <option value="Injection">Injection</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3 col-12">
-                            <div class="md-3 row">
-                                <div class="md-3 col">
-                                    <label for="medistrength" class="col-form-label">Strength</label>
-                                    <div>
-                                        <div>
-                                            <input type="text" class="form-control" placeholder="100mg"
-                                                name="medistrength">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="md-3 col">
-                                    <label for="quantity" class="col-form-label">Generic Name</label>
-                                    <div>
-                                        <div>
-                                            <input type="text" class="form-control" placeholder="Enter Generic Name"
-                                                name="medigeneric">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3 col-12">
-                            <label for="price" class="form-label">Company Name</label>
-                            <input type="text" class="form-control" placeholder="Enter Company Name" name="medicompany">
-                        </div>                        
-                        <!-- button -->
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-primary">Submit</button>
-                        </div>
-                    </form>
-                </div>
+  <div class="main--content">
+    <!-- Add Medicine Form -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body p-4">
+        <h5 class="section--title mb-3"><i class="ri-add-circle-line me-1"></i>Add Medicine</h5>
+        <form action="/add-medi" method="post">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="form-floating">
+                <input type="text" class="form-control" name="mediname" placeholder="Medicine Name" required>
+                <label>Medicine Name</label>
+              </div>
             </div>
-            <div class="recent--worker">
-                <div class="title">
-                    <h2 class="section--title">Medicine List</h2>
-                </div>
-                <div class="table">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Strength</th>
-                                <th>Geenric Name</th>
-                                <th>Company</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% allService.map(service=>{ %>
-                                <tr>
-                                    <th scope="row">
-                                        <%= service.name%>
-                                    </th>
-                                    <td>
-                                        <%= service.type%>
-                                    </td>
-                                    <td>
-                                        <%= service.strength%>
-                                    </td>
-                                    <td>
-                                        <%= service.generic%>
-                                    </td>
-                                    <td>
-                                        <%= service.company%>
-                                    </td>
-                                    
-
-                                </tr>
-                                <% }) %>
-
-
-                        </tbody>
-                    </table>
-                </div>
+            <div class="col-md-3">
+              <div class="form-floating">
+                <select class="form-select" name="meditype" id="meditype">
+                  <option value="Tablet">Tablet</option>
+                  <option value="Capsule">Capsule</option>
+                  <option value="Syrup">Syrup</option>
+                  <option value="Injection">Injection</option>
+                  <option value="Inhaler">Inhaler</option>
+                  <option value="Gel">Gel</option>
+                  <option value="Lozenges">Lozenges</option>
+                </select>
+                <label>Type</label>
+              </div>
             </div>
+            <div class="col-md-3">
+              <div class="form-floating">
+                <input type="text" class="form-control" name="medistrength" id="medistrength" placeholder="Strength" required>
+                <label>Strength</label>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-floating">
+                <input type="text" class="form-control" name="medigeneric" id="medigeneric" placeholder="Generic" required>
+                <label>Generic</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-floating">
+                <input type="text" class="form-control" name="medicompany" id="medicompany" placeholder="Company" required>
+                <label>Company</label>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100 h-100">
+                <i class="ri-add-line"></i> Add
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Medicine List -->
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-0">
+        <div class="p-3 border-bottom">
+          <h5 class="section--title mb-0"><i class="ri-database-2-line me-1"></i>Medicine Catalog</h5>
         </div>
-    </section>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Strength</th>
+                <th>Generic</th>
+                <th>Company</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% allService.map(service=>{ %>
+                <tr>
+                  <td class="fw-500"><%= service.name %></td>
+                  <td><span class="badge bg-light text-dark"><%= service.type %></span></td>
+                  <td><%= service.strength %></td>
+                  <td><%= service.generic %></td>
+                  <td class="text-muted small"><%= service.company %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <script src="/js/service.js"></script>
-
-    <script>
-         
-    </script>
+<script src="/js/service.js"></script>
+<%- include ('../template/alfooter') %>

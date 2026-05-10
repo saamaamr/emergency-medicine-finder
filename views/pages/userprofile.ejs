@@ -1,52 +1,60 @@
 <%- include ('../template/header') %>
-  <%- include ('../template/nav') -%>
-    <!-- about section -->
+<%- include ('../template/nav') -%>
 
-    <section class="about_section layout_padding">
-      <div class="container  ">
-        <div class="row">
-          <div class="col-md-6 ">
-            <div class="img-profile-box">
-              <img src="uploads/<%= userData[0].propic%>" alt="">
+<section class="layout_padding">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-4 mb-4">
+              <img src="uploads/<%= userData[0].propic %>" alt="Profile" 
+                   class="rounded-circle border border-3 border-primary" 
+                   style="width: 100px; height: 100px; object-fit: cover;">
+              <div>
+                <h3 class="mb-1"><%= userData[0].first_name %> <span><%= userData[0].last_name %></span></h3>
+                <p class="text-muted mb-0"><i class="ri-mail-line me-1"></i><%= userData[0].email %></p>
+                <span class="badge bg-<%= userData[0].status == 1 ? 'success' : 'warning' %> mt-1">
+                  <%= userData[0].status == 1 ? 'Active' : 'Pending' %>
+                </span>
+              </div>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="detail-box">
-              <div class="heading_container">
-                <h2>
-                  <%= userData[0].first_name %> <span>
-                      <%= userData[0].last_name %>
-                    </span>
-                </h2>
+            <hr>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <p class="mb-1 text-muted small">Phone</p>
+                <p class="fw-semibold"><i class="ri-phone-line me-1 text-primary"></i><%= userData[0].phone %></p>
               </div>
-              <div class="profile_container">
-                <p>
-                  <span>email: </span>
-                  <%= userData[0].email %>
-                </p>
-                <p>
-                  <span>Address: </span>
-                  House: <%= userData[0].house %>, Road: <%= userData[0].road %>, Thana/Upazila: <%= userData[0].upazila
-                        %>,     Zila: <%= userData[0].zila %>.
-                </p>
-                <p>
-                  <span>phone: </span>
-                  <%= userData[0].phone %>
+              <div class="col-md-6">
+                <p class="mb-1 text-muted small">Gender</p>
+                <p class="fw-semibold"><i class="ri-user-line me-1 text-primary"></i><%= userData[0].gender %></p>
+              </div>
+              <div class="col-12">
+                <p class="mb-1 text-muted small">Address</p>
+                <p class="fw-semibold">
+                  <i class="ri-map-pin-line me-1 text-primary"></i>
+                  House: <%= userData[0].house %>, Road: <%= userData[0].road %><br>
+                  <%= userData[0].upazila %>, <%= userData[0].zila %>, <%= userData[0].division %>
                 </p>
               </div>
-              <a href="/userupdate">
-                Edit Profile
+            </div>
+            <hr>
+            <div class="d-flex gap-3 flex-wrap">
+              <a href="/userupdate" class="btn btn-primary">
+                <i class="ri-edit-line me-1"></i>Edit Profile
               </a>
-              <a href="/req" style="background-color: blueviolet;">
-                My Request
+              <a href="/req" class="btn btn-outline-primary">
+                <i class="ri-file-list-3-line me-1"></i>My Requests
               </a>
-              
-
+              <a href="/logout" class="btn btn-outline-danger ms-auto">
+                <i class="ri-logout-box-r-line me-1"></i>Logout
+              </a>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <!-- end about section -->
-    <%- include("../template/footer"); -%>
+<%- include("../template/footer"); -%>

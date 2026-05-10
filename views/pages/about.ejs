@@ -1,57 +1,25 @@
 <%- include ('../template/header') %>
+<%- include ('../template/nav') -%>
 
-  <%- include ('../template/nav') -%>
-
-
-    <!-- about section -->
-
-    <section class="about_section layout_padding">
-      <div class="container  ">
-        <div class="row">
-          <div class="col-md-6 ">
-            <div class="img-box">
-              <img src="images/about-img.jpg" alt="">
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="detail-box">
-              <div class="heading_container">
-                <h2>
-                  Find <span>Medicine</span>
-                </h2>
-              </div>
-              <p>
-                Emergency Medicine Finder is a web application that allows users to quickly and easily find the medicine
-                they need in the nearest pharmacy. This project aims to simplify the process of finding emergency
-                medicine, which can often be a time-sensitive and stressful situation.
-              </p>
-              <p>             
-                Our web application provides a user-friendly interface where users can search for the medicine they need
-                and see a list of nearby pharmacies that carry the medicine. The system uses real-time data to ensure
-                that the information displayed is accurate and up-to-date.
-              </p>
-            </div>
-          </div>
+<section class="layout_padding">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-md-6">
+        <img src="images/about-img.jpg" alt="About EMF" class="img-fluid rounded-4 shadow">
+      </div>
+      <div class="col-md-6">
+        <div class="heading_container mb-4">
+          <h2>Find <span>Medicine</span> Fast</h2>
+        </div>
+        <p class="mb-3">Emergency Medicine Finder is a web application that allows users to quickly and easily find the medicine they need in the nearest pharmacy. This project aims to simplify the process of finding emergency medicine, which can often be a time-sensitive and stressful situation.</p>
+        <p class="mb-4">Our web application provides a user-friendly interface where users can search for the medicine they need and see a list of nearby pharmacies that carry the medicine. The system uses real-time data to ensure that the information displayed is accurate and up-to-date.</p>
+        <div class="d-flex gap-3">
+          <a href="/service" class="btn btn-primary">Browse Medicines</a>
+          <a href="/contact" class="btn btn-outline-primary">Contact Us</a>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <!-- end about section -->
-
-    <%- include ('../template/footer') %>
-
-
-      <!-- jQery -->
-      <script src="js/jquery-3.4.1.min.js"></script>
-      <!-- popper js -->
-      <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-        crossorigin="anonymous"></script>
-      <!-- bootstrap js -->
-      <script src="js/bootstrap.js"></script>
-      <!-- custom js -->
-      <script src="js/custom.js"></script>
-
-      </body>
-
-      </html>
+<%- include("../template/footer"); -%>

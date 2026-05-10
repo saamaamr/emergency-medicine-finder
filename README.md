@@ -1,111 +1,286 @@
 # Emergency Medicine Finder
 
-A web application for finding emergency medicines and medical services. Users can request medicines from nearby shops, workers can manage their inventory, and administrators can oversee the system.
+A web application for finding emergency medicines and medical services in Bangladesh. Users can search for medicines across local pharmacies, request them from nearby shops, and manage their healthcare needs.
+
+## Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [User Roles](#user-roles)
+- [Project Structure](#project-structure)
+- [API Reference](#api-reference)
+- [Database Schema](#database-schema)
+- [Configuration](#configuration)
+- [Testing](#testing)
+- [Sample Accounts](#sample-accounts)
+- [Contributing](#contributing)
+- [Troubleshooting](#troubleshooting)
+
+---
 
 ## Features
 
-- User registration and authentication
-- Medicine request system
-- Worker/medicine shop management
-- Admin dashboard for overseeing users, workers, and services
-- Medicine search functionality
-- Profile management
-- Service booking system
-- Responsive design with EJS templating
+| Category | Description |
+|----------|-------------|
+| **Authentication** | User, shopkeeper, and admin registration with email verification |
+| **Medicine Search** | Search medicines across shops with autocomplete suggestions |
+| **Medicine Requests** | Users request medicines from specific shops with prescription upload |
+| **Inventory Management** | Shopkeepers manage their medicine stock and pricing |
+| **Admin Dashboard** | Overview of users, shops, inventory, and stock transfers |
+| **Stock Transfers** | Admin-initiated medicine transfers between shops |
+| **Contact System** | Contact form for user inquiries |
 
-## Technology Stack
+---
 
-- **Backend**: Node.js, Express.js
-- **Frontend**: EJS templating, HTML/CSS/JavaScript
-- **Database**: MySQL
-- **Authentication**: JWT (JSON Web Tokens), bcryptjs for password hashing
-- **Session Management**: Express-session
-- **File Uploads**: Multer
-- **Validation**: Express-validator
-- **Email**: Nodemailer for account verification
+## Quick Start
 
-## Installation
+### 1. Install Dependencies
 
-### Prerequisites
+```bash
+npm install
+```
 
-- Node.js (v14 or higher)
-- MySQL Server
-- npm (Node Package Manager)
+### 2. Configure Environment
 
-### Setup Instructions
+```bash
+cp .env.sample .env
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd emergency-medicine-finder
-   ```
+Edit `.env` with your settings (see [Configuration](#configuration)).
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 3. Setup Database
 
-3. **Setup MySQL Database**
-   - Ensure MySQL server is running
-   - Create the database and tables using the provided setup script:
-     ```bash
-     mysql -u root -p < database_setup.sql
-     ```
-   - Alternatively, source the file in MySQL:
-     ```sql
-     SOURCE /path/to/emergency-medicine-finder/database_setup.sql;
-     ```
+```bash
+mysql -u root -p < database_setup.sql
+```
 
-4. **Configure Environment Variables**
-   - Copy `.env.sample` to `.env`:
-     ```bash
-     cp .env.sample .env
-     ```
-   - Edit `.env` file with your configuration:
-     ```
-     DB_HOST=localhost
-     DB_USER=root
-     DB_NAME=emergency_medicine
-     DB_PASS=your_mysql_password
-     PORT=3440
-     JWT_SECRET=your_jwt_secret_key_here
-     COOKIE_NAME=token
-     COOKIE_SECRET=your_cookie_secret_key_here
-     BASE_URL=http://localhost:3440
-     ```
+### 4. Start Server
 
-5. **Start the application**
-   ```bash
-   npm start
-   ```
-   Or directly with Node.js:
-   ```bash
-   node app.js
-   ```
+```bash
+npm start
+```
 
-6. **Access the application**
-   Open your browser and navigate to: `http://localhost:3440`
+Access at `http://localhost:3440`
 
-## Database Setup
+---
 
-The project includes a `database_setup.sql` file that creates:
-- Database: `emergency_medicine`
-- Tables:
-  - `users` - Patient/user information
-  - `worker` - Medicine shop/worker information
-  - `medicine` - Generic medicine catalog
-  - `shopmedicine` - Medicines available at specific shops
-  - `medicine_request` - Medicine requests from users to shops
-  - `org_service` - Organization services offered
-  - `admin` - Administrator accounts
-- Sample data for services and an admin account
-- Indexes for performance optimization
+## User Roles
 
-Default admin credentials:
-- Email: admin@emf.com
-- Password: admin123 (hashed in database)
+The application has three distinct user roles:
 
-## Environment Variables
+| Role | Description | Dashboard |
+|------|-------------|-----------|
+| **User** | Patients seeking medicines | `/profile`, `/req` |
+| **Shopkeeper** | Pharmacy owners managing inventory | `/shopkeeperdesh`, `/servicereq` |
+| **Admin** | System administrators | `/admin`, `/admin/inventory` |
+
+### Quick Reference — Login URLs
+
+| Role | Login Page | After Login |
+|------|-----------|-------------|
+| User | `/login` | Home page with user menu |
+| Shopkeeper | `/shopkeeperlogin` | Shopkeeper dashboard |
+| Admin | `/admin` | Admin dashboard |
+
+### Role Permissions
+
+| Action | User | Shopkeeper | Admin |
+|--------|------|-----------|-------|
+| View services | Yes | Yes | Yes |
+| Request medicines | Yes | — | — |
+| Manage own inventory | — | Yes | — |
+| View all inventories | — | — | Yes |
+| Approve requests | — | Yes | Yes |
+| Create stock transfers | — | — | Yes |
+| Manage users | — | — | Yes |
+| Verify accounts | — | — | Yes |
+
+---
+
+## Project Structure
+
+```
+emergency-medicine-finder/
+├── app.js                    # Application entry point
+├── package.json              # Dependencies and scripts
+├── .env                      # Environment variables
+├── .env.sample               # Environment template
+├── jest.config.js            # Jest configuration
+│
+├── config/
+│   └── database.js           # MySQL connection pool
+│
+├── controllers/
+│   └── UserController.js      # All business logic handlers
+│
+├── middleware/
+│   ├── AuthMiddleware.js      # JWT auth & role guards
+│   ├── errorHandler.js        # Global error handling
+│   ├── decoratorHtmlResponse.js
+│   ├── decorateHtmlResponse.js
+│   └── validator/
+│       └── userValidator.js   # Input validation rules
+│
+├── models/
+│   └── UserModels.js          # Database query functions
+│
+├── routers/
+│   └── routes.js              # All route definitions
+│
+├── public/
+│   ├── CSS/                   # Stylesheets
+│   ├── JS/                    # Client-side scripts
+│   └── uploads/               # Uploaded files (profiles, prescriptions, NIDs)
+│
+├── views/
+│   ├── pages/                 # Page templates (home, login, dashboard, etc.)
+│   └── template/              # Reusable components (header, footer, navbar)
+│
+├── database_setup.sql         # Complete schema and seed data
+├── test_data_dhaka.sql        # Sample data for Dhaka region
+├── test_data_chattogram.sql   # Sample data for Chattogram region
+│
+└── tests/                     # Test suite
+```
+
+---
+
+## API Reference
+
+### Authentication
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/login` | User login page | — |
+| `POST` | `/login` | User login (email, pass) | — |
+| `GET` | `/logout` | User logout | User |
+| `GET` | `/shopkeeperlogin` | Shopkeeper login page | — |
+| `POST` | `/shopkeeperlogin` | Shopkeeper login | — |
+| `GET` | `/shopkeeperlogout` | Shopkeeper logout | Shopkeeper |
+| `GET` | `/admin` | Admin dashboard | Admin |
+| `POST` | `/alogin` | Admin login | — |
+| `GET` | `/adminlogout` | Admin logout | Admin |
+
+### User Management
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/signup` | User registration page | — |
+| `POST` | `/signup` | User registration | — |
+| `GET` | `/profile` | User profile page | User |
+| `GET` | `/userupdate` | Edit profile page | User |
+| `POST` | `/userupdate` | Update profile | User |
+
+### Shopkeeper Management
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/shopkeepersignup` | Shopkeeper registration | — |
+| `POST` | `/shopkeepersignup` | Shopkeeper registration | — |
+| `GET` | `/shopkeeperdesh` | Shopkeeper dashboard | Shopkeeper |
+| `GET` | `/mediupdate` | Inventory update page | Shopkeeper |
+| `POST` | `/add-medicine` | Add medicine to inventory | Shopkeeper |
+
+### Medicine & Services
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/service` | View all services/medicines | — |
+| `GET` | `/medicine` | Get medicine details by ID | — |
+| `GET` | `/searchmedicine` | Search medicines across shops | — |
+| `GET` | `/medicine-suggestions` | Autocomplete suggestions | — |
+| `POST` | `/book-service` | Book a service | User |
+| `POST` | `/admin/add-medi` | Add master medicine catalog | Admin |
+
+### Medicine Requests
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/req` | User's medicine requests | User |
+| `GET` | `/request/:service_id` | Request specific medicine | User |
+| `POST` | `/request` | Submit medicine request | User |
+| `GET` | `/delete-medicine-request/:id` | Delete own request | User |
+| `GET` | `/servicereq` | Incoming requests for shop | Shopkeeper |
+| `GET` | `/verify-medicine-request/:id` | Approve request | Shopkeeper |
+| `GET` | `/hold-medicine-request/:id` | Hold request | Shopkeeper |
+
+### Admin & Inventory
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/admin/inventory` | View all shop inventories | Admin |
+| `GET` | `/admin/shop-inventory` | Filter inventory by shop | Admin |
+| `GET` | `/admin/transfers` | View stock transfers | Admin |
+| `POST` | `/admin/create-transfer` | Create stock transfer | Admin |
+| `GET` | `/admin/approve-transfer/:id` | Approve transfer | Admin |
+| `GET` | `/admin/reject-transfer/:id` | Reject transfer | Admin |
+
+### Account Verification
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/verify-account/:id` | Verify user account | — |
+| `GET` | `/verify-shopkeeper-account/:id` | Verify shopkeeper | Admin |
+| `GET` | `/hold-shopkeeper-account/:id` | Hold shopkeeper account | Admin |
+
+### Pages
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Home page |
+| `GET` | `/home` | Home page |
+| `GET` | `/about` | About page |
+| `GET` | `/contact` | Contact page |
+| `POST` | `/contact` | Submit contact form |
+| `GET` | `/offer` | Special offers page |
+| `GET` | `/booked` | User's booked services |
+| `GET` | `/user` | View all users (admin) |
+| `GET` | `/shopkeeper` | View all shopkeepers (admin) |
+
+### Query Parameters (GET APIs)
+
+| Endpoint | Parameters | Description |
+|----------|------------|-------------|
+| `/medicine` | `mid` | Get medicine by ID |
+| `/searchmedicine` | `mname` | Search medicine name |
+| `/medicine-suggestions` | `q` | Prefix for autocomplete |
+| `/admin/shop-inventory` | `email` | Filter by shop email |
+| `/admin/shop-inventory-json` | `email` | JSON view of shop inventory |
+
+---
+
+## Database Schema
+
+### Tables
+
+| Table | Description |
+|-------|-------------|
+| `users` | Patient/user accounts with address and profile |
+| `worker` | Shopkeeper accounts with shop details and location |
+| `medicine` | Master medicine catalog (name, type, strength, generic, company) |
+| `shopmedicine` | Shop-specific inventory (stock, price per shop) |
+| `medicine_request` | User requests to shops (status: pending/approved/on hold) |
+| `org_service` | Available services (medicine delivery, consultation, etc.) |
+| `admin` | Administrator accounts |
+| `stock_transfer` | Inter-shop medicine transfer records |
+| `contact_messages` | Contact form submissions |
+
+### Status Codes
+
+| Table | Field | Values |
+|-------|-------|--------|
+| `users` | `status` | `0` = inactive, `1` = active |
+| `worker` | `status` | `0` = pending, `1` = active, `2` = held |
+| `medicine_request` | `status` | `0` = pending, `1` = approved, `2` = on hold |
+| `stock_transfer` | `status` | `pending`, `approved`, `rejected` |
+
+---
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file based on `.env.sample`:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
@@ -114,137 +289,149 @@ Default admin credentials:
 | `DB_NAME` | Database name | `emergency_medicine` |
 | `DB_PASS` | MySQL password | `your_password` |
 | `PORT` | Server port | `3440` |
-| `JWT_SECRET` | Secret for JWT signing | `your_secret_key` |
-| `COOKIE_NAME` | Cookie name | `token` |
-| `COOKIE_SECRET` | Secret for cookie signing | `your_cookie_secret` |
-| `BASE_URL` | Base URL for the application | `http://localhost:3440` |
+| `JWT_SECRET` | JWT signing secret | `your_secret_key` |
+| `COOKIE_NAME` | Session cookie name | `token` |
+| `COOKIE_SECRET` | Cookie signing secret | `your_cookie_secret` |
+| `BASE_URL` | Application base URL | `http://localhost:3440` |
+| `SMTP_HOST` | SMTP server host | `smtp.gmail.com` |
+| `SMTP_PORT` | SMTP server port | `465` |
+| `SMTP_USER` | SMTP username | `your_email@gmail.com` |
+| `SMTP_PASS` | SMTP password | `your_app_password` |
 
-## API Endpoints
+### Required Dependencies
 
-### Authentication
-- `GET /login` - Login page
-- `POST /login` - Process login
-- `GET /workerlogin` - Worker login page
-- `POST /workerlogin` - Process worker login
-- `GET /logout` - User logout
-- `GET /workerlogout` - Worker logout
-- `GET /adminlogout` - Admin logout
+- Node.js v14 or higher
+- MySQL Server
 
-### User Management
-- `GET /signup` - User registration page
-- `POST /signup` - Process user registration
-- `GET /profile` - User profile
-- `GET /userupdate` - Edit user profile
-- `POST /userupdate` - Update user profile
+---
 
-### Worker Management
-- `GET /workersignup` - Worker registration page
-- `POST /workersignup` - Process worker registration
-- `GET /worker` - Worker dashboard
-- `GET /workerdesh` - Worker dashboard alternative
-- `GET /mediupdate` - Update medicine inventory
-- `POST /mediupdate` - Process medicine inventory update
+## Testing
 
-### Medicine Requests
-- `GET /servicereq` - View medicine requests (for workers)
-- `GET /request` - View user's medicine requests
-- `GET /req` - Request medicine
-- `POST /request` - Submit medicine request
-- `GET /verify-medicine-request/:id` - Verify medicine request
-- `GET /hold-medicine-request/:id` - Hold medicine request
-- `GET /delete-medicine-request/:id` - Delete medicine request
+### Run Tests
 
-### Services
-- `GET /service` - View available services
-- `GET /medicine` - Get medicine details
-- `GET /searchmedicine` - Search medicines
-- `POST /book-service` - Book a service
+```bash
+npm test
+```
+
+### Watch Mode
+
+```bash
+npm run test:watch
+```
+
+### Test Configuration
+
+Jest is configured via `jest.config.js`. The test suite uses:
+- `supertest` for HTTP assertions
+- `jest` as the test runner
+
+---
+
+## Sample Accounts
+
+The database seed includes the following test accounts:
 
 ### Admin
-- `GET /admin` - Admin dashboard
-- `POST /alogin` - Admin login
 
-### Verification
-- `GET /verify-account/:id` - Verify user account
-- `GET /verify-worker-account/:id` - Verify worker account
-- `GET /hold-worker-account/:id` - Hold worker account
+| Email | Password |
+|-------|----------|
+| `admin@emf.com` | `admin123` |
 
-## Security Features
+### Users (Patients)
 
-- **SQL Injection Prevention**: All database queries use parameterized statements
-- **Password Hashing**: Passwords are hashed using bcryptjs with salt rounds
-- **Input Validation**: All form inputs are validated using express-validator
-- **Session Security**: Secure cookie settings with HTTPOnly flag
-- **Environment Configuration**: Sensitive data stored in environment variables
-- **Account Verification**: Email verification for new accounts
+| Email | Password | Name |
+|-------|----------|------|
+| `rahim@email.com` | `user123` | Rahim Miah |
+| `fatima@email.com` | `user123` | Fatima Begum |
+| `karim@email.com` | `user123` | Karim Hossain |
 
-## Project Structure
+### Shopkeepers (Pharmacies)
 
-```
-emergency-medicine-finder/
-├── app.js                 # Main application entry point
-├── package.json           # Project dependencies and scripts
-├── .env                   # Environment variables (not in version control)
-├── .env.sample            # Environment variables template
-├── database_setup.sql     # Database schema and initial data
-├── README.md              # This file
-├── config/
-│   └── database.js        # MySQL database configuration
-├── controllers/
-│   └── UserController.js  # Application logic handlers
-├── middleware/
-│   ├── AuthMiddleware.js  # Authentication middleware
-│   ├── decoratorHtmlResponse.js # Response decoration
-│   ├── errorHandler.js    # Error handling middleware
-│   └── validator/
-│       └── userValidator.js # Input validation rules
-├── models/
-│   └── UserModels.js      # Database interaction models
-├── public/                # Static assets
-│   ├── CSS/               # Stylesheets
-│   ├── JS/                # Client-side JavaScript
-│   └── uploads/           # Uploaded files (profile pictures, etc.)
-├── views/                 # EJS templates
-│   ├── pages/             # Main page templates
-│   └── template/          # Reusable template components (header, footer, etc.)
-└── scratch/               # LocalStorage data (for server-side localStorage)
-```
+| Email | Password | Shop Name | Location |
+|-------|----------|-----------|----------|
+| `haque@pharmacy.com` | `worker123` | Haques Pharmacy | Dhaka, Mirpur |
+| `shahida@medical.com` | `worker123` | Shahida Medical Store | Chattogram, Agrabad |
+| `alam@pharma.com` | `worker123` | Alam Brothers Pharma | Dhaka, Uttara |
+
+> All seed accounts have `status = 1` (active). No email verification required for login.
+
+---
 
 ## Contributing
 
 1. Fork the repository
-2. Create a new branch (`git checkout -b feature/amazing-feature`)
+2. Create a feature branch:
+
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
 3. Make your changes
-4. Commit your changes (`git commit -m 'Add some amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
+4. Run tests:
 
-## License
+   ```bash
+   npm test
+   ```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+5. Commit with a clear message:
 
-## Acknowledgments
+   ```bash
+   git commit -m "Add: brief description of changes"
+   ```
 
-- Inspired by the need for accessible emergency medicine information
-- Built with Node.js and Express.js
-- Uses various open-source packages listed in package.json
+6. Push and open a pull request
+
+---
 
 ## Troubleshooting
 
 ### Database Connection Issues
-- Ensure MySQL service is running
-- Verify credentials in `.env` file
-- Check that the database `emergency_medicine` exists
-- Confirm the user has appropriate permissions
+
+1. Ensure MySQL service is running
+2. Verify credentials in `.env`
+3. Confirm database `emergency_medicine` exists:
+
+   ```sql
+   SHOW DATABASES;
+   USE emergency_medicine;
+   SHOW TABLES;
+   ```
+
+4. Check user permissions:
+
+   ```sql
+   SHOW GRANTS FOR 'root'@'localhost';
+   ```
 
 ### Port Already in Use
-- Change the PORT value in `.env` to an available port
-- Or stop the process using port 3440: `netstat -ano | findstr :3440`
+
+```bash
+# Windows
+netstat -ano | findstr :3440
+
+# Stop the process or change PORT in .env
+```
 
 ### Missing Dependencies
-- Run `npm install` to install all required packages
-- If bcrypt installation fails, ensure you have build tools installed
 
-### LocalStorage Errors
-- The application uses node-localstorage for server-side localStorage simulation
-- Data is stored in the `scratch/` directory
+```bash
+npm install
+```
+
+If bcrypt fails, ensure build tools are installed:
+
+```bash
+npm install --global windows-build-tools
+```
+
+### Session/Cookie Issues
+
+- Clear browser cookies for localhost
+- Verify `COOKIE_SECRET` is set in `.env`
+- Ensure browser allows cookies
+
+---
+
+## License
+
+MIT License

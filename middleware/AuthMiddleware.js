@@ -2,62 +2,147 @@ const jwt = require('jsonwebtoken');
 const UserModels = require('../models/UserModels');
 
 require('dotenv').config();
-/* ==== Require auth ==== */
+
+/* ==== Require auth - any logged in user ==== */
 const requireAuth = (req, res, next) => {
-  const token = req.cookies.jwt
+  const token = req.cookies[process.env.COOKIE_NAME];
 
   if (token) {
-    jwt.verify(token, process.env.JWT_SECRET, (err) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
       if (err) {
+        res.clearCookie(process.env.COOKIE_NAME);
         res.redirect('/login');
       } else {
+        req.user = decodedToken;
         next();
       }
     });
   } else {
-    res.redirect('/login')
+    res.redirect('/login');
   }
-}
-/* ===== check user ====== */
+};
+
+/* ==== Require user role ==== */
+const requireUser = (req, res, next) => {
+  const token = req.cookies[process.env.COOKIE_NAME];
+
+  if (token) {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
+      if (err || decodedToken.role !== 'user') {
+        res.clearCookie(process.env.COOKIE_NAME);
+        res.redirect('/login');
+      } else {
+        req.user = decodedToken;
+        next();
+      }
+    });
+  } else {
+    res.redirect('/login');
+  }
+};
+
+/* ==== Require shopkeeper role ==== */
+const requireShopkeeper = (req, res, next) => {
+  const token = req.cookies[process.env.COOKIE_NAME];
+
+  if (token) {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
+      if (err || decodedToken.role !== 'shopkeeper') {
+        res.clearCookie(process.env.COOKIE_NAME);
+        res.redirect('/shopkeeperlogin');
+      } else {
+        req.user = decodedToken;
+        next();
+      }
+    });
+  } else {
+    res.redirect('/shopkeeperlogin');
+  }
+};
+
+/* ==== Require admin role ==== */
+const requireAdmin = (req, res, next) => {
+  const token = req.cookies[process.env.COOKIE_NAME];
+
+  if (token) {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
+      if (err || decodedToken.role !== 'admin') {
+        res.clearCookie(process.env.COOKIE_NAME);
+        res.redirect('/admin');
+      } else {
+        req.user = decodedToken;
+        next();
+      }
+    });
+  } else {
+    res.redirect('/admin');
+  }
+};
+
+/* ===== check user for templates ====== */
 const checkUser = (req, res, next) => {
-  const token = req.cookies.jwt;
+  const token = req.cookies[process.env.COOKIE_NAME];
 
   if (token) {
     jwt.verify(token, process.env.JWT_SECRET, async (err, decodedToken) => {
       if (err) {
         res.locals.user = null;
+        res.locals.role = null;
         next();
-        res.redirect('/login');
       } else {
-        const user = await UserModels.mailCatchM(decodedToken.userMail);
-        res.locals.user = user;
+        if (decodedToken.role === 'user') {
+          const user = await UserModels.mailCatchM(decodedToken.mail);
+          res.locals.user = user;
+        } else if (decodedToken.role === 'shopkeeper') {
+          const shopkeeper = await UserModels.workermailCatchM(decodedToken.mail);
+          res.locals.user = shopkeeper;
+        } else if (decodedToken.role === 'admin') {
+          res.locals.user = { userid: decodedToken.mail };
+        }
+        res.locals.role = decodedToken.role;
         next();
       }
     });
   } else {
     res.locals.user = null;
-    next()
+    res.locals.role = null;
+    next();
   }
 };
 
-/* ==== check login ==== */
+/* ==== check login - redirect if already logged in ==== */
 const checkCurrentLogin = (req, res, next) => {
-  const token = req.cookies.jwt;
+  const token = req.cookies[process.env.COOKIE_NAME];
 
   if (token) {
-    res.redirect('/');
+    jwt.verify(token, process.env.JWT_SECRET, (err) => {
+      if (!err) {
+        res.redirect('/');
+      } else {
+        next();
+      }
+    });
   } else {
-    // res.redirect('/login');
-    next()
+    next();
   }
-}
+};
+
+/* ==== redirect if already logged in (for login pages) ==== */
 const redirectLoggedIn = (req, res, next) => {
-  const cookie = req.signedCookies[process.env.COOKIE_NAME]
-  if (!cookie) {
-    next()
+  const token = req.cookies[process.env.COOKIE_NAME];
+  if (!token) {
+    next();
   } else {
-    res.redirect('/');
+    jwt.verify(token, process.env.JWT_SECRET, (err) => {
+      if (err) {
+        next();
+      } else {
+        res.redirect('/');
+      }
+    });
   }
-}
-// exports function
-module.exports = { requireAuth, checkUser, checkCurrentLogin, redirectLoggedIn };
+};
+
+module.exports = {
+  requireAuth, requireUser, requireShopkeeper, requireAdmin, checkUser, checkCurrentLogin, redirectLoggedIn,
+};

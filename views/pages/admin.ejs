@@ -1,200 +1,120 @@
 <%- include ('../template/aheader') %>
-    <% if(adminData){ %>
 
-        <section class="main">
-            <div class="sidebar">
-                <ul class="sidebar--items">
-                    <li>
-                        <a href="/admin" id="active--link">
-                            <span class="icon icon-1"><i class="ri-layout-grid-line"></i></span>
-                            <span class="sidebar--item">Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/service">
-                            <span class="icon icon-2"><i class="ri-git-repository-line"></i></span>
-                            <span class="sidebar--item">Medicine</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/user">
-                            <span class="icon icon-4"><i class="ri-user-line"></i></span>
-                            <span class="sidebar--item">User</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/worker">
-                            <span class="icon icon-7"><i class="ri-user-2-line"></i></span>
-                            <span class="sidebar--item" style="white-space: nowrap;">Shopkeeper</span>
-                        </a>
-                    </li>
+<section class="main">
+  <div class="sidebar">
+    <ul class="sidebar--items">
+      <li><a href="/admin" id="active--link">
+        <span class="icon icon-1"><i class="ri-layout-grid-line"></i></span>
+        <span class="sidebar--item">Dashboard</span>
+      </a></li>
+      <li><a href="/service">
+        <span class="icon icon-2"><i class="ri-git-repository-line"></i></span>
+        <span class="sidebar--item">Medicine</span>
+      </a></li>
+      <li><a href="/admin/inventory">
+        <span class="icon icon-3"><i class="ri-store-2-line"></i></span>
+        <span class="sidebar--item">Inventory</span>
+      </a></li>
+      <li><a href="/admin/transfers">
+        <span class="icon icon-4"><i class="ri-exchange-line"></i></span>
+        <span class="sidebar--item">Transfers</span>
+      </a></li>
+      <li><a href="/user">
+        <span class="icon icon-5"><i class="ri-user-line"></i></span>
+        <span class="sidebar--item">User</span>
+      </a></li>
+      <li><a href="/shopkeeper">
+        <span class="icon icon-6"><i class="ri-user-2-line"></i></span>
+        <span class="sidebar--item" style="white-space: nowrap;">Shopkeeper</span>
+      </a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/adminlogout">
+        <span class="icon icon-8"><i class="ri-logout-box-r-line"></i></span>
+        <span class="sidebar--item">Logout</span>
+      </a></li>
+    </ul>
+  </div>
 
-                </ul>
-                <ul class="sidebar--bottom-items">
-
-                    <li>
-                        <a href="/adminlogout">
-                            <span class="icon icon-8"><i class="ri-logout-box-r-line"></i></span>
-                            <span class="sidebar--item">Logout</span>
-                        </a>
-                    </li>
-                </ul>
+  <div class="main--content">
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-3">
+              <i class="ri-user-2-line fs-2 text-primary"></i>
             </div>
-
-
-            <div class="main--content">
-                <div class="overview">
-                    <div class="title">
-                        <h2 class="section--title">Overview</h2>
-                    </div>
-                    <div class="cards">
-                        <div class="card card-4">
-                            <div class="card--data">
-                                <div class="card--content">
-                                    <h5 class="card--title">Total Shopkeeper</h5>
-                                    <h1>
-                                        <%=allWorker.length%>
-                                    </h1>
-                                </div>
-                                <i class="ri-user-2-line card--icon--lg"></i>
-                            </div>
-                        </div>
-                        <div class="card card-2">
-                            <div class="card--data">
-                                <div class="card--content">
-                                    <h5 class="card--title">Total User</h5>
-                                    <h1>
-                                        <%=allUser.length%>
-                                    </h1>
-                                </div>
-                                <i class="ri-user-line card--icon--lg"></i>
-                            </div>
-                        </div>
-                        <div class="card card-3">
-                            <div class="card--data">
-                                <div class="card--content">
-                                    <h5 class="card--title">Medicine Data</h5>
-                                    <h1>
-                                        <%=allService.length%>
-                                    </h1>
-                                </div>
-                                <i class="ri-reserved-line card--icon--lg"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="recent--worker">
-                    <div class="title">
-                        <h2 class="section--title">Recent User</h2>
-                    </div>
-                    <div class="table">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Mobile</th>
-                                    <th>Address</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% allUser.map(user=>{ %>
-
-                                    <tr>
-                                        <td>
-                                            <%=user.first_name%>
-                                                <%=user.last_name%>
-                                        </td>
-                                        <td>
-                                            <%=user.email%>
-                                        </td>
-                                        <td>
-                                            <%=user.phone%>
-                                        </td>
-                                        <td>
-                                            <%=user.house%>, Road No: <%=user.road%>, Division: <%=user.division%>,
-                                                        District:
-                                                        Chattogram, Thana/Upazila: <%=user.upazila%>
-                                        </td>
-
-                                        <%if(user.status==0){%>
-                                            <td class="pending">Pending</td>
-                                            <td>
-                                                <% }else if(user.status==1){ %>
-                                            <td class="confirmed">Active</td>
-
-                                            <% }else{ %>
-                                                <td class="pending">Hold</td>
-
-                                                <% } %>
-
-
-                                    </tr>
-                                    <% }) %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="recent--worker">
-                    <div class="title">
-                        <h2 class="section--title">Recent Shopkeeper</h2>
-                    </div>
-                    <div class="table">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Mobile</th>
-                                    <th>Address</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% allWorker.map(user=>{ %>
-
-                                    <tr>
-                                        <td>
-                                            <%=user.first_name%>
-                                                <%=user.last_name%>
-                                        </td>
-                                        <td>
-                                            <%=user.email%>
-                                        </td>
-                                        <td>
-                                            <%=user.phone%>
-                                        </td>
-                                        <td>
-                                            <%=user.house%>, Road No: <%=user.road%>, Division: <%=user.division%>,
-                                                        District:
-                                                        Chattogram, Thana/Upazila: <%=user.upazila%>
-                                        </td>
-
-                                        <%if(user.status==0){%>
-                                            <td class="pending">Pending</td>
-                                            <td>
-                                                <% }else if(user.status==1){ %>
-                                            <td class="confirmed">Active</td>
-
-                                            <% }else{ %>
-                                                <td class="pending">Hold</td>
-
-                                                <% } %>
-
-
-                                    </tr>
-                                    <% }) %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div>
+              <p class="text-muted mb-1 small">Total Shopkeepers</p>
+               <h3 class="mb-0 fw-bold"><%= allShopkeeper.length %></h3>
             </div>
-        </section>
-        <% } else { %>
-            <%- include ('../template/alheader') -%>
-                <%- include('../template/bottom') -%>
-                    <%- include('../template/alfooter.ejs') -%>
-                        <% } %>
-                            <script src="/js/admin.js"></script>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <div class="bg-success bg-opacity-10 p-3 rounded-3">
+              <i class="ri-user-line fs-2 text-success"></i>
+            </div>
+            <div>
+              <p class="text-muted mb-1 small">Total Users</p>
+              <h3 class="mb-0 fw-bold"><%= allUser.length %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-4">
+            <div class="bg-info bg-opacity-10 p-3 rounded-3">
+              <i class="ri-medicine-bottle-line fs-2 text-info"></i>
+            </div>
+            <div>
+              <p class="text-muted mb-1 small">Total Medicines</p>
+              <h3 class="mb-0 fw-bold"><%= allService.length %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-0">
+        <div class="p-3 border-bottom">
+          <h5 class="section--title mb-0"><i class="ri-user-line me-1"></i>Recent Users</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% allUser.slice(0, 5).forEach(user => { %>
+                <tr>
+                  <td><strong><%= user.first_name %> <%= user.last_name %></strong></td>
+                  <td class="text-muted small"><%= user.email %></td>
+                  <td><%= user.phone %></td>
+                  <td>
+                    <span class="badge <%= user.status == 1 ? 'bg-success' : 'bg-warning' %>">
+                      <%= user.status == 1 ? 'Active' : 'Pending' %>
+                    </span>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../template/alfooter') %>

@@ -1,0 +1,9 @@
+process.env.DB_HOST = 'localhost';
+process.env.DB_USER = 'test_user';
+process.env.DB_NAME = 'test_db';
+process.env.DB_PASS = 'test_pass';
+process.env.PORT = '4001';
+process.env.JWT_SECRET = 'test_jwt_secret';
+process.env.COOKIE_NAME = 'token';
+process.env.COOKIE_SECRET = 'test_cookie_secret';
+process.env.BASE_URL = 'http://localhost:4001';

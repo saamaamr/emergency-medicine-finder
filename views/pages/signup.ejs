@@ -1,152 +1,127 @@
-<%- include("../template/header"); -%>
-  <div class="hero_area">
-    <div class="hero_bg_box">
-      <img src="images/hero-bg.jpg" alt="">
-    </div>
-    <!-- header section strats -->
-    <header class="header_section">
-      <div class="header_bottom">
-        <div class="container">
-          <div class="row">
-            <div class="col-md-12">
-              <div class="full">
-                <nav class="navbar navbar-expand-lg custom_nav-container">
-                  <a class="navbar-brand " href="/home"><img width="120" src="images/logo_main.png" alt="#" /></a>
-
-                  <button class="navbar-toggler" type="button" data-toggle="collapse"
-                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                    <span class=""> </span>
-                  </button>
-
-                  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav">
-                      <li class="nav-item active">
-                        <a class="nav-link" href="/home">Home <span class="sr-only">(current)</span></a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link" href="/about">About</a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="/login" value="user" id="user">User Login</a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="/workerlogin" value="worker" id="worker">Shopkeeper
-                          Login</a>
-                      </li>
-                    </ul>
-                  </div>
-                </nav>
+<%- include("../template/lheader") -%>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <div class="text-center mb-4">
+            <h3 class="contact_heading">User <span>Register</span></h3>
+            <p class="text-muted">Create your account to find medicines near you</p>
+          </div>
+          <form action="/signup" method="post" enctype="multipart/form-data">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control <%= typeof error !== 'undefined' && error.firstName ? 'is-invalid' : '' %>" 
+                    id="firstName" name="firstName" placeholder="First Name"
+                    value="<%= typeof value !== 'undefined' && value.firstName ? value.firstName : '' %>" required>
+                  <label for="firstName"><i class="ri-user-line me-1"></i>First Name</label>
+                  <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.firstName && error.firstName %></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control <%= typeof error !== 'undefined' && error.lastName ? 'is-invalid' : '' %>" 
+                    id="lastName" name="lastName" placeholder="Last Name"
+                    value="<%= typeof value !== 'undefined' && value.lastName ? value.lastName : '' %>" required>
+                  <label for="lastName"><i class="ri-user-line me-1"></i>Last Name</label>
+                  <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.lastName && error.lastName %></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-floating mb-3">
+                  <input type="email" class="form-control <%= typeof error !== 'undefined' && error.email ? 'is-invalid' : '' %>" 
+                    id="floatingInput" name="email" placeholder="name@example.com"
+                    value="<%= typeof value !== 'undefined' && value.email ? value.email : '' %>" required>
+                  <label for="floatingInput"><i class="ri-mail-line me-1"></i>Email address</label>
+                  <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.email && error.email %></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-floating mb-3">
+                  <input type="password" class="form-control <%= typeof error !== 'undefined' && error.pass ? 'is-invalid' : '' %>" 
+                    id="floatingPassword" name="pass" placeholder="Password"
+                    value="<%= typeof value !== 'undefined' && value.pass ? value.pass : '' %>" required>
+                  <label for="floatingPassword"><i class="ri-lock-line me-1"></i>Password</label>
+                  <div class="invalid-feedback"><%= typeof error !== 'undefined' && error.pass && error.pass %></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control" name="phone" placeholder="Phone" required>
+                  <label><i class="ri-phone-line me-1"></i>Phone Number</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-floating mb-3">
+                  <select class="form-select" name="gender" required>
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <label><i class="ri-user-settings-line me-1"></i>Gender</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control" name="house" placeholder="House No" required>
+                  <label><i class="ri-home-line me-1"></i>House</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control" name="road" placeholder="Road No" required>
+                  <label><i class="ri-road-map-line me-1"></i>Road</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control" name="division" placeholder="Division" required>
+                  <label><i class="ri-map-pin-line me-1"></i>Division</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control" name="zila" placeholder="Zila" required>
+                  <label><i class="ri-map-line me-1"></i>Zila</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control" name="upazila" placeholder="Upazila" required>
+                  <label><i class="ri-map-line me-1"></i>Upazila</label>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="mb-3">
+                  <label class="form-label"><i class="ri-image-line me-1"></i>Profile Picture</label>
+                  <input type="file" class="form-control" name="propic" accept="image/*">
+                </div>
               </div>
             </div>
-          </div>
+            <div class="d-grid gap-3 mt-2">
+              <button type="submit" class="btn btn-primary btn-lg rounded-3 w-100">
+                <i class="ri-user-add-line me-1"></i>Register
+              </button>
+              <a href="/login" class="btn btn-outline-secondary rounded-3">
+                <i class="ri-login-circle-line me-1"></i>Already have an account? Login
+              </a>
+            </div>
+          </form>
         </div>
       </div>
-    </header>
-    <!-- end header section -->
+    </div>
   </div>
-
-  <!-- from section -->
-  <section class="contact_section layout_padding">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-11 col-lg-9 mx-auto">
-          <div class="map_form_container">
-            <div class="form_container">
-              <div class="heading_container heading_center">
-                <h2 class="contact_heading">
-                  User <span>Register</span> Form
-                </h2>
-              </div>
-              <form action="/signup" method="post" enctype="multipart/form-data">
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" name="firstName" placeholder="First Name" />
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" name="lastName" placeholder="Last Name" />
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <label for="gender">Gender</label>
-
-                    <select class="form-select" name="gender" id="gender" aria-label="Default select example">
-                      <option selected>Select Gender:</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Feale</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div class="form-group col-md-6">
-                    <label for="prpic">Profile Picture</label>
-                    <input class="form-control" accept="image/*" type="file" id="propic" name="propic">
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <input type="email" class="form-control" name="email" placeholder="Email Address" />
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" name="phone" placeholder="Mobile Number" />
-                  </div>
-                </div>
-
-
-
-
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" placeholder="House" name="house" />
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" placeholder="Road" name="road" />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <select class="form-select divisions" name="division" id="division"
-                      aria-label="Default select example">
-                      <option selected>Select Division:</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group col-md-6">
-                    <select class="form-select districts" name="zila" id="districts"
-                      aria-label="Default select example">
-                      <option selected>Select Zila:</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" placeholder="Upazila/Thana" name="upazila" />
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="password" class="form-control" placeholder="Password" name="pass" />
-                  </div>
-                </div>
-                <div class="btn-box">
-                  <button type="submit" class="submit_btn">
-                    Sign Up
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    </div>
-  </section>
-  <!-- end from section -->
-
-  <%- include("../template/lfooter"); -%>
-
-    <script src="/js/signup.js"></script>
-    <script>
-
-    </script>
+</div>
+<%- include("../template/lfooter"); -%>
+<script>
+  let registerFail = '<%= typeof registerFail !== "undefined" && registerFail ? registerFail : false %>';
+  if (registerFail === "true") {
+    Swal.fire({
+      icon: 'error',
+      title: 'Registration Failed',
+      text: 'Something went wrong. Please try again.',
+    })
+  }
+</script>

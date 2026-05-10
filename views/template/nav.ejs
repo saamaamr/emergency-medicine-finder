@@ -2,65 +2,337 @@
   <div class="hero_bg_box">
     <img src="images/hero-bg.jpg" alt="" />
   </div>
-  <!-- header section strats -->
   <header class="header_section">
-    <div class="header_bottom">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-12">
-            <div class="full">
-              <nav class="navbar navbar-expand-lg custom_nav-container">
-                <a class="navbar-brand" href="/home"><img width="120" src="images/logo_main.png" alt="#" /></a>
-
-                <button class="navbar-toggler" type="button" data-toggle="collapse"
-                  data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                  aria-label="Toggle navigation">
-                  <span class=""> </span>
+    <div class="container-fluid">
+      <nav class="navbar navbar-expand-lg custom_nav-container">
+        <a class="navbar-brand" href="/home">
+          <img width="130" src="images/logo.svg" alt="EMF - Emergency Medicine Finder" />
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+          aria-label="Toggle navigation">
+          <i class="ri-menu-line"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item <%= typeof activeNav !== 'undefined' && activeNav === 'home' ? 'active' : '' %>">
+              <a class="nav-link" href="/home">Home</a>
+            </li>
+            <li class="nav-item <%= typeof activeNav !== 'undefined' && activeNav === 'about' ? 'active' : '' %>">
+              <a class="nav-link" href="/about">About</a>
+            </li>
+            <% if(typeof uId !== 'undefined' && uId) { %>
+              <li class="nav-item">
+                <a class="nav-link" href="/profile">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-2px;margin-right:4px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  <%= typeof userData !== 'undefined' && userData && userData[0] ? userData[0].first_name : '' %>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/req">My Requests</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/logout">Logout</a>
+              </li>
+            <% } else { %>
+              <li class="nav-item">
+                <a class="nav-link" href="/login">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-2px;margin-right:4px;"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                  Login
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/shopkeeperlogin">Shopkeeper</a>
+              </li>
+            <% } %>
+          </ul>
+          <form class="d-flex" role="search" onsubmit="return false;">
+            <div class="nav-search-wrapper">
+              <div class="nav-search-input-group">
+                <span class="nav-search-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </span>
+                <input class="form-control nav-search-input" id="searchmedi" type="search" placeholder="Search Medicine..." aria-label="Search Medicine" autocomplete="off">
+                <button class="nav-search-btn" type="button" id="searchmedi-btn" aria-label="Search medicines">
+                  <span class="nav-search-btn-text">Search</span>
                 </button>
-
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                  <ul class="navbar-nav">
-                    <li class="nav-item active">
-                      <a class="nav-link" href="/home">Home <span class="sr-only">(current)</span></a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="/about">About</a>
-                    </li>
-                    
-                        <% if(uId) { %>
-                          <li class="nav-item">
-                            <a class="nav-link" href="/profile">
-                              <%= userData[0].first_name %>
-                                <%= userData[0].last_name %>
-                            </a>
-                          </li>
-                          <li class="nav-item">
-                            <a class="nav-link" href="/logout">Logout</a>
-                          </li>
-                          <% } else{ %>
-                            <li class="nav-item">
-                              <a class="nav-link" aria-current="page" href="/login" value="user" id="user">User
-                                Login</a>
-                            </li>
-                            <li class="nav-item">
-                              <a class="nav-link" aria-current="page" href="/workerlogin" value="worker"
-                                id="worker">Shopkeeper Login</a>
-                            </li>
-                            <% } %>
-                              <li class="nav-item"><% if(uId) { %>  
-                                  <input type="text" class="form-control" id="searchmedi" placeholder="Search Medicine">
-                                
-                                <% } %>
-                                
-                              </li>
-                  </ul>
-                </div>
-              </nav>
+              </div>
+              <div class="nav-suggestions-dropdown"></div>
             </div>
-          </div>
+          </form>
         </div>
-      </div>
+      </nav>
     </div>
   </header>
-  <!-- end header section -->
 </div>
+
+<style>
+  :root {
+    --nav-primary: #0891B2;
+    --nav-primary-dark: #0E7490;
+    --nav-primary-light: #22D3EE;
+    --nav-bg: #ffffff;
+    --nav-border: #E2E8F0;
+    --nav-text: #164E63;
+    --nav-text-muted: #64748B;
+    --nav-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --nav-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --nav-focus-ring: 0 0 0 3px rgba(8, 145, 178, 0.4);
+  }
+
+  .header_section {
+    background: var(--nav-bg);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .custom_nav-container {
+    padding: 0.5rem 0;
+  }
+
+  .navbar-brand {
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar-brand img {
+    height: auto;
+  }
+
+  .navbar .nav-link {
+    color: var(--nav-text);
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-out;
+  }
+
+  .navbar .nav-link:hover {
+    color: var(--nav-primary);
+    background: rgba(8, 145, 178, 0.08);
+  }
+
+  .navbar .nav-link:focus-visible {
+    outline: none;
+    box-shadow: var(--nav-focus-ring);
+  }
+
+  .navbar .nav-item.active > .nav-link {
+    color: var(--nav-primary);
+    font-weight: 600;
+  }
+
+  .navbar-toggler {
+    border: none;
+    padding: 0.5rem;
+    background: transparent;
+  }
+
+  .navbar-toggler:focus {
+    box-shadow: none;
+  }
+
+  /* Nav Search Wrapper */
+  .nav-search-wrapper {
+    position: relative;
+  }
+
+  .nav-search-input-group {
+    display: flex;
+    align-items: center;
+    background: var(--nav-bg);
+    border: 2px solid var(--nav-border);
+    border-radius: 50px;
+    overflow: hidden;
+    transition: all 0.2s ease-out;
+    position: relative;
+  }
+
+  .nav-search-input-group:focus-within {
+    border-color: var(--nav-primary);
+    box-shadow: var(--nav-shadow);
+  }
+
+  .nav-search-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 14px;
+    color: var(--nav-primary);
+    transition: color 0.2s ease-out;
+  }
+
+  .nav-search-input-group:focus-within .nav-search-icon {
+    color: var(--nav-primary-dark);
+  }
+
+  .nav-search-input {
+    flex: 1;
+    border: none !important;
+    padding: 10px 12px 10px 10px !important;
+    font-size: 0.9rem;
+    background: transparent !important;
+    box-shadow: none !important;
+    min-width: 180px;
+  }
+
+  .nav-search-input:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .nav-search-input::placeholder {
+    color: var(--nav-text-muted);
+  }
+
+  .nav-search-btn {
+    background: linear-gradient(135deg, var(--nav-primary), var(--nav-primary-dark));
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nav-search-btn:hover {
+    background: linear-gradient(135deg, var(--nav-primary-dark), var(--nav-primary));
+    transform: scale(1.02);
+  }
+
+  .nav-search-btn:active {
+    transform: scale(0.98);
+  }
+
+  .nav-search-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .nav-search-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--nav-focus-ring);
+  }
+
+  /* Loading Spinner */
+  .nav-search-btn .loading-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+  }
+
+  .nav-search-btn.loading .loading-spinner {
+    display: block;
+  }
+
+  .nav-search-btn.loading .nav-search-btn-text {
+    display: none;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Suggestions Dropdown */
+  .nav-suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--nav-border);
+    border-radius: 12px;
+    box-shadow: var(--nav-shadow-lg);
+    z-index: 9999;
+    max-height: 280px;
+    overflow-y: auto;
+    display: none;
+    margin-top: 4px;
+  }
+
+  .nav-suggestions-dropdown.show {
+    display: block;
+    animation: fadeInDown 0.2s ease-out;
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .nav-suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s ease-out;
+    border-bottom: 1px solid #F1F5F9;
+  }
+
+  .nav-suggestion-item:last-child {
+    border-bottom: none;
+  }
+
+  .nav-suggestion-item:hover {
+    background: linear-gradient(135deg, #F0FDF4, #ECFDF5);
+  }
+
+  .nav-suggestion-item svg {
+    color: var(--nav-primary);
+    flex-shrink: 0;
+  }
+
+  .nav-suggestion-item span {
+    color: var(--nav-text);
+    font-size: 0.9rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 991px) {
+    .navbar-collapse {
+      background: white;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      box-shadow: var(--nav-shadow);
+      margin-top: 0.5rem;
+    }
+
+    .navbar-nav {
+      margin-bottom: 1rem;
+    padding-bottom: 1rem;
+      border-bottom: 1px solid var(--nav-border);
+    }
+
+    .nav-search-wrapper {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+
+    .nav-search-input-group {
+      width: 100%;
+    }
+
+    .nav-search-input {
+      min-width: auto;
+    }
+  }
+</style>

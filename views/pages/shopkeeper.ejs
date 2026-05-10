@@ -1,0 +1,100 @@
+<%- include ('../template/aheader') %>
+
+<section class="main">
+  <div class="sidebar">
+    <ul class="sidebar--items">
+      <li><a href="/admin">
+        <span class="icon icon-1"><i class="ri-layout-grid-line"></i></span>
+        <span class="sidebar--item">Dashboard</span>
+      </a></li>
+      <li><a href="/service">
+        <span class="icon icon-2"><i class="ri-git-repository-line"></i></span>
+        <span class="sidebar--item">Medicine</span>
+      </a></li>
+      <li><a href="/admin/inventory">
+        <span class="icon icon-3"><i class="ri-store-2-line"></i></span>
+        <span class="sidebar--item">Inventory</span>
+      </a></li>
+      <li><a href="/admin/transfers">
+        <span class="icon icon-4"><i class="ri-exchange-line"></i></span>
+        <span class="sidebar--item">Transfers</span>
+      </a></li>
+      <li><a href="/user">
+        <span class="icon icon-5"><i class="ri-user-line"></i></span>
+        <span class="sidebar--item">User</span>
+      </a></li>
+      <li><a href="/shopkeeper" id="active--link">
+        <span class="icon icon-6"><i class="ri-user-2-line"></i></span>
+        <span class="sidebar--item" style="white-space: nowrap;">Shopkeeper</span>
+      </a></li>
+    </ul>
+    <ul class="sidebar--bottom-items">
+      <li><a href="/adminlogout">
+        <span class="icon icon-8"><i class="ri-logout-box-r-line"></i></span>
+        <span class="sidebar--item">Logout</span>
+      </a></li>
+    </ul>
+  </div>
+
+  <div class="main--content">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-0">
+        <div class="p-3 border-bottom">
+          <h5 class="section--title mb-0"><i class="ri-user-2-line me-1"></i>Shopkeeper List</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Shop</th>
+                <th>Date In</th>
+                <th>Gender</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Address</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% allShopkeeper.forEach(shopkeeper => { %>
+                <tr>
+                  <td><strong><%= shopkeeper.first_name %> <%= shopkeeper.last_name %></strong></td>
+                  <td><%= shopkeeper.shopname %></td>
+                  <td class="text-muted small"><%= shopkeeper.fdate %></td>
+                  <td><span class="badge bg-light text-dark"><%= shopkeeper.gender %></span></td>
+                  <td class="text-muted small"><%= shopkeeper.email %></td>
+                  <td><%= shopkeeper.phone %></td>
+                  <td class="text-muted small">
+                    <%= shopkeeper.house %>, Road: <%= shopkeeper.road %><br>
+                    <%= shopkeeper.upazila %>, <%= shopkeeper.zila %>
+                  </td>
+                  <td>
+                    <% if(shopkeeper.status == 0) { %>
+                      <span class="badge bg-warning">Pending</span>
+                    <% } else if(shopkeeper.status == 1) { %>
+                      <span class="badge bg-success">Active</span>
+                    <% } else { %>
+                      <span class="badge bg-danger">Hold</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if(shopkeeper.status == 0) { %>
+                      <a class="btn btn-sm btn-primary" href="/verify-shopkeeper-account/<%= shopkeeper.email %>">Accept</a>
+                    <% } else if(shopkeeper.status == 1) { %>
+                      <a class="btn btn-sm btn-warning" href="/hold-shopkeeper-account/<%= shopkeeper.email %>">Block</a>
+                    <% } else { %>
+                      <a class="btn btn-sm btn-primary" href="/verify-shopkeeper-account/<%= shopkeeper.email %>">Activate</a>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<%- include ('../template/alfooter') %>
