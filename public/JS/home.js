@@ -489,7 +489,211 @@ function showRouteToPharmacy(lat, lng, name, address) {
 // Clear route button
 function clearRouteOnMap() {
   clearRoute()
+  stopLiveTracking()
   log('info', 'Route cleared')
+}
+
+// ==================== LIVE TRACKING ====================
+
+let liveTrackingInterval = null
+let watchPositionId = null
+let liveTrackingDestination = null
+let liveTrackingStartTime = null
+
+// Start live tracking to a pharmacy
+function startLiveTracking(lat, lng, pharmacyName, pharmacyAddress) {
+  // Stop any existing tracking
+  stopLiveTracking()
+  
+  if (!navigator.geolocation) {
+    showNotification('Geolocation not supported', 'error')
+    return
+  }
+  
+  // Check if user location is available
+  if (!curentlat || !curentlng) {
+    showNotification('Your location not available. Please enable location.', 'warning')
+    return
+  }
+  
+  // Store destination
+  liveTrackingDestination = {
+    lat: lat,
+    lng: lng,
+    name: pharmacyName,
+    address: pharmacyAddress
+  }
+  liveTrackingStartTime = Date.now()
+  
+  log('info', 'Starting live tracking to ' + pharmacyName)
+  
+  // Create live tracking UI
+  createLiveTrackingUI(pharmacyName, pharmacyAddress)
+  
+  // Start watching position
+  watchPositionId = navigator.geolocation.watchPosition(
+    (position) => {
+      const { latitude, longitude, speed, accuracy } = position.coords
+      
+      // Update current position
+      curentlat = latitude
+      curentlng = longitude
+      
+      // Update user marker on map
+      updateUserMarkerPosition(latitude, longitude)
+      
+      // Calculate distance to destination
+      const distance = calculateDistance(latitude, longitude, lat, lng)
+      
+      // Calculate estimated time (assuming average walking speed 5 km/h or driving 30 km/h)
+      const avgSpeedKmH = speed > 0 ? speed * 3.6 : 5 // Convert m/s to km/h, default to walking
+      const etaSeconds = distance > 0 ? (distance / avgSpeedKmH) * 3600 : 0
+      
+      // Update the live tracking UI
+      updateLiveTrackingUI(distance, etaSeconds, accuracy)
+      
+      // Check if arrived (within 30 meters)
+      if (distance < 0.03) {
+        showArrivedNotification(pharmacyName)
+        stopLiveTracking()
+      }
+      
+      log('info', 'Live tracking: ' + formatDistance(distance) + ' remaining')
+    },
+    (error) => {
+      log('warn', 'Live tracking error', error.message)
+      showNotification('Location error: ' + error.message, 'warning')
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 10000
+    }
+  )
+  
+  // Update every 5 seconds as backup
+  liveTrackingInterval = setInterval(() => {
+    if (liveTrackingDestination && curentlat && curentlng) {
+      const distance = calculateDistance(curentlat, curentlng, liveTrackingDestination.lat, liveTrackingDestination.lng)
+      updateLiveTrackingUI(distance, null, null)
+    }
+  }, 5000)
+  
+  showNotification('Live tracking started to ' + pharmacyName, 'success')
+}
+
+// Stop live tracking
+function stopLiveTracking() {
+  if (watchPositionId !== null) {
+    navigator.geolocation.clearWatch(watchPositionId)
+    watchPositionId = null
+    log('info', 'Position watch stopped')
+  }
+  
+  if (liveTrackingInterval) {
+    clearInterval(liveTrackingInterval)
+    liveTrackingInterval = null
+  }
+  
+  liveTrackingDestination = null
+  liveTrackingStartTime = null
+  
+  // Remove live tracking UI
+  const trackingUI = document.getElementById('live-tracking-panel')
+  if (trackingUI) {
+    trackingUI.remove()
+  }
+}
+
+// Update user marker position during live tracking
+function updateUserMarkerPosition(lat, lng) {
+  if (userMarker) {
+    userMarker.setLngLat([lng, lat])
+  }
+  
+  if (userPulse) {
+    userPulse.setLngLat([lng, lat])
+  }
+}
+
+// Create live tracking UI panel
+function createLiveTrackingUI(pharmacyName, pharmacyAddress) {
+  // Remove existing if any
+  const existing = document.getElementById('live-tracking-panel')
+  if (existing) existing.remove()
+  
+  const panel = document.createElement('div')
+  panel.id = 'live-tracking-panel'
+  panel.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    padding: 16px 24px;
+    z-index: 9999;
+    min-width: 300px;
+    font-family: 'Figtree', sans-serif;
+  `
+  
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div>
+        <div style="font-weight:700;font-size:1.1rem;color:#14532D;">${pharmacyName}</div>
+        <div style="font-size:0.8rem;color:#6b7280;">${pharmacyAddress || 'Pharmacy'}</div>
+      </div>
+      <button onclick="stopLiveTracking()" style="background:#fee2e2;color:#dc2626;border:none;padding:8px 12px;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.8rem;">
+        Stop
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;gap:20px;">
+      <div style="text-align:center;">
+        <div id="tracking-distance" style="font-size:1.5rem;font-weight:700;color:#0891B2;">--</div>
+        <div style="font-size:0.75rem;color:#6b7280;">Distance</div>
+      </div>
+      <div style="text-align:center;">
+        <div id="tracking-eta" style="font-size:1.5rem;font-weight:700;color:#15803D;">--</div>
+        <div style="font-size:0.75rem;color:#6b7280;">ETA</div>
+      </div>
+      <div style="text-align:center;">
+        <div id="tracking-time" style="font-size:1.5rem;font-weight:700;color:#D97706;">--</div>
+        <div style="font-size:0.75rem;color:#6b7280;">Elapsed</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+      <div style="width:12px;height:12px;background:#22c55e;border-radius:50%;animation:pulse 1.5s infinite;"></div>
+      <span style="font-size:0.8rem;color:#6b7280;">Live tracking active</span>
+    </div>
+  `
+  
+  document.body.appendChild(panel)
+}
+
+// Update live tracking UI with new distance/ETA
+function updateLiveTrackingUI(distance, eta, accuracy) {
+  const distanceEl = document.getElementById('tracking-distance')
+  const etaEl = document.getElementById('tracking-eta')
+  const timeEl = document.getElementById('tracking-time')
+  
+  if (distanceEl) {
+    distanceEl.textContent = formatDistance(distance)
+  }
+  
+  if (etaEl && eta !== null) {
+    etaEl.textContent = formatDuration(eta)
+  }
+  
+  if (timeEl && liveTrackingStartTime) {
+    const elapsed = Math.floor((Date.now() - liveTrackingStartTime) / 1000)
+    timeEl.textContent = formatDuration(elapsed)
+  }
+}
+
+// Show arrived notification
+function showArrivedNotification(pharmacyName) {
+  showNotification(`You have arrived at ${pharmacyName}!`, 'success')
 }
 
 // Legacy locateUser function for compatibility
@@ -611,16 +815,24 @@ function generatePopupHTML(item, isNearest) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
         Request Medicine
       </button>
+      <button onclick="startLiveTracking(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}', '${(addr || '').replace(/'/g, "\\'")}')"
+        style="width:100%;padding:12px;margin-top:8px;background:linear-gradient(135deg, #7c3aed, #6d28d9);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(124,58,237,0.3);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="white"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+        <span style="position:relative;">
+          Live Tracking
+          <span style="position:absolute;top:-2px;right:-8px;width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse 1s infinite;"></span>
+        </span>
+      </button>
       <div style="display:flex;gap:6px;margin-top:6px;">
         <button onclick="showRouteToPharmacy(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}', '${(addr || '').replace(/'/g, "\\'")}')"
           style="flex:1;padding:10px;background:#0891B2;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;gap:4px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16"/><path d="M16 6v16"/></svg>
-          Show Route
+          Route
         </button>
         <button onclick="openGoogleMapsDirections(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}')"
           style="flex:1;padding:10px;background:#6b7280;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;gap:4px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
-          Google Maps
+          Maps
         </button>
       </div>
     </div>
