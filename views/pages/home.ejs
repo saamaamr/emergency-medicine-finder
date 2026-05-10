@@ -9,20 +9,34 @@
     --color-primary: #0284C7;
     --color-primary-dark: #0369A1;
     --color-primary-light: #38BDF8;
+    --color-primary-100: #E0F2FE;
     --color-secondary: #0EA5E9;
     --color-cta: #059669;
     --color-cta-dark: #047857;
+    --color-surface: #FFFFFF;
+    --color-border: #E2E8F0;
     --color-background: #ECFEFF;
     --color-text: #164E63;
     --color-text-muted: #0E7490;
-    --color-surface: #FFFFFF;
-    --color-border: #E2E8F0;
-    --color-card: #FFFFFF;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     --focus-ring: 0 0 0 3px rgba(8, 145, 178, 0.4);
+  }
+
+  /* Dark Mode */
+  .dark {
+    --color-surface: #1E293B;
+    --color-border: #334155;
+    --color-background: #0F172A;
+    --color-text: #E0F2FE;
+    --color-text-muted: #94A3B8;
+    --color-primary-100: #164E63;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.3);
   }
 
   /* Dark Mode */
@@ -55,10 +69,12 @@
   body {
     font-family: 'Noto Sans', sans-serif;
     color: var(--color-text);
+    background: var(--color-background);
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Figtree', sans-serif;
+    color: var(--color-text);
   }
 
   /* Focus states for accessibility */
@@ -69,7 +85,7 @@
 
   /* Hero Section */
   .hero-section {
-    background: linear-gradient(135deg, #ECFEFF 0%, #CFFAFE 50%, #A5F3FC 100%);
+    background: var(--color-surface);
     position: relative;
     overflow: hidden;
   }
@@ -97,7 +113,7 @@
   }
 
   .hero-title {
-    color: #0F172A;
+    color: var(--color-text);
     font-weight: 800;
     line-height: 1.1;
     animation: fadeInUp 0.6s ease-out 0.1s backwards;
@@ -140,7 +156,7 @@
   }
 
   .btn-secondary-emf {
-    background: white;
+    background: var(--color-surface);
     color: var(--color-primary);
     border: 2px solid var(--color-primary);
     font-weight: 600;
@@ -266,10 +282,10 @@
     border-radius: 1rem;
     box-shadow: var(--shadow-lg);
     overflow: hidden;
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--color-border);
     z-index: 1;
     position: relative;
-    background: #f0f0f0;
+    background: var(--color-surface);
   }
 
   #shopmap {
@@ -286,7 +302,7 @@
   .maplibregl-popup-content {
     font-family: 'Figtree', sans-serif;
     border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    box-shadow: var(--shadow-xl);
     padding: 0;
     overflow: hidden;
     min-width: 280px;
@@ -296,8 +312,8 @@
   .maplibregl-popup-close-button {
     font-size: 20px;
     padding: 6px 10px;
-    color: #64748B;
-    background: #F1F5F9;
+    color: var(--color-text-muted);
+    background: var(--color-background);
     border-radius: 50%;
     width: 32px;
     height: 32px;
@@ -307,8 +323,8 @@
   }
 
   .maplibregl-popup-close-button:hover {
-    background: #E2E8F0;
-    color: #0284C7;
+    background: var(--color-border);
+    color: var(--color-primary);
   }
 
   .maplibregl-ctrl-group {
@@ -380,15 +396,15 @@
 
   .result-card.nearest {
     border-color: var(--accent, #F59E0B);
-    background: var(--warning-light, #FEF3C7);
+    background: linear-gradient(135deg, #FEF3C7, #FEF9E7);
   }
 
   .result-card.nearest:hover {
-    background: var(--warning-light, #FEF3C7);
+    background: #FEF3C7;
   }
 
   .pharmacy-name {
-    color: #0F172A;
+    color: var(--color-text);
     font-weight: 700;
     font-family: 'Figtree', sans-serif;
   }
@@ -403,7 +419,7 @@
   }
 
   .medicine-name {
-    color: #0284C7;
+    color: var(--color-primary);
     font-weight: 600;
     font-size: 0.9rem;
   }
@@ -411,7 +427,7 @@
   .medicine-price {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #0284C7;
+    color: var(--color-primary);
   }
 
   .stock-badge {
@@ -437,7 +453,7 @@
   }
 
   .distance-badge {
-    background: #E0F2FE;
+    background: var(--color-primary-100, #E0F2FE);
     color: var(--color-primary);
     font-size: 0.8rem;
     font-weight: 600;
@@ -449,22 +465,22 @@
   .empty-state, .no-results-state {
     text-align: center;
     padding: 3rem 1rem;
-    color: #94A3B8;
+    color: var(--color-text-muted);
   }
 
   .empty-state svg, .no-results-state svg {
-    color: #CBD5E1;
+    color: var(--color-text-muted);
     margin-bottom: 1rem;
   }
 
   /* How It Works */
   .how-it-works {
-    background: white;
+    background: var(--color-surface);
     padding: 4rem 0;
   }
 
   .how-title {
-    color: #0F172A;
+    color: var(--color-text);
     font-weight: 700;
     font-family: 'Figtree', sans-serif;
     margin-bottom: 3rem;
@@ -499,40 +515,40 @@
   }
 
   .step-title {
-    color: #0F172A;
+    color: var(--color-text);
     font-weight: 700;
     font-family: 'Figtree', sans-serif;
     margin-bottom: 0.5rem;
   }
 
   .step-description {
-    color: #64748B;
+    color: var(--color-text-muted);
     font-size: 0.9rem;
     line-height: 1.6;
   }
 
   /* Available Medicines */
   .medicines-section {
-    background: #F8FAFC;
+    background: var(--color-background);
     padding: 4rem 0;
   }
 
   .medicines-title {
-    color: #0F172A;
+    color: var(--color-text);
     font-weight: 700;
     font-family: 'Figtree', sans-serif;
   }
 
   .medicines-subtitle {
-    color: #64748B;
+    color: var(--color-text-muted);
   }
 
   .medicine-card {
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1.5rem;
     box-shadow: var(--shadow-sm);
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--color-border);
     height: 100%;
     transition: all 0.3s ease-out;
   }
@@ -556,14 +572,14 @@
   }
 
   .medicine-name {
-    color: #0F172A;
+    color: var(--color-text);
     font-weight: 700;
     font-family: 'Figtree', sans-serif;
     margin-bottom: 0.25rem;
   }
 
   .medicine-details {
-    color: #059669;
+    color: var(--color-cta);
     font-size: 0.9rem;
     margin-bottom: 0.25rem;
   }
@@ -762,7 +778,7 @@
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <p class="mt-3 mb-0" style="color: #64748B;">Type a medicine name above<br>to see nearby pharmacies</p>
+              <p class="mt-3 mb-0" style="color: var(--color-text-muted);">Type a medicine name above<br>to see nearby pharmacies</p>
             </div>
             <div id="no-results-state" style="display: none;" class="no-results-state">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -771,8 +787,8 @@
                 <line x1="9" y1="9" x2="9.01" y2="9"></line>
                 <line x1="15" y1="9" x2="15.01" y2="9"></line>
               </svg>
-              <p class="mt-3 mb-0 fw-bold" style="color: #0F172A;">No nearby pharmacies have this medicine</p>
-              <p class="small mb-0" style="color: #94A3B8;">Try searching with a different medicine name</p>
+              <p class="mt-3 mb-0 fw-bold" style="color: var(--color-text);">No nearby pharmacies have this medicine</p>
+              <p class="small mb-0" style="color: var(--color-text-muted);">Try searching with a different medicine name</p>
             </div>
           </div>
         </div>
