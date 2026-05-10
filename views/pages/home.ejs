@@ -15,11 +15,28 @@
     --color-background: #ECFEFF;
     --color-text: #164E63;
     --color-text-muted: #0E7490;
+    --color-surface: #FFFFFF;
+    --color-border: #E2E8F0;
+    --color-card: #FFFFFF;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     --focus-ring: 0 0 0 3px rgba(8, 145, 178, 0.4);
+  }
+
+  /* Dark Mode */
+  .dark {
+    --color-background: #0F172A;
+    --color-text: #E0F2FE;
+    --color-text-muted: #94A3B8;
+    --color-surface: #1E293B;
+    --color-border: #334155;
+    --color-card: #1E293B;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.3);
   }
 
   * {
@@ -171,18 +188,18 @@
 
   /* Search Section */
   .search-section {
-    background: #F8FAFC;
+    background: var(--color-background);
     padding: 3rem 0;
   }
 
   .search-title {
-    color: #0F172A;
+    color: var(--color-text);
     font-weight: 700;
     font-family: 'Figtree', sans-serif;
   }
 
   .search-subtitle {
-    color: #64748B;
+    color: var(--color-text-muted);
   }
 
   /* Search Input Group */
@@ -192,7 +209,7 @@
   }
 
   .search-input-group {
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
     box-shadow: var(--shadow-lg);
     overflow: hidden;
@@ -321,16 +338,16 @@
   .results-header {
     background: linear-gradient(135deg, #E0F2FE, #F0F9FF);
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid #E2E8F0;
+    border-bottom: 1px solid var(--color-border);
     border-radius: 1rem 1rem 0 0;
     position: sticky;
     top: 0;
     z-index: 10;
-    background: white;
+    background: var(--color-surface);
   }
 
   .results-header h6 {
-    color: #0F172A;
+    color: var(--color-text);
     font-weight: 700;
     font-family: 'Figtree', sans-serif;
   }
@@ -346,8 +363,8 @@
 
   /* Result Card */
   .result-card {
-    background: white;
-    border: 1px solid #E2E8F0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1rem;
     margin-bottom: 0.75rem;
@@ -356,18 +373,18 @@
   }
 
   .result-card:hover {
-    border-color: #0284C7;
-    box-shadow: 0 8px 20px rgba(2, 132, 199, 0.15);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-lg);
     transform: translateX(4px);
   }
 
   .result-card.nearest {
-    border-color: #F59E0B;
-    background: linear-gradient(135deg, #FEF3C7, #FEF9E7);
+    border-color: var(--accent, #F59E0B);
+    background: var(--warning-light, #FEF3C7);
   }
 
   .result-card.nearest:hover {
-    background: #FEF3C7;
+    background: var(--warning-light, #FEF3C7);
   }
 
   .pharmacy-name {

@@ -46,6 +46,23 @@
               </li>
             <% } %>
           </ul>
+          <!-- Theme Toggle -->
+          <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark mode">
+            <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+            </svg>
+          </button>
           <form class="d-flex" role="search" onsubmit="return false;">
             <div class="nav-search-wrapper">
               <div class="nav-search-input-group">
@@ -309,7 +326,7 @@
   /* Responsive */
   @media (max-width: 991px) {
     .navbar-collapse {
-      background: white;
+      background: var(--nav-bg);
       padding: 1rem;
       border-radius: 0.75rem;
       box-shadow: var(--nav-shadow);
@@ -335,4 +352,82 @@
       min-width: auto;
     }
   }
+
+  /* Theme Toggle */
+  .theme-toggle-btn {
+    background: linear-gradient(135deg, #F0F9FF, #E0F2FE);
+    border: 2px solid var(--nav-border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  .theme-toggle-btn:hover {
+    background: linear-gradient(135deg, #E0F2FE, #BAE6FD);
+    transform: scale(1.05);
+  }
+
+  .theme-toggle-btn .sun-icon {
+    color: #F59E0B;
+    display: block;
+  }
+
+  .theme-toggle-btn .moon-icon {
+    color: #64748B;
+    display: none;
+  }
+
+  /* Dark mode */
+  .dark .theme-toggle-btn {
+    background: linear-gradient(135deg, #1E293B, #334155);
+    border-color: #475569;
+  }
+
+  .dark .theme-toggle-btn:hover {
+    background: linear-gradient(135deg, #334155, #475569);
+  }
+
+  .dark .theme-toggle-btn .sun-icon {
+    display: none;
+  }
+
+  .dark .theme-toggle-btn .moon-icon {
+    display: block;
+    color: #F1F5F9;
+  }
+
+  @media (max-width: 991px) {
+    .theme-toggle-btn {
+      margin: 0.5rem 0;
+    }
+  }
 </style>
+
+<script>
+  // Theme toggle functionality
+  (function() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+    
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    }
+    
+    themeToggle.addEventListener('click', function() {
+      document.documentElement.classList.toggle('dark');
+      const isDarkNow = document.documentElement.classList.contains('dark');
+      localStorage.setItem('theme', isDarkNow ? 'dark' : 'light');
+    });
+  })();
+</script>
