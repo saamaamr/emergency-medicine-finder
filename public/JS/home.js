@@ -10,21 +10,21 @@ let userPulse = null
 let userLocationResolved = false
 
 const pharmacyIcon = L.icon({
-  iconUrl: 'images/marker-pharmacy.svg',
+  iconUrl: '/images/marker-pharmacy.svg',
   iconSize: [32, 48],
   iconAnchor: [16, 48],
   popupAnchor: [0, -48],
 })
 
 const userIcon = L.icon({
-  iconUrl: 'images/marker-user.svg',
+  iconUrl: '/images/marker-user.svg',
   iconSize: [32, 48],
   iconAnchor: [16, 48],
   popupAnchor: [0, -48],
 })
 
 const selectedIcon = L.icon({
-  iconUrl: 'images/marker-selected.svg',
+  iconUrl: '/images/marker-selected.svg',
   iconSize: [40, 56],
   iconAnchor: [20, 56],
   popupAnchor: [0, -56],
@@ -71,7 +71,7 @@ function getSearchInput() {
 
 const map = L.map('shopmap', {
   doubleClickZoom: false,
-  zoomControl: true,
+  zoomControl: true
 }).setView([23.8103, 90.4125], 12)
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -241,10 +241,22 @@ function focusMarker(index) {
   if (!demo[index]) return
   log('info', 'Focusing marker index', index)
   const item = demo[index]
-  map.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 16, { duration: 0.6 })
+  
+  map.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 15, { 
+    duration: 0.5,
+    easeLinearity: 0.25
+  })
+  
   clearMarkers()
   placeMarkers(demo, index)
   highlightSidebarCard(index)
+  
+  setTimeout(() => {
+    const marker = markerToIndexMap[index]
+    if (marker) {
+      marker.openPopup()
+    }
+  }, 600)
 }
 
 function highlightMarker(index) {
@@ -361,6 +373,9 @@ function performSearch(query) {
   const noResults = document.getElementById('no-results-state')
   const resultsList = document.getElementById('results-list')
   const countEl = document.getElementById('result-count')
+  const mainSearchBtn = document.getElementById('search-btn')
+  const mainSearchBtnText = document.getElementById('search-btn-text')
+  const navSearchBtn = document.getElementById('searchmedi-btn')
 
   log('info', 'Search triggered:', query)
 
@@ -370,7 +385,18 @@ function performSearch(query) {
     if (resultsList) resultsList.innerHTML = ''
     if (countEl) countEl.textContent = '0'
     clearMarkers()
+    map.setZoom(12, { animate: true })
     return
+  }
+
+  if (mainSearchBtn) {
+    mainSearchBtn.disabled = true
+    if (mainSearchBtnText) mainSearchBtnText.innerHTML = '<span class="loading-spinner"></span>'
+  }
+
+  if (navSearchBtn) {
+    navSearchBtn.disabled = true
+    navSearchBtn.classList.add('loading')
   }
 
   const searchTerm = query.trim()
@@ -407,17 +433,49 @@ function performSearch(query) {
 
       updateResultsUI(validData)
 
+      if (mainSearchBtn) {
+        mainSearchBtn.disabled = false
+        if (mainSearchBtnText) mainSearchBtnText.textContent = 'Search'
+      }
+
+      if (navSearchBtn) {
+        navSearchBtn.disabled = false
+        navSearchBtn.classList.remove('loading')
+      }
+
       const nearest = validData[0]
-      log('info', 'Zooming map to zoom 10, centered on nearest:', nearest.shopname)
-      map.setView([parseFloat(nearest.lat), parseFloat(nearest.lng)], 10)
+      log('info', 'Search result: ' + validData.length + ' pharmacies, nearest: ' + nearest.shopname)
+      
       placeMarkers(validData)
+      
+      map.flyTo([parseFloat(nearest.lat), parseFloat(nearest.lng)], 16, {
+        duration: 1.0,
+        easeLinearity: 0.25
+      })
+
+      setTimeout(() => {
+        const nearestMarker = markerToIndexMap[0]
+        if (nearestMarker) {
+          nearestMarker.openPopup()
+          highlightSidebarCard(0)
+        }
+      }, 1200)
+      
       demo = validData
-      log('info', 'Search complete - ' + validData.length + ' pharmacies displayed')
+      log('info', 'Search complete - ' + validData.length + ' pharmacies displayed with zoom effect')
     })
     .catch(err => {
       log('error', 'Search failed:', err.message)
       clearMarkers()
       updateResultsUI([])
+      if (mainSearchBtn) {
+        mainSearchBtn.disabled = false
+        if (mainSearchBtnText) mainSearchBtnText.textContent = 'Search'
+      }
+      if (navSearchBtn) {
+        navSearchBtn.disabled = false
+        navSearchBtn.classList.remove('loading')
+      }
     })
 }
 
@@ -480,38 +538,61 @@ function selectSuggestion(name) {
 }
 
 function attachSearchListeners() {
-  const searchInput = getSearchInput()
-  if (!searchInput) {
+  const mainSearchInput = document.getElementById('searchmedi-page')
+  const navSearchInput = document.getElementById('searchmedi')
+  const mainSearchBtn = document.getElementById('search-btn')
+  const navSearchBtn = document.getElementById('searchmedi-btn')
+
+  if (!mainSearchInput && !navSearchInput) {
     log('warn', 'No search input found, retrying in 500ms')
     setTimeout(attachSearchListeners, 500)
     return
   }
-  log('info', 'Search input found, attaching listeners')
+  log('info', 'Attaching search listeners to both inputs')
 
-  searchInput.addEventListener('input', e => {
-    const value = e.target.value
-    if (searchTimeout) clearTimeout(searchTimeout)
-    searchTimeout = setTimeout(() => performSearch(value), 300)
-    if (suggestionsTimeout) clearTimeout(suggestionsTimeout)
-    suggestionsTimeout = setTimeout(() => fetchSuggestions(value), 100)
-  })
+  function setupInputEvents(input, btn) {
+    if (!input) return
+    
+    input.addEventListener('input', e => {
+      const value = e.target.value
+      if (searchTimeout) clearTimeout(searchTimeout)
+      searchTimeout = setTimeout(() => performSearch(value), 300)
+      if (suggestionsTimeout) clearTimeout(suggestionsTimeout)
+      suggestionsTimeout = setTimeout(() => fetchSuggestions(value), 100)
+    })
 
-  searchInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        if (searchTimeout) clearTimeout(searchTimeout)
+        performSearch(e.target.value)
+        hideSuggestions()
+      }
+    })
+
+    input.addEventListener('blur', () => {
+      setTimeout(hideSuggestions, 200)
+    })
+
+    input.addEventListener('focus', e => {
+      if (e.target.value.trim().length >= 2) fetchSuggestions(e.target.value)
+    })
+  }
+
+  function setupBtnEvent(btn, input) {
+    if (!btn || !input) return
+    btn.addEventListener('click', (e) => {
       e.preventDefault()
       if (searchTimeout) clearTimeout(searchTimeout)
-      performSearch(e.target.value)
+      performSearch(input.value)
       hideSuggestions()
-    }
-  })
+    })
+  }
 
-  searchInput.addEventListener('blur', () => {
-    setTimeout(hideSuggestions, 200)
-  })
-
-  searchInput.addEventListener('focus', e => {
-    if (e.target.value.trim().length >= 2) fetchSuggestions(e.target.value)
-  })
+  setupInputEvents(mainSearchInput, mainSearchBtn)
+  setupInputEvents(navSearchInput, navSearchBtn)
+  setupBtnEvent(mainSearchBtn, mainSearchInput)
+  setupBtnEvent(navSearchBtn, navSearchInput)
 }
 
 attachSearchListeners()
