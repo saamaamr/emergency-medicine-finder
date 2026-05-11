@@ -1,9 +1,6 @@
 <div class="hero_area">
-  <div class="hero_bg_box">
-    <img src="images/hero-bg.jpg" alt="" />
-  </div>
   <header class="header_section">
-    <div class="container-fluid">
+    <div class="container-fluid px-3 px-lg-4">
       <nav class="navbar navbar-expand-lg custom_nav-container">
         <a class="navbar-brand" href="/home">
           <img width="130" src="images/logo.svg" alt="EMF - Emergency Medicine Finder" />
@@ -113,12 +110,29 @@
   }
 
   .header_section {
-    background: var(--nav-bg);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    background: transparent;
+    box-shadow: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
   }
 
   .custom_nav-container {
-    padding: 0.5rem 0;
+    padding: 0.75rem 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .dark .custom_nav-container {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 
   .navbar-brand {
@@ -133,15 +147,15 @@
   .navbar .nav-link {
     color: var(--nav-text);
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
+    border-radius: 9999px;
     transition: all 0.2s ease-out;
   }
 
   .navbar .nav-link:hover {
     color: var(--nav-primary);
-    background: rgba(8, 145, 178, 0.08);
+    background: rgba(2, 132, 199, 0.1);
   }
 
   .navbar .nav-link:focus-visible {
@@ -152,16 +166,29 @@
   .navbar .nav-item.active > .nav-link {
     color: var(--nav-primary);
     font-weight: 600;
+    background: rgba(2, 132, 199, 0.15);
   }
 
   .navbar-toggler {
-    border: none;
+    border: 1px solid var(--nav-border);
     padding: 0.5rem;
-    background: transparent;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .navbar-toggler:focus {
     box-shadow: none;
+  }
+
+  .navbar-toggler i {
+    color: var(--nav-text);
+    font-size: 1.25rem;
   }
 
   /* Nav Search Wrapper */
@@ -367,8 +394,9 @@
 
   /* Theme Toggle */
   .theme-toggle-btn {
-    background: linear-gradient(135deg, #F0F9FF, #E0F2FE);
-    border: 2px solid var(--nav-border);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--nav-border);
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -377,12 +405,13 @@
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease-out;
-    margin-right: 8px;
+    margin-right: 12px;
     flex-shrink: 0;
   }
 
   .theme-toggle-btn:hover {
-    background: linear-gradient(135deg, #E0F2FE, #BAE6FD);
+    background: rgba(2, 132, 199, 0.15);
+    border-color: var(--nav-primary);
     transform: scale(1.05);
   }
 
@@ -392,7 +421,7 @@
   }
 
   .theme-toggle-btn .moon-icon {
-    color: #64748B;
+    color: var(--nav-text-muted);
     display: none;
   }
 
