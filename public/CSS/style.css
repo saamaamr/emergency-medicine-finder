@@ -412,6 +412,13 @@ a:hover {
   color: var(--text-muted);
 }
 
+/* File input - Basic */
+
+.form-control[type="file"] {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
 .form-label {
   font-weight: 500;
   color: var(--text-primary);
