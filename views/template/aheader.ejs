@@ -6,6 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>EMF Admin</title>
   <link rel="shortcut icon" href="images/s1.png" type="image/x-icon">
+  
+  <!-- Theme Initialize BEFORE render -->
+  <script>
+    (function() {
+      const saved = localStorage.getItem('theme');
+      const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefers)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -13,3 +25,55 @@
   <link rel="stylesheet" href="/css/astyle.css" />
 </head>
 <body data-logged-in="true">
+<div class="header">
+  <div class="logo">
+    <h2>EMF <span>Admin</span></h2>
+  </div>
+  <div class="search--notification--profile">
+    <button class="theme-toggle-btn" id="themeToggle" style="background:none;border:none;color:white;padding:8px;cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+      <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+      <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<style>
+  .dark .header { background: #1E293B; }
+  .dark .logo h2 { color: #F1F5F9; }
+  .dark .search input { background: #334155; color: #F1F5F9; }
+  .dark .search input::placeholder { color: #94A3B8; }
+  .dark .picon.chat { color: #F1F5F9; }
+  .dark .header .theme-toggle-btn { background: #334155; }
+</style>
+
+<script>
+  (function() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    const sunIcon = themeToggle.querySelector('.sun-icon');
+    const moonIcon = themeToggle.querySelector('.moon-icon');
+    function update() {
+      const isDark = document.documentElement.classList.contains('dark');
+      sunIcon.style.display = isDark ? 'none' : 'block';
+      moonIcon.style.display = isDark ? 'block' : 'none';
+    }
+    update();
+    themeToggle.addEventListener('click', function() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      update();
+    });
+  })();
+</script>
