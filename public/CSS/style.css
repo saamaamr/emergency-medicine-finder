@@ -419,6 +419,23 @@ a:hover {
   color: var(--text-primary);
 }
 
+/* Custom File Input Button */
+.form-control[type="file"]::file-selector-button {
+  background: var(--primary);
+  color: var(--text-inverse);
+  border: none;
+  padding: 0.5rem 1rem;
+  margin-right: 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+.form-control[type="file"]::file-selector-button:hover {
+  background: var(--primary-dark);
+}
+
 .form-label {
   font-weight: 500;
   color: var(--text-primary);
