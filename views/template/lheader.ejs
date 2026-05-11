@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><%= typeof title !== 'undefined' ? title : 'EMF - Emergency Medicine Finder' %></title>
   
+  <!-- Theme Initialize BEFORE render to prevent flash -->
+  <script>
+    (function() {
+      const saved = localStorage.getItem('theme');
+      const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefers)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+
   <!-- Google Fonts: Figtree + Noto Sans -->
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
@@ -58,6 +69,25 @@
           <li class="nav-item">
             <a class="nav-link" href="/contact">Contact</a>
           </li>
+          <li class="nav-item">
+            <!-- Theme Toggle -->
+            <button class="theme-toggle-btn ms-2" id="themeToggle" aria-label="Toggle dark mode" style="background:none;border:none;padding:8px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+              <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" style="display:none;">
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+              </svg>
+            </button>
+          </li>
           <li class="nav-item ms-lg-2">
             <a class="btn btn-primary btn-sm" href="/login">
               <i class="ri-login-circle-line"></i>Login
@@ -67,3 +97,49 @@
       </div>
     </div>
   </nav>
+
+<style>
+  .dark .navbar {
+    background: var(--bg-surface) !important;
+  }
+  .dark .navbar .nav-link {
+    color: var(--text-primary);
+  }
+  .dark .navbar .nav-link:hover {
+    color: var(--primary);
+  }
+  .dark .navbar-toggler {
+    color: var(--text-primary);
+  }
+  .dark .bg-white {
+    background: var(--bg-surface) !important;
+  }
+  .dark .theme-toggle-btn {
+    background: var(--bg-surface) !important;
+  }
+</style>
+
+<script>
+  (function() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    const sunIcon = themeToggle.querySelector('.sun-icon');
+    const moonIcon = themeToggle.querySelector('.moon-icon');
+    
+    function updateIcons() {
+      const isDark = document.documentElement.classList.contains('dark');
+      sunIcon.style.display = isDark ? 'none' : 'block';
+      moonIcon.style.display = isDark ? 'block' : 'none';
+    }
+    
+    updateIcons();
+    
+    themeToggle.addEventListener('click', function() {
+      document.documentElement.classList.toggle('dark');
+      const isDarkNow = document.documentElement.classList.contains('dark');
+      localStorage.setItem('theme', isDarkNow ? 'dark' : 'light');
+      updateIcons();
+    });
+  })();
+</script>

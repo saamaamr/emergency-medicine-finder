@@ -95,9 +95,21 @@
     --nav-border: #E2E8F0;
     --nav-text: #0F172A;
     --nav-text-muted: #64748B;
+    --nav-surface: #ffffff;
     --nav-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --nav-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --nav-focus-ring: 0 0 0 3px rgba(2, 132, 199, 0.4);
+  }
+
+  /* Dark Mode */
+  .dark {
+    --nav-bg: #1E293B;
+    --nav-border: #334155;
+    --nav-text: #F1F5F9;
+    --nav-text-muted: #94A3B8;
+    --nav-surface: #1E293B;
+    --nav-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --nav-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
   }
 
   .header_section {
@@ -160,7 +172,7 @@
   .nav-search-input-group {
     display: flex;
     align-items: center;
-    background: var(--nav-bg);
+    background: var(--nav-surface);
     border: 2px solid var(--nav-border);
     border-radius: 50px;
     overflow: hidden;
