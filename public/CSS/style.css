@@ -464,6 +464,14 @@ a:hover {
   background-size: 16px 12px;
 }
 
+/* File Input */
+.input-with-icon input[type="file"] {
+  padding-left: 2.75rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--bg-gray);
+}
+
 /* Custom Checkbox */
 .form-check-input:checked {
   background-color: var(--primary);
