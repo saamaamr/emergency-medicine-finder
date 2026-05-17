@@ -11,6 +11,24 @@ let userMarker = null
 let userPulse = null
 let userLocationResolved = false
 let map = null
+let isNewSearch = false // Flag to track if this is a fresh search
+
+// ==================== LOCATION DETECTION ====================
+
+// City coordinates for Bangladesh
+const cityCoords = {
+  dhaka: { lat: 23.8103, lng: 90.4125, name: "Dhaka" },
+  chattogram: { lat: 22.3569, lng: 91.7832, name: "Chattogram" },
+  sylhet: { lat: 24.8967, lng: 91.8711, name: "Sylhet" },
+  khulna: { lat: 22.8456, lng: 89.5403, name: "Khulna" },
+  rangpur: { lat: 25.7439, lng: 89.2752, name: "Rangpur" },
+  barisal: { lat: 22.7010, lng: 90.3535, name: "Barisal" },
+  mymensingh: { lat: 24.7471, lng: 90.4203, name: "Mymensingh" },
+  rajshahi: { lat: 24.3636, lng: 88.6261, name: "Rajshahi" }
+}
+
+let locationStatus = 'default' // default, searching, detected, approximate
+let manualCitySelected = false
 
 function log(level, msg, data) {
   const prefix = '[EMF-MapLibre]'
@@ -121,6 +139,9 @@ function initMap() {
     // Add custom 3D building layer using MapLibre's built-in 3D capabilities
     // This creates a simple extrusion effect where OSM has building data
     
+    // Initialize location controls (floating button, city selector)
+    initLocationControls()
+    
     // Request user location after map loads
     setTimeout(() => {
       if (navigator.geolocation) {
@@ -134,14 +155,30 @@ function initMap() {
 
   // Listen for geolocate events
   geolocate.on('geolocate', (e) => {
+    console.log('[EMF] Geolocate event fired!', e.coords)
     curentlat = e.coords.latitude
     curentlng = e.coords.longitude
     userLocationResolved = true
+    manualCitySelected = false
+    
     log('info', 'User location detected via GeolocateControl', { lat: curentlat, lng: curentlng })
+    
+    // Create user marker and update status
+    addUserLocation(curentlat, curentlng)
+    const cityName = getCityNameFromCoords(curentlat, curentlng)
+    console.log('[EMF] Calling updateLocationStatus with detected, city:', cityName)
+    updateLocationStatus('detected', cityName)
+    
+    // Recalculate if we have results
+    if (demo.length > 0) {
+      recalculateDistances()
+    }
   })
 
   geolocate.on('error', (e) => {
-    log('warn', 'Geolocate error, using fallback', e.message)
+    log('warn', 'Geolocate error, trying IP fallback', e.message)
+    // Don't auto-fallback here, let user click the button
+    updateLocationStatus('default')
   })
 
   // Handle map errors
@@ -154,16 +191,46 @@ function initMap() {
 
 // Initialize map when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('[EMF] DOM ready, initializing...')
   initMap()
+  console.log('[EMF] Map initialized')
+  
+  // Setup search functionality - wait for DOM to be fully ready
+  setTimeout(() => {
+    attachSearchListeners()
+    console.log('[EMF] Search functionality setup complete')
+  }, 100)
+  
+  // Update location status after a delay (in case geolocate fired before elements ready)
+  setTimeout(() => {
+    if (userLocationResolved && curentlat && curentlng) {
+      const cityName = getCityNameFromCoords(curentlat, curentlng)
+      updateLocationStatus('detected', cityName)
+    }
+  }, 2000)
+  
+  // Auto-search from URL param (navbar search)
+  const urlParams = new URLSearchParams(window.location.search)
+  const mname = urlParams.get('mname')
+  if (mname && mname.trim()) {
+    const searchInput = getSearchInput()
+    if (searchInput) {
+      searchInput.value = mname.trim()
+      performSearch(mname.trim())
+    }
+  }
 })
 
 // Add user location marker
 function addUserLocation(lat, lng) {
   log('info', 'Adding user location marker', { lat, lng })
   
-  // Remove existing user marker and pulse
+  // Remove existing user marker
   if (userMarker) { userMarker.remove(); userMarker = null }
-  if (userPulse) { userPulse.remove(); userPulse = null }
+
+  // Remove old pulse source/layer if exists
+  if (map.getLayer('user-pulse-layer')) map.removeLayer('user-pulse-layer')
+  if (map.getSource('user-pulse')) map.removeSource('user-pulse')
 
   // Create user marker element
   const userEl = document.createElement('div')
@@ -175,14 +242,31 @@ function addUserLocation(lat, lng) {
     </div>
   `
 
-  // Create accuracy circle
-  userPulse = new maplibregl.Circle({
-    radius: 30,
-    color: '#22c55e',
-    fillColor: '#22c55e',
-    fillOpacity: 0.1,
-    weight: 1,
-  }).setLngLat([lng, lat]).addTo(map)
+  // Create accuracy circle using GeoJSON source and circle layer
+  map.addSource('user-pulse', {
+    type: 'geojson',
+    data: {
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [lng, lat]
+      }
+    }
+  })
+
+  map.addLayer({
+    id: 'user-pulse-layer',
+    type: 'circle',
+    source: 'user-pulse',
+    paint: {
+      'circle-radius': 30,
+      'circle-color': '#22c55e',
+      'circle-opacity': 0.15,
+      'circle-stroke-color': '#22c55e',
+      'circle-stroke-width': 1,
+      'circle-stroke-opacity': 0.5
+    }
+  })
 
   // Create marker
   userMarker = new maplibregl.Marker({ element: userEl })
@@ -222,6 +306,7 @@ async function getRoute(startLng, startLat, endLng, endLat, pharmacyName) {
     // OSRM routing API - use public demo server
     const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&steps=true`
     
+    log('info', 'Fetching route from OSRM...')
     const response = await fetch(url)
     
     if (!response.ok) {
@@ -229,9 +314,41 @@ async function getRoute(startLng, startLat, endLng, endLat, pharmacyName) {
     }
     
     const data = await response.json()
+    log('info', 'OSRM response:', data)
     
     if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
-      log('warn', 'No route found, falling back to Google Maps')
+      log('warn', 'No route found from OSRM, trying alternative...')
+      // Try alternative OSRM server
+      try {
+        const altUrl = `https://routing.openstreetmap.de/routed-car/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`
+        const altResponse = await fetch(altUrl)
+        const altData = await altResponse.json()
+        
+        if (altData.code === 'Ok' && altData.routes && altData.routes.length > 0) {
+          const route = altData.routes[0]
+          const geometry = route.geometry
+          routeInfo = {
+            distance: route.distance,
+            duration: route.duration,
+            geometry: geometry
+          }
+          
+          currentRouteDestination = {
+            name: pharmacyName,
+            lat: endLat,
+            lng: endLng,
+            distance: route.distance,
+            duration: route.duration
+          }
+          
+          log('info', 'Route found from alternative OSRM')
+          drawRoute(geometry, pharmacyName, endLat, endLng)
+          return
+        }
+      } catch (altErr) {
+        log('warn', 'Alternative route also failed', altErr.message)
+      }
+      
       openGoogleMapsDirections(endLat, endLng, pharmacyName)
       return
     }
@@ -263,6 +380,7 @@ async function getRoute(startLng, startLat, endLng, endLat, pharmacyName) {
     
   } catch (err) {
     log('error', 'Route calculation failed', err.message)
+    showNotification('Route unavailable. Opening Google Maps.', 'warning')
     // Fallback to Google Maps
     openGoogleMapsDirections(endLat, endLng, pharmacyName)
   }
@@ -363,6 +481,266 @@ function formatDuration(seconds) {
   const hours = Math.floor(seconds / 3600)
   const mins = Math.round((seconds % 3600) / 60)
   return hours + ' hr ' + mins + ' min'
+}
+
+// ==================== LOCATION FUNCTIONS ====================
+
+// Update location status badge
+function updateLocationStatus(status, cityName = '') {
+  const statusEl = document.getElementById('location-status')
+  const btnEl = document.getElementById('btn-my-location')
+  const citySelector = document.getElementById('city-selector')
+  
+  console.log('[EMF] updateLocationStatus called:', status, cityName, 'statusEl:', !!statusEl)
+  
+  if (!statusEl) {
+    console.warn('[EMF] Location status element not found, will retry...')
+    setTimeout(() => updateLocationStatus(status, cityName), 500)
+    return
+  }
+  
+  statusEl.className = 'location-status status-' + status
+  locationStatus = status
+  
+  const iconEl = statusEl.querySelector('.location-icon')
+  const textEl = statusEl.querySelector('.location-text')
+  
+  if (!iconEl || !textEl) {
+    console.warn('[EMF] Location status child elements not found')
+    return
+  }
+  
+  const iconMap = {
+    'default': '⚠️',
+    'searching': '⏳',
+    'detected': '✅',
+    'approximate': '📡'
+  }
+  
+  const textMap = {
+    'default': 'Location not detected',
+    'searching': 'Getting location...',
+    'detected': 'Location: ' + cityName,
+    'approximate': 'Location: ' + cityName + ' (Approx)'
+  }
+  
+  iconEl.textContent = iconMap[status] || '⚠️'
+  textEl.textContent = textMap[status] || 'Unknown'
+  
+  // Hide city selector when location is detected (GPS or IP)
+  if (citySelector) {
+    if (status === 'detected' || status === 'approximate') {
+      citySelector.style.display = 'none'
+    } else {
+      citySelector.style.display = 'block'
+    }
+  }
+  
+  // Update button state
+  if (btnEl) {
+    if (status === 'searching') {
+      btnEl.classList.add('searching')
+    } else {
+      btnEl.classList.remove('searching')
+    }
+    if (status === 'detected' || status === 'approximate') {
+      btnEl.classList.add('success')
+    } else {
+      btnEl.classList.remove('success')
+    }
+  }
+  
+  log('info', 'Location status updated:', { status, cityName })
+}
+
+// Request user location via browser GPS
+function requestUserLocation() {
+  const btnEl = document.getElementById('btn-my-location')
+  updateLocationStatus('searching')
+  
+  if (btnEl) btnEl.classList.add('searching')
+  
+  if (!navigator.geolocation) {
+    log('warn', 'Geolocation not supported, trying IP fallback')
+    getIPLocation()
+    return
+  }
+  
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      // Success - got GPS location
+      curentlat = position.coords.latitude
+      curentlng = position.coords.longitude
+      userLocationResolved = true
+      manualCitySelected = false
+      
+      log('info', 'User location detected via GPS', { lat: curentlat, lng: curentlng })
+      
+      // Create user marker at this location
+      addUserLocation(curentlat, curentlng)
+      
+      // Update status
+      const cityName = getCityNameFromCoords(curentlat, curentlng)
+      updateLocationStatus('detected', cityName)
+      
+      // Recalculate distances if we have results
+      if (demo.length > 0) {
+        recalculateDistances()
+      }
+      
+      showNotification('Location detected! Using GPS coordinates.', 'success')
+    },
+    (error) => {
+      // Failed - try IP fallback
+      log('warn', 'Geolocation failed:', error.message)
+      getIPLocation()
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  )
+}
+
+// Get location via IP (fallback)
+async function getIPLocation() {
+  try {
+    log('info', 'Trying IP-based location detection...')
+    const response = await fetch('http://ip-api.com/json/')
+    
+    if (!response.ok) throw new Error('IP API failed')
+    
+    const data = await response.json()
+    
+    if (data.status === 'success' && data.lat && data.lon) {
+      // Check if location is in Bangladesh
+      if (data.countryCode === 'BD') {
+        curentlat = data.lat
+        curentlng = data.lon
+        userLocationResolved = true
+        manualCitySelected = false
+        
+        log('info', 'Location detected via IP', { lat: curentlat, lng: curentlng, city: data.city })
+        
+        // Create user marker
+        addUserLocation(curentlat, curentlng)
+        
+        // Update status
+        updateLocationStatus('approximate', data.city || 'Bangladesh')
+        
+        // Recalculate distances
+        if (demo.length > 0) {
+          recalculateDistances()
+        }
+        
+        showNotification('Location detected (IP-based). Approximate accuracy.', 'info')
+      } else {
+        throw new Error('Not in Bangladesh')
+      }
+    } else {
+      throw new Error('IP API returned no data')
+    }
+  } catch (err) {
+    log('error', 'IP location failed:', err.message)
+    updateLocationStatus('default')
+    showNotification('Could not detect location. Please select city manually.', 'warning')
+  }
+}
+
+// Get city name from coordinates (simple approximation)
+function getCityNameFromCoords(lat, lng) {
+  // Find closest city from coordinates
+  let closestCity = 'Dhaka'
+  let minDistance = Infinity
+  
+  for (const [key, city] of Object.entries(cityCoords)) {
+    const distance = calculateDistance(lat, lng, city.lat, city.lng)
+    if (distance < minDistance) {
+      minDistance = distance
+      closestCity = city.name
+    }
+  }
+  
+  return closestCity
+}
+
+// Set location from city dropdown
+function setCityLocation(cityKey) {
+  const city = cityCoords[cityKey]
+  if (!city) {
+    log('warn', 'Invalid city key:', cityKey)
+    return
+  }
+  
+  curentlat = city.lat
+  curentlng = city.lng
+  userLocationResolved = true
+  manualCitySelected = true
+  
+  log('info', 'Manual city selected:', { city: city.name, lat: curentlat, lng: curentlng })
+  
+  // Create user marker
+  addUserLocation(curentlat, curentlng)
+  
+  // Update status
+  updateLocationStatus('detected', city.name)
+  
+  // Update dropdown
+  const selector = document.getElementById('city-selector')
+  if (selector) selector.value = cityKey
+  
+  // Recalculate distances
+  if (demo.length > 0) {
+    recalculateDistances()
+  }
+  
+  showNotification('Location set to ' + city.name, 'success')
+}
+
+// Recalculate distances with new location
+function recalculateDistances() {
+  if (!demo || demo.length === 0) return
+  
+  log('info', 'Recalculating distances from new location', { lat: curentlat, lng: curentlng })
+  
+  // Recalculate distances
+  demo.forEach(item => {
+    if (item.lat && item.lng) {
+      item.distance = calculateDistance(curentlat, curentlng, parseFloat(item.lat), parseFloat(item.lng))
+    }
+  })
+  
+  // Sort by distance
+  demo.sort((a, b) => a.distance - b.distance)
+  
+  // Update UI
+  updateResultsUI(demo)
+  
+  // Re-place markers
+  placeMarkers(demo)
+  
+  log('info', 'Distances recalculated, nearest:', demo[0]?.shopname)
+}
+
+// Initialize location controls
+function initLocationControls() {
+  const btnEl = document.getElementById('btn-my-location')
+  const selector = document.getElementById('city-selector')
+  
+  if (btnEl) {
+    btnEl.addEventListener('click', requestUserLocation)
+  }
+  
+  if (selector) {
+    selector.addEventListener('change', (e) => {
+      if (e.target.value) {
+        setCityLocation(e.target.value)
+      }
+    })
+  }
+  
+  log('info', 'Location controls initialized')
 }
 
 // Show route loading state
@@ -471,11 +849,30 @@ document.head.appendChild(style)
 
 // Route button click handler - called from popup
 function showRouteToPharmacy(lat, lng, name, address) {
-  if (!curentlat || !curentlng) {
-    log('warn', 'User location not available')
-    showNotification('Please enable location to get directions', 'warning')
-    // Fall back to Google Maps
-    openGoogleMapsDirections(lat, lng, name || address)
+  log('info', 'showRouteToPharmacy called', { lat, lng, name, curentlat, curentlng })
+  
+  if (!curentlat || !curentlng || curentlat === 23.8103) {
+    log('warn', 'User location not available, requesting...')
+    showNotification('Getting your location...', 'info')
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          curentlat = position.coords.latitude
+          curentlng = position.coords.longitude
+          log('info', 'Got user location for route', { lat: curentlat, lng: curentlng })
+          getRoute(curentlng, curentlat, lng, lat, name || address)
+        },
+        (error) => {
+          log('error', 'Geolocation error', error.message)
+          showNotification('Location unavailable. Opening Google Maps.', 'warning')
+          openGoogleMapsDirections(lat, lng, name || address)
+        }
+      )
+    } else {
+      showNotification('Geolocation not supported. Opening Google Maps.', 'warning')
+      openGoogleMapsDirections(lat, lng, name || address)
+    }
     return
   }
   
@@ -499,6 +896,7 @@ let liveTrackingInterval = null
 let watchPositionId = null
 let liveTrackingDestination = null
 let liveTrackingStartTime = null
+let liveTrackingDestMarker = null
 
 // Start live tracking to a pharmacy
 function startLiveTracking(lat, lng, pharmacyName, pharmacyAddress) {
@@ -510,10 +908,15 @@ function startLiveTracking(lat, lng, pharmacyName, pharmacyAddress) {
     return
   }
   
-  // Check if user location is available
-  if (!curentlat || !curentlng) {
-    showNotification('Your location not available. Please enable location.', 'warning')
+  // Check if user location is actually detected (not default Dhaka)
+  if (!userLocationResolved || !curentlat || !curentlng) {
+    showNotification('Please use "Use My Location" button first to enable live tracking.', 'warning')
     return
+  }
+  
+  // Warn if using approximate (IP-based) location
+  if (manualCitySelected) {
+    showNotification('Using manual city location. For accurate tracking, use GPS location.', 'info')
   }
   
   // Store destination
@@ -529,6 +932,48 @@ function startLiveTracking(lat, lng, pharmacyName, pharmacyAddress) {
   
   // Create live tracking UI
   createLiveTrackingUI(pharmacyName, pharmacyAddress)
+  
+  // Add destination marker on map
+  if (map) {
+    // Remove existing destination marker if any
+    if (liveTrackingDestMarker) {
+      liveTrackingDestMarker.remove()
+    }
+    
+    // Create destination marker element
+    const destEl = document.createElement('div')
+    destEl.className = 'marker-destination'
+    destEl.innerHTML = '<img src="/images/marker-pharmacy.svg" alt="Destination">'
+    destEl.style.cssText = 'width:36px;height:36px;filter:drop-shadow(0 2px 4px rgba(139,92,246,0.5));'
+    
+    // Add destination marker
+    liveTrackingDestMarker = new maplibregl.Marker({ element: destEl })
+      .setLngLat([lng, lat])
+      .addTo(map)
+    
+    // Add pulse effect
+    const destPulse = document.createElement('div')
+    destPulse.className = 'destination-pulse'
+    destPulse.style.cssText = `
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(139, 92, 246, 0.3);
+      animation: destPulse 2s infinite;
+      transform: translate(-7px, -7px);
+    `
+    destEl.appendChild(destPulse)
+    
+    // Add destination popup
+    const destPopup = new maplibregl.Popup({ offset: 25, closeButton: false })
+      .setHTML(`<div style="padding:8px;font-family:'Figtree',sans-serif;">
+        <strong style="color:#7C3AED;">📍 Destination</strong><br>
+        <span style="color:#64748B;font-size:0.85rem;">${pharmacyName}</span>
+      </div>`)
+    liveTrackingDestMarker.setPopup(destPopup)
+    liveTrackingDestMarker.togglePopup()
+  }
   
   // Start watching position
   watchPositionId = navigator.geolocation.watchPosition(
@@ -595,6 +1040,12 @@ function stopLiveTracking() {
     liveTrackingInterval = null
   }
   
+  // Remove destination marker
+  if (liveTrackingDestMarker) {
+    liveTrackingDestMarker.remove()
+    liveTrackingDestMarker = null
+  }
+  
   liveTrackingDestination = null
   liveTrackingStartTime = null
   
@@ -611,8 +1062,16 @@ function updateUserMarkerPosition(lat, lng) {
     userMarker.setLngLat([lng, lat])
   }
   
-  if (userPulse) {
-    userPulse.setLngLat([lng, lat])
+  // Update the GeoJSON source for the pulse circle
+  const source = map.getSource('user-pulse')
+  if (source) {
+    source.setData({
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [lng, lat]
+      }
+    })
   }
 }
 
@@ -881,17 +1340,57 @@ function createPharmacyMarker(item, index, isSelected) {
 
 // Highlight sidebar card
 function highlightSidebarCard(index) {
+  const isDark = document.documentElement.classList.contains('dark')
+  
   document.querySelectorAll('.result-card').forEach(c => {
-    c.style.borderColor = '#e5e7eb'
-    c.style.boxShadow = 'none'
-    c.style.background = 'white'
+    if (isDark) {
+      c.style.borderColor = 'rgba(56, 189, 248, 0.1)'
+      c.style.boxShadow = 'none'
+      c.style.background = ''
+    } else {
+      c.style.borderColor = '#e5e7eb'
+      c.style.boxShadow = 'none'
+      c.style.background = 'white'
+    }
   })
+  
   const card = document.querySelector(`.result-card[data-index="${index}"]`)
   if (card) {
-    card.style.borderColor = '#15803D'
-    card.style.boxShadow = '0 2px 12px rgba(21,128,61,0.15)'
-    card.style.background = '#F0FDF4'
+    if (isDark) {
+      card.style.borderColor = 'rgba(34, 197, 94, 0.4)'
+      card.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.2)'
+      card.style.background = ''
+    } else {
+      card.style.borderColor = '#15803D'
+      card.style.boxShadow = '0 2px 12px rgba(21,128,61,0.15)'
+      card.style.background = '#F0FDF4'
+    }
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }
+}
+
+// Show search feedback (success/error/loading)
+function showSearchFeedback(type, message) {
+  const feedback = document.getElementById('search-feedback')
+  if (!feedback) return
+  
+  feedback.className = 'search-feedback'
+  feedback.innerHTML = ''
+  
+  if (type === 'loading') {
+    feedback.innerHTML = '<span class="spinner" style="width:14px;height:14px;"></span>' + message
+    feedback.classList.add('show', 'loading')
+    return
+  }
+  
+  if (type === 'success') {
+    feedback.innerHTML = '<i class="ri-check-circle-line"></i>' + message
+    feedback.classList.add('show', 'success')
+    setTimeout(() => feedback.classList.remove('show'), 4000)
+  } else if (type === 'error') {
+    feedback.innerHTML = '<i class="ri-error-warning-line"></i>' + message
+    feedback.classList.add('show', 'error')
+    setTimeout(() => feedback.classList.remove('show'), 5000)
   }
 }
 
@@ -901,14 +1400,30 @@ function updateResultsUI(data) {
   const emptyState = document.getElementById('empty-state')
   const noResults = document.getElementById('no-results-state')
   const countEl = document.getElementById('result-count')
+  const mainSearchBtn = document.getElementById('search-btn')
+  const navSearchBtn = document.getElementById('searchmedi-btn')
+  
+  // Reset button state
+  if (mainSearchBtn) {
+    mainSearchBtn.disabled = false
+    mainSearchBtn.classList.remove('loading')
+  }
+  if (navSearchBtn) {
+    navSearchBtn.disabled = false
+    navSearchBtn.classList.remove('loading')
+  }
+
   if (!list) return
 
   if (!data || data.length === 0) {
+    // Show error feedback
+    showSearchFeedback('error', 'No nearby pharmacies currently stock this medicine')
+    
     if (emptyState) emptyState.style.display = 'none'
     if (noResults) {
       noResults.style.display = 'block'
       const title = noResults.querySelector('.fw-bold')
-      if (title) title.textContent = 'No nearby pharmacies have this medicine'
+      if (title) title.textContent = 'No nearby pharmacy currently has this medicine'
     }
     list.innerHTML = ''
     if (countEl) countEl.textContent = '0'
@@ -919,6 +1434,9 @@ function updateResultsUI(data) {
   if (emptyState) emptyState.style.display = 'none'
   if (noResults) noResults.style.display = 'none'
   if (countEl) countEl.textContent = data.length
+  
+  // Show success feedback
+  showSearchFeedback('success', data.length + ' nearby pharmacies found')
 
   log('info', 'Rendering ' + data.length + ' results in sidebar')
 
@@ -926,51 +1444,80 @@ function updateResultsUI(data) {
   data.forEach((item, index) => {
     const dist = item.distance ? formatDistance(item.distance) : '--'
     const qty = item.stock != null ? parseInt(item.stock) : 0
+    const stockClass = qty > 10 ? 'available' : qty > 0 ? 'low' : 'out'
     const stockLabel = qty > 10 ? 'In Stock' : qty > 0 ? 'Low Stock' : 'Out of Stock'
-    const stockColor = qty > 10 ? '#15803D' : qty > 0 ? '#D97706' : '#dc2626'
+    const stockIcon = stockClass === 'available' ? 'check-circle' : stockClass === 'low' ? 'alert-line' : 'close-line'
     const addr = buildAddress(item)
     const isNearest = index === 0
     html += `
-      <div class="result-card" data-index="${index}" style="background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:all 0.2s ease;${isNearest ? 'border-color:#15803D;' : ''}"
+      <div class="result-card" data-index="${index}" ${isNearest ? 'active' : ''}
         onmouseover="highlightMarker(${index})"
         onmouseout="unhighlightMarker(${index})"
         onclick="focusMarker(${index})">
-        <div class="d-flex justify-content-between align-items-start mb-1">
-          <h6 class="fw-bold mb-0" style="color:#14532D;font-size:0.95rem;display:flex;align-items:center;gap:4px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#15803D" style="flex-shrink:0;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        <div class="result-card-header">
+          <h6 class="pharmacy-name">
+            ${isNearest ? '<span class="nearest-badge"><i class="ri-star-fill"></i> Nearest</span>' : ''}
             ${item.shopname}
-            ${isNearest ? '<span style="font-size:0.6rem;background:#15803D;color:white;padding:1px 8px;border-radius:20px;font-weight:600;white-space:nowrap;">Nearest</span>' : ''}
           </h6>
-          <span class="badge" style="background:#15803D;color:white;font-size:0.7rem;white-space:nowrap;">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="white" style="display:inline;vertical-align:-1px;margin-right:2px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          <span class="result-distance">
+            <i class="ri-map-pin-distance"></i>
             ${dist}
           </span>
         </div>
-        <p class="mb-1" style="color:#166534;font-size:0.85rem;font-weight:500;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="#15803D" style="display:inline;vertical-align:-2px;margin-right:4px;"><rect x="7" y="3" width="4" height="18" rx="2"/><rect x="12" y="7" width="4" height="10" rx="2" transform="rotate(90 14 12)"/></svg>
-          ${item.mediname}${item.medistrength ? ' (' + item.medistrength + ')' : ''}
-        </p>
-        <div class="d-flex justify-content-between align-items-center">
-          <span class="fw-bold" style="color:#15803D;font-size:1.1rem;">BDT ${item.price} <small style="font-size:0.7rem;color:#6b7280;">/ pcs</small></span>
-          <div class="d-flex align-items-center gap-2">
-            <span style="font-size:0.75rem;padding:2px 10px;border-radius:20px;background:${stockColor}15;color:${stockColor};font-weight:600;">${stockLabel}</span>
+        <div class="medicine-info">
+          <div class="medicine-name-result">
+            <i class="ri-medicine-bottle-line"></i>
+            ${item.mediname}${item.medistrength ? ' (' + item.medistrength + ')' : ''}
+          </div>
+          <div class="medicine-price">
+            <span class="price-value">BDT ${item.price}</span>
+            <small>/ pcs</small>
           </div>
         </div>
-        <div class="d-flex justify-content-between align-items-center mt-1">
-          <span style="font-size:0.75rem;color:#6b7280;">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="#6b7280" style="display:inline;vertical-align:-1px;margin-right:2px;"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.36 11.36 0 003.58.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 00.57 3.58 1 1 0 01-.25 1.01l-2.2 2.2z"/></svg>
-            ${item.phone || '--'}
+        <div class="result-info-row">
+          <span class="stock-badge ${stockClass}">
+            <i class="ri-${stockIcon}"></i>
+            ${stockLabel}
           </span>
-          ${addr ? '<span style="font-size:0.7rem;color:#9ca3af;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><svg width="10" height="10" viewBox="0 0 24 24" fill="#9ca3af" style="display:inline;vertical-align:-1px;margin-right:2px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg> ' + addr + '</span>' : ''}
+          <span class="result-phone">
+            <i class="ri-phone-line"></i> ${item.phone || '--'}
+          </span>
         </div>
-        <button class="btn btn-sm w-100 mt-2" style="background:#15803D;color:white;border:none;font-weight:500;border-radius:8px;"
-          onclick="event.stopPropagation();handleRequest(this,'${item.id}','${item.email}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display:inline;vertical-align:-2px;margin-right:4px;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-          Request Medicine
-        </button>
+        <div class="result-actions">
+          <button class="btn btn-route" onclick="event.stopPropagation();showRouteToPharmacy(${item.lat}, ${item.lng}, '${item.shopname.replace(/'/g, "\\'")}', '${(addr || '').replace(/'/g, "\\'")}')">
+            <i class="ri-navigation-line"></i> Route
+          </button>
+          <button class="btn btn-view-map" onclick="event.stopPropagation();focusMarker(${index})">
+            <i class="ri-map-fill"></i> View
+          </button>
+          <button class="btn btn-call" onclick="event.stopPropagation();window.open('tel:${item.phone}')">
+            <i class="ri-phone-fill"></i> Call
+          </button>
+        </div>
       </div>`
   })
   list.innerHTML = html
+  
+  // Scroll to results section
+  const searchSection = document.querySelector('.search-section')
+  if (searchSection) {
+    searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
+// Generate skeleton loading cards
+function generateSkeletons(count) {
+  let html = ''
+  for (let i = 0; i < count; i++) {
+    html += `
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-line short"></div>
+        <div class="skeleton skeleton-line medium"></div>
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-line short" style="margin-top:0.5rem"></div>
+      </div>`
+  }
+  return html
 }
 
 // Focus marker
@@ -987,16 +1534,16 @@ function focusMarker(index) {
     essential: true,
   })
   
-  clearMarkers()
-  placeMarkers(demo, index)
   highlightSidebarCard(index)
   
-  setTimeout(() => {
-    const marker = pharmacyMarkers.get(index)
-    if (marker) {
-      marker.togglePopup()
+  // Show popup for this marker
+  const marker = pharmacyMarkers.get(index)
+  if (marker) {
+    const popup = marker.getPopup()
+    if (popup && !popup.isOpen()) {
+      popup.addTo(map)
     }
-  }, 600)
+  }
 }
 
 // Highlight marker on hover
@@ -1007,9 +1554,7 @@ function highlightMarker(index) {
   const marker = pharmacyMarkers.get(index)
   if (marker) {
     marker.getElement().querySelector('img').src = '/images/marker-selected.svg'
-    if (!marker.getPopup().isOpen()) {
-      marker.togglePopup()
-    }
+    // Don't auto-open popup on hover to prevent conflicts
   }
 }
 
@@ -1025,11 +1570,18 @@ function unhighlightMarker(index) {
   }
   
   // Reset to nearest card highlight
+  const isDark = document.documentElement.classList.contains('dark')
   const nearest = document.querySelector('.result-card[data-index="0"]')
   if (nearest) {
-    nearest.style.borderColor = '#15803D'
-    nearest.style.boxShadow = '0 2px 12px rgba(21,128,61,0.15)'
-    nearest.style.background = '#F0FDF4'
+    if (isDark) {
+      nearest.style.borderColor = 'rgba(34, 197, 94, 0.4)'
+      nearest.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.2)'
+      nearest.style.background = ''
+    } else {
+      nearest.style.borderColor = '#15803D'
+      nearest.style.boxShadow = '0 2px 12px rgba(21,128,61,0.15)'
+      nearest.style.background = '#F0FDF4'
+    }
   }
 }
 
@@ -1052,6 +1604,25 @@ function placeMarkers(data, focusIndex) {
     const bounds = new maplibregl.LngLatBounds()
     data.forEach(item => bounds.extend([parseFloat(item.lng), parseFloat(item.lat)]))
     map.fitBounds(bounds, { padding: 50, maxZoom: 15, duration: 500 })
+    
+    // Show popup for nearest pharmacy only on fresh search
+    if (isNewSearch && data.length > 0) {
+      setTimeout(() => {
+        try {
+          const nearestMarker = pharmacyMarkers.get(0)
+          if (nearestMarker) {
+            const popup = nearestMarker.getPopup()
+            if (popup && !popup.isOpen()) {
+              popup.addTo(map)
+              highlightSidebarCard(0)
+              log('info', 'Popup opened for nearest pharmacy on new search')
+            }
+          }
+        } catch (e) {
+          log('error', 'Error opening popup:', e.message)
+        }
+      }, 1000)
+    }
   }
 
   log('info', pharmacyMarkers.size + ' markers rendered on map')
@@ -1079,15 +1650,24 @@ function performSearch(query) {
     return
   }
 
+  // Show loading state with premium button
   if (mainSearchBtn) {
     mainSearchBtn.disabled = true
-    if (mainSearchBtnText) mainSearchBtnText.innerHTML = '<span class="loading-spinner"></span>'
+    mainSearchBtn.classList.add('loading')
   }
 
   if (navSearchBtn) {
     navSearchBtn.disabled = true
     navSearchBtn.classList.add('loading')
   }
+
+  // Show skeleton loading in results
+  if (resultsList) {
+    resultsList.innerHTML = generateSkeletons(4)
+  }
+
+  // Show loading feedback
+  showSearchFeedback('loading', 'Searching nearby pharmacies...')
 
   const searchTerm = query.trim()
   log('info', 'Fetching search results for:', searchTerm)
@@ -1136,7 +1716,9 @@ function performSearch(query) {
       const nearest = validData[0]
       log('info', 'Search result: ' + validData.length + ' pharmacies, nearest: ' + nearest.shopname)
       
+      isNewSearch = true
       placeMarkers(validData)
+      isNewSearch = false // Reset after placing markers
       
       // MapLibre uses different flyTo syntax
       map.flyTo({
@@ -1144,14 +1726,14 @@ function performSearch(query) {
         zoom: 16,
         duration: 1000,
       })
-
+      
+      // Auto-show route to nearest pharmacy after popup opens
       setTimeout(() => {
-        const nearestMarker = pharmacyMarkers.get(0)
-        if (nearestMarker) {
-          nearestMarker.togglePopup()
-          highlightSidebarCard(0)
+        if (userLocationResolved && nearest.lat && nearest.lng) {
+          console.log('[EMF] Auto-displaying route to nearest pharmacy')
+          showRouteToPharmacy(nearest.lat, nearest.lng, nearest.shopname, buildAddress(nearest))
         }
-      }, 1200)
+      }, 2000)
       
       demo = validData
       log('info', 'Search complete - ' + validData.length + ' pharmacies displayed with zoom effect')

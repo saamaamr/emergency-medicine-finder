@@ -1,0 +1,191 @@
+/* ============================================
+   Component Styles - Reusable UI Components
+   ============================================ */
+
+/* --- OTP Input Styles --- */
+.otp-digit {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+/* --- Progress Bar --- */
+.progress {
+  height: 4px;
+}
+
+.progress-bar {
+  transition: width 0.3s ease;
+}
+
+/* --- Profile Image --- */
+.profile-image {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border: 3px solid var(--primary);
+  border-radius: 50%;
+}
+
+.profile-image-sm {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-image-xs {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+}
+
+/* --- Prescription Image --- */
+.prescription-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* --- Form Controls --- */
+textarea.form-control {
+  height: 120px;
+}
+
+/* --- Sidebar Item --- */
+.sidebar-item-nowrap {
+  white-space: nowrap;
+}
+
+/* --- Table Responsive --- */
+.table-responsive-custom {
+  max-height: 300px;
+}
+
+/* --- Inline SVG helpers --- */
+.svg-inline {
+  display: inline;
+  vertical-align: -2px;
+  margin-right: 4px;
+}
+
+.svg-inline-3 {
+  display: inline;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
+
+/* --- Text Muted --- */
+.text-muted-custom {
+  color: var(--color-text-muted);
+}
+
+/* --- Theme Toggle --- */
+.theme-toggle-btn-admin {
+  background: none;
+  border: none;
+  color: white;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-btn-nav {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.moon-icon-hidden {
+  display: none;
+}
+
+/* --- Search Suggestions Container --- */
+.search-suggestions-container {
+  display: none;
+  margin-top: 4px;
+}
+
+/* Modern Search Bar Suggestions */
+.search-modern .search-suggestions-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  margin-top: 8px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+html.dark .search-modern .search-suggestions-container {
+  background: #1E293B;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Map Container (Inline) --- */
+.map-container-inline {
+  min-height: 520px;
+}
+
+/* --- No Results State --- */
+.no-results-state-hidden {
+  display: none;
+}
+
+/* --- Action Buttons Inline --- */
+.btn-inline {
+  display: inline;
+}
+
+/* --- Card Custom --- */
+.card-custom {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-lg);
+  background: var(--color-surface);
+}
+
+.card-body-custom {
+  padding: 2rem;
+}
+
+/* --- Animations --- */
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Inline Style Replacements --- */
+.text-primary-custom {
+  color: var(--color-primary);
+}
+
+.bg-light-custom {
+  background-color: #f8f9fa;
+}
+
+.form-control-height {
+  height: 120px;
+}

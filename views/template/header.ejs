@@ -10,6 +10,17 @@
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
   <title>EMF - Emergency Medicine Finder</title>
 
+  <!-- Theme Initialize BEFORE render to prevent flash -->
+  <script>
+    (function() {
+      const saved = localStorage.getItem('theme');
+      const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefers)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+
   <!-- Google Fonts: Figtree + Noto Sans (Healthcare Design System) -->
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
