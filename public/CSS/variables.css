@@ -1,0 +1,77 @@
+:root {
+  /* Design System: Blue & White Healthcare Palette */
+  
+  /* Primary - Medical Blue */
+  --color-primary: #0284C7;
+  --color-primary-dark: #0369A1;
+  --color-primary-light: #38BDF8;
+  --color-primary-100: #E0F2FE;
+  
+  /* Secondary - Sky Blue */
+  --color-secondary: #0EA5E9;
+  
+  /* Accent - Amber/Orange for CTAs */
+  --color-cta: #059669;
+  --color-cta-dark: #047857;
+  
+  /* Backgrounds - Light Mode */
+  --color-surface: #FFFFFF;
+  --color-border: #E2E8F0;
+  --color-background: #ECFEFF;
+  
+  /* Text - Light Mode */
+  --color-text: #164E63;
+  --color-text-muted: #0E7490;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* Focus Ring */
+  --focus-ring: 0 0 0 3px rgba(8, 145, 178, 0.4);
+  
+  /* Transitions */
+  --transition-fast: 200ms ease-out;
+}
+
+/* Dark Mode */
+.dark {
+  --color-surface: #1E293B;
+  --color-border: #334155;
+  --color-background: #0F172A;
+  --color-text: #E0F2FE;
+  --color-text-muted: #94A3B8;
+  --color-primary-100: #164E63;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+}
+
+/* Nav Variables */
+:root {
+  --nav-primary: #0284C7;
+  --nav-primary-dark: #0369A1;
+  --nav-primary-light: #38BDF8;
+  --nav-bg: #ffffff;
+  --nav-border: #E2E8F0;
+  --nav-text: #0F172A;
+  --nav-text-muted: #64748B;
+  --nav-surface: #ffffff;
+  --nav-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --nav-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --nav-focus-ring: 0 0 0 3px rgba(2, 132, 199, 0.4);
+}
+
+/* Nav Dark Mode */
+.dark {
+  --nav-bg: #1E293B;
+  --nav-border: #334155;
+  --nav-text: #F1F5F9;
+  --nav-text-muted: #94A3B8;
+  --nav-surface: #1E293B;
+  --nav-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+  --nav-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+}
