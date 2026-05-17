@@ -1,5 +1,24 @@
 # Emergency Medicine Finder
 
+---
+
+## ⚠️ Copyright Notice
+
+**Project:** Emergency Medicine Finder  
+**Developer:** Abdullah Al Mamun  
+**Copyright (c) 2026 Abdullah Al Mamun. All rights reserved.**
+
+### Terms of Use:
+- This project is the **intellectual property of Abdullah Al Mamun**
+- Anyone using this code must give **appropriate credit** to Abdullah Al Manun
+- You must include this **copyright notice** in any copy or derivative work
+- **Selling** or **claiming** this project as your own is **prohibited**
+- **Commercial use** without written permission is not allowed
+
+For permissions, collaborations, or inquiries, please contact the developer.
+
+---
+
 A full-stack web application for finding emergency medicines and managing pharmacy operations in Bangladesh. Users search medicines across local pharmacies, shopkeepers manage inventory/sales/expenses, and admins oversee the entire platform.
 
 ## Contents
