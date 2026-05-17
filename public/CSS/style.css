@@ -301,78 +301,105 @@ a:hover {
   padding: 1.5rem;
 }
 
-/* Buttons */
+/* Buttons - Modern Design */
 .btn {
   font-weight: 600;
   padding: 0.625rem 1.5rem;
-  border-radius: var(--radius);
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.btn:hover::before {
+  opacity: 1;
 }
 
 .btn-primary {
-  background: var(--primary);
-  color: var(--text-inverse);
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
-  color: var(--text-inverse);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow);
+  background: linear-gradient(135deg, #0369A1 0%, #075985 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(2, 132, 199, 0.4);
 }
 
 .btn-primary:active {
   transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
 }
 
 .btn-secondary {
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  border: 1px solid var(--bg-gray);
+  background: white;
+  color: #374151;
+  border: 1px solid #E5E7EB;
 }
 
 .btn-secondary:hover {
-  background: var(--bg-gray);
-  color: var(--text-primary);
+  background: #F3F4F6;
+  color: #1F2937;
+  transform: translateY(-1px);
 }
 
 .btn-accent {
-  background: var(--accent);
-  color: var(--text-inverse);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
 }
 
 .btn-accent:hover {
-  background: var(--accent-dark);
-  color: var(--text-inverse);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow);
+  background: linear-gradient(135deg, #047857 0%, #065F46 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(5, 150, 105, 0.4);
 }
 
 .btn-danger {
-  background: var(--danger);
-  color: var(--text-inverse);
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
 }
 
 .btn-danger:hover {
-  background: #991B1B;
-  color: var(--text-inverse);
+  background: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(220, 38, 38, 0.4);
 }
 
 .btn-outline-primary {
   background: transparent;
-  border: 2px solid var(--primary);
-  color: var(--primary);
+  border: 2px solid #0284C7;
+  color: #0284C7;
 }
 
 .btn-outline-primary:hover {
-  background: var(--primary);
-  color: var(--text-inverse);
+  background: #0284C7;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
 }
 
 .btn-sm {
@@ -388,7 +415,20 @@ a:hover {
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Dark Mode Buttons */
+.dark .btn-secondary {
+  background: #1E293B;
+  border-color: #334155;
+  color: #E2E8F0;
+}
+
+.dark .btn-secondary:hover {
+  background: #334155;
+  color: #F1F5F9;
 }
 
 /* Forms */

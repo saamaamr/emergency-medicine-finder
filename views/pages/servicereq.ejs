@@ -89,7 +89,7 @@
                   <td class="text-muted small"><%= worker.user_email %></td>
                   <td><span class="badge bg-info"><%= worker.quantity %> pcs</span></td>
                   <td>
-                    <img src="uploads/<%=worker.ppic%>" alt="Prescription" style="width:50px; height:50px; object-fit:cover;" class="rounded">
+                    <img src="uploads/<%=worker.ppic%>" alt="Prescription" class="rounded prescription-image">
                   </td>
                   <%if(worker.status==0){%>
                     <td><span class="badge bg-warning">Pending</span></td>

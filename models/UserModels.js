@@ -611,6 +611,86 @@ const UserModels = {
     const [rows] = await dbConnect.promise().execute(sql, [shopEmail, year, month]);
     return rows[0];
   },
+
+  createShopkeeperOTP: async (email, hashedOTP, expiresAt, purpose = 'signup') => {
+    try {
+      await dbConnect.promise().execute(
+        'DELETE FROM shopkeeper_otp WHERE email = ?',
+        [email]
+      );
+      const sql = 'INSERT INTO shopkeeper_otp (email, otp_hash, purpose, expires_at) VALUES (?, ?, ?, ?)';
+      const [rows] = await dbConnect.promise().execute(sql, [email, hashedOTP, purpose, expiresAt]);
+      return rows;
+    } catch (err) {
+      console.error('createShopkeeperOTP error:', err);
+      return err;
+    }
+  },
+
+  getShopkeeperOTP: async (email) => {
+    try {
+      const sql = `SELECT *, TIMESTAMPDIFF(SECOND, NOW(), expires_at) as time_remaining 
+        FROM shopkeeper_otp WHERE email = ? AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1`;
+      const [rows] = await dbConnect.promise().execute(sql, [email]);
+      return rows[0] || null;
+    } catch (err) {
+      console.error('getShopkeeperOTP error:', err);
+      return null;
+    }
+  },
+
+  incrementOTPAttempts: async (email) => {
+    try {
+      const sql = 'UPDATE shopkeeper_otp SET attempts = attempts + 1 WHERE email = ?';
+      const [rows] = await dbConnect.promise().execute(sql, [email]);
+      return rows;
+    } catch (err) {
+      return err;
+    }
+  },
+
+  getOTPAttempts: async (email) => {
+    try {
+      const sql = 'SELECT attempts FROM shopkeeper_otp WHERE email = ? ORDER BY created_at DESC LIMIT 1';
+      const [rows] = await dbConnect.promise().execute(sql, [email]);
+      return rows[0]?.attempts || 0;
+    } catch (err) {
+      return 0;
+    }
+  },
+
+  deleteShopkeeperOTP: async (email) => {
+    try {
+      const sql = 'DELETE FROM shopkeeper_otp WHERE email = ?';
+      const [rows] = await dbConnect.promise().execute(sql, [email]);
+      return rows;
+    } catch (err) {
+      return err;
+    }
+  },
+
+  updateShopkeeperVerification: async (email, type, verified) => {
+    try {
+      const column = type === 'email' ? 'email_verified' : 'phone_verified';
+      const sql = `UPDATE worker SET ${column} = ? WHERE email = ?`;
+      const [rows] = await dbConnect.promise().execute(sql, [verified, email]);
+      return rows;
+    } catch (err) {
+      console.error('updateShopkeeperVerification error:', err);
+      return err;
+    }
+  },
+
+  checkShopkeeperVerification: async (email) => {
+    try {
+      const sql = 'SELECT email_verified, phone_verified, status FROM worker WHERE email = ?';
+      const [rows] = await dbConnect.promise().execute(sql, [email]);
+      return rows[0] || null;
+    } catch (err) {
+      console.error('checkShopkeeperVerification error:', err);
+      return null;
+    }
+  },
 };
 
 module.exports = UserModels;

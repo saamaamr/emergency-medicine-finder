@@ -1,13 +1,3 @@
-/**
- * Emergency Medicine Finder - Map & Search Functionality
- * 
- * MIT License
- * Copyright (c) 2026 Abdullah Al Mamun
- * 
- * A web application that helps users find emergency medicines
- * at nearby pharmacies in Bangladesh.
- */
-
 // MapLibre GL JS Implementation for Emergency Medicine Finder
 
 const markers = []

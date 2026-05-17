@@ -44,6 +44,7 @@ router.get('/userupdate', requireUser, UserController.userUpadateC);
 router.get('/mediupdate', requireShopkeeper, UserController.mediUpadateC);
 router.get('/request/:service_id', requireUser, UserController.mediReqC);
 router.get('/shopkeepersignup', decorateHtmlResponse('SignUp'), redirectLoggedIn, UserController.shopkeeperRegisterC);
+router.get('/shopkeeper-otp-verify', UserController.getShopkeeperOTPVerify);
 
 router.get('/logout', UserController.logout);
 router.get('/shopkeeperlogout', UserController.shopkeeperLogout);
@@ -79,6 +80,8 @@ router.post('/userupdate', requireUser, upload.fields([{ name: 'propic' }]), Use
 router.post('/shopkeepersignup', redirectLoggedIn, upload.fields([{ name: 'propic' }, { name: 'nid1' }, { name: 'nid2' }]),
   UserController.insertShopkeeperRegisterC,
 );
+router.post('/shopkeeper-verify-otp', UserController.verifyShopkeeperOTPC);
+router.post('/shopkeeper-resend-otp', UserController.resendShopkeeperOTPC);
 router.post('/request', requireUser, upload.fields([{ name: 'ppic' }]), UserController.insertMediReqC);
 router.get('/medicine', UserController.getMedicineData)
 router.get('/searchmedicine', UserController.getSearchMediData)

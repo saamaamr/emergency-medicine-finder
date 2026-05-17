@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- Custom Styles -->
+  <link href="css/variables.css" rel="stylesheet" />
   <link href="css/style.css" rel="stylesheet" />
 
   <!-- Browser Key Generation for Session Management -->
@@ -71,7 +72,7 @@
           </li>
           <li class="nav-item">
             <!-- Theme Toggle -->
-            <button class="theme-toggle-btn ms-2" id="themeToggle" aria-label="Toggle dark mode" style="background:none;border:none;padding:8px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <button class="theme-toggle-btn theme-toggle-btn-nav ms-2" id="themeToggle" aria-label="Toggle dark mode">
               <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2">
                 <circle cx="12" cy="12" r="5"></circle>
                 <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -83,7 +84,7 @@
                 <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
               </svg>
-              <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" style="display:none;">
+              <svg class="moon-icon moon-icon-hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2">
                 <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
               </svg>
             </button>
@@ -97,27 +98,6 @@
       </div>
     </div>
   </nav>
-
-<style>
-  .dark .navbar {
-    background: var(--bg-surface) !important;
-  }
-  .dark .navbar .nav-link {
-    color: var(--text-primary);
-  }
-  .dark .navbar .nav-link:hover {
-    color: var(--primary);
-  }
-  .dark .navbar-toggler {
-    color: var(--text-primary);
-  }
-  .dark .bg-white {
-    background: var(--bg-surface) !important;
-  }
-  .dark .theme-toggle-btn {
-    background: var(--bg-surface) !important;
-  }
-</style>
 
 <script>
   (function() {

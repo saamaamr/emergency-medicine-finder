@@ -76,7 +76,7 @@
         
         <div class="row g-4">
           <div class="col-md-4 text-center">
-            <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" alt="Profile" id="previewImage" class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover; border: 3px solid var(--primary);">
+            <img src="<%= shopkeeperData[0].propic || '/images/default-shop.png' %>" alt="Profile" id="previewImage" class="rounded-circle mb-3 profile-image">
             <h5 class="mb-1"><%= shopkeeperData[0].shopname %></h5>
             <p class="text-muted mb-2"><%= shopkeeperData[0].email %></p>
             <span class="badge <%= shopkeeperData[0].status === 1 ? 'bg-success' : 'bg-warning' %>">

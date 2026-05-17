@@ -294,6 +294,8 @@ describe('Shopkeeper Journey', () => {
   it('Shopkeeper registers a new account', async () => {
     UserModels.getUser.mockResolvedValue(null);
     UserModels.insertWorkerRegisterM.mockResolvedValue([{ insertId: 4 }]);
+    UserModels.checkEmailAcrossRoles.mockResolvedValue(false);
+    UserModels.createShopkeeperOTP.mockResolvedValue();
     const app = createApp();
     const res = await request(app)
       .post('/shopkeepersignup')
@@ -304,8 +306,10 @@ describe('Shopkeeper Journey', () => {
       .field('email', 'new@pharmacy.com')
       .field('phone', '01900000000')
       .field('pass', 'shopPass123');
-    expect(res.status).toBe(302);
-    expect(res.headers.location).toBe('/shopkeeperlogin');
+    // With sequential OTP, registration shows OTP verification page (200) instead of redirect
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('OTP');
+    expect(res.text).toContain('new@pharmacy.com');
   });
 
   it('Shopkeeper adds medicine to inventory', async () => {

@@ -22,10 +22,11 @@ A full-stack web application for finding emergency medicines and managing pharma
 
 | Category | Description |
 |----------|-------------|
-| **Authentication** | Three-role auth (user/shopkeeper/admin) with JWT cookies, email verification, single-session-per-browser enforcement |
+| **Authentication** | Three-role auth (user/shopkeeper/admin) with JWT cookies, email + phone OTP verification, single-session-per-browser enforcement |
 | **Medicine Search** | Search across shops with autocomplete suggestions |
 | **Medicine Requests** | Users request medicines from shops with prescription photo upload |
 | **Stock Management** | Shopkeepers manage inventory stock levels and pricing |
+| **Shopkeeper OTP** | Email + SMS OTP verification on signup and login for shopkeepers |
 | **Pharmacy Management** | Full buy/sell cycle: suppliers, purchases (with batch/expiry), sales (with profit calc), expenses/categories, profit/loss reports |
 | **Data Export** | Shopkeepers export their data as JSON or per-table CSV files |
 | **Stock Transfers** | Admin-initiated medicine transfers between shops |
@@ -163,7 +164,7 @@ emergency-medicine-finder/
 │   └── database.js           # MySQL connection pool
 │
 ├── controllers/
-│   ├── UserController.js     # User, shopkeeper, admin business logic (935 lines)
+│   ├── UserController.js     # User, shopkeeper, admin business logic (1136 lines)
 │   ├── PharmacyController.js # Pharmacy management CRUD (369 lines)
 │   └── BackupController.js   # Backup & data export (128 lines)
 │
@@ -175,23 +176,36 @@ emergency-medicine-finder/
 │       └── userValidator.js   # express-validator rules
 │
 ├── models/
-│   └── UserModels.js          # All database query functions (616 lines, 65+ methods)
+│   └── UserModels.js          # All database query functions (696 lines, 80+ methods)
 │
 ├── routers/
-│   └── routes.js              # All route definitions (82 routes)
+│   └── routes.js              # All route definitions (88 routes)
+│
+├── services/
+│   └── OTPService.js          # OTP generation, email/SMS sending, verification
 │
 ├── cron/
 │   ├── index.js               # Cron job registration (node-cron)
 │   └── backup.js              # Backup engine (mysqldump, export, listing)
 │
 ├── public/
-│   ├── CSS/                   # Stylesheets (7 files)
+│   ├── CSS/
+│   │   ├── variables.css      # Design tokens (CSS custom properties)
+│   │   ├── layout.css         # Header, footer, navigation styles
+│   │   ├── home.css           # Home page specific styles
+│   │   ├── components.css     # Reusable component styles
+│   │   ├── style.css          # Main application styles
+│   │   ├── astyle.css         # Admin styles
+│   │   ├── map-style.css      # Map-specific styles
+│   │   ├── responsive.css     # Responsive breakpoints
+│   │   ├── bootstrap.css     # Bootstrap framework
+│   │   └── font-awesome.min.css
 │   ├── JS/                    # Client-side scripts (9 files)
 │   ├── images/                # Logos, icons, map markers (18 files)
 │   └── uploads/               # Uploaded photos, NIDs, prescriptions
 │
 ├── views/
-│   ├── pages/                 # 23 page templates
+│   ├── pages/                 # 24 page templates (includes OTP verification)
 │   │   └── pharmacy/          # 11 pharmacy management sub-pages
 │   └── template/              # 7 reusable partials (header, footer, nav)
 │
@@ -250,7 +264,10 @@ emergency-medicine-finder/
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | `GET` | `/shopkeepersignup` | Shopkeeper registration page | — |
-| `POST` | `/shopkeepersignup` | Register shop (multipart) | — |
+| `POST` | `/shopkeepersignup` | Register shop + send OTP (multipart) | — |
+| `GET` | `/shopkeeper-otp-verify` | OTP verification page | — |
+| `POST` | `/shopkeeper-verify-otp` | Verify OTP | — |
+| `POST` | `/shopkeeper-resend-otp` | Resend OTP | — |
 | `GET` | `/shopkeeperdesh` | Main dashboard + inventory | Shopkeeper |
 | `GET` | `/shopprofile` | Profile page with lat/lng | Shopkeeper |
 | `POST` | `/shopprofile` | Update profile (multipart) | Shopkeeper |
@@ -370,12 +387,13 @@ emergency-medicine-finder/
 
 ## Database Schema
 
-### Tables (17 total)
+### Tables (18 total)
 
 | Table | Description |
 |-------|-------------|
 | `users` | Patient/user accounts with address and profile |
-| `worker` | Shopkeeper accounts with shop details, lat/lng |
+| `worker` | Shopkeeper accounts with shop details, lat/lng, email/phone verification flags |
+| `shopkeeper_otp` | OTP codes for shopkeeper signup/login verification |
 | `medicine` | Master medicine catalog (name, type, strength, generic, company) |
 | `shopmedicine` | Shop-specific inventory (stock, price per shop) |
 | `medicine_request` | User requests to shops (pending/approved/hold) |
@@ -398,6 +416,8 @@ emergency-medicine-finder/
 |-------|-------|--------|
 | `users` | `status` | `0` = inactive, `1` = active |
 | `worker` | `status` | `0` = pending, `1` = active, `2` = held |
+| `worker` | `email_verified` | `0` = not verified, `1` = verified |
+| `worker` | `phone_verified` | `0` = not verified, `1` = verified |
 | `medicine_request` | `status` | `0` = pending, `1` = approved, `2` = on hold |
 | `stock_transfer` | `status` | `pending`, `approved`, `rejected` |
 | `purchases` | `payment_status` | `paid`, `partial`, `due` |
@@ -421,12 +441,18 @@ Create a `.env` file from `.env.sample`:
 | `COOKIE_NAME` | Session cookie name | `token` |
 | `COOKIE_SECRET` | Cookie signing secret | |
 | `BASE_URL` | App base URL (for email links) | `http://localhost:3000` |
-| `SESSION_EXPIRY_HOURS` | Active session lifetime | `8` |
+| `SESSION_EXPIRY_HOURS` | Active session lifetime (default) | `8` |
+| `USER_SESSION_HOURS` | User JWT cookie lifetime | `3` |
+| `SHOPKEEPER_SESSION_HOURS` | Shopkeeper JWT cookie lifetime | `24` |
+| `ADMIN_SESSION_HOURS` | Admin JWT cookie lifetime | `8` |
 | `BROWSER_SECRET` | Secret for browser key hashing | |
 | `SMTP_HOST` | SMTP server for emails | `smtp.gmail.com` |
 | `SMTP_PORT` | SMTP port | `465` |
 | `SMTP_USER` | SMTP username | |
 | `SMTP_PASS` | SMTP password | |
+| `OTP_SECRET` | Secret key for hashing OTPs | |
+| `SMS_API_URL` | SMS API endpoint for SMS OTP | |
+| `SMS_API_KEY` | SMS API authentication key | |
 | `BACKUP_DIR` | Directory for backup files | `./backups` |
 | `BACKUP_SCHEDULE` | Cron expression for auto-backup | `0 2 * * *` (daily 2 AM) |
 | `BACKUP_RETENTION_DAYS` | Keep backups for N days | `30` |

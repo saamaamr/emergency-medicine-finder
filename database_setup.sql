@@ -6,6 +6,7 @@ CREATE DATABASE IF NOT EXISTS emergency_medicine;
 USE emergency_medicine;
 
 -- Drop existing tables in reverse dependency order (clean slate)
+DROP TABLE IF EXISTS shopkeeper_otp;
 DROP TABLE IF EXISTS daily_summary;
 DROP TABLE IF EXISTS sale_items;
 DROP TABLE IF EXISTS sales;
@@ -68,8 +69,23 @@ CREATE TABLE IF NOT EXISTS worker (
     lng DECIMAL(11, 8),
     pass VARCHAR(255) NOT NULL,
     status TINYINT DEFAULT 0,
+    email_verified TINYINT DEFAULT 0,
+    phone_verified TINYINT DEFAULT 0,
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Shopkeeper OTP table
+CREATE TABLE IF NOT EXISTS shopkeeper_otp (
+    otp_id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    otp_hash VARCHAR(255) NOT NULL,
+    purpose ENUM('signup', 'login') NOT NULL,
+    attempts INT DEFAULT 0,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email (email),
+    INDEX idx_expires (expires_at)
 );
 
 -- Master medicine catalog

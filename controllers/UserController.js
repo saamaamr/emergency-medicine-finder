@@ -4,11 +4,18 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { validationResult } = require('express-validator');
 const UserModels = require('../models/UserModels');
+const OTPService = require('../services/OTPService');
 
 require('dotenv').config();
 
-const maxAge = 3 * 24 * 60 * 60 * 1000;
+const USER_SESSION_HOURS = parseInt(process.env.USER_SESSION_HOURS) || 3;
+const SHOPKEEPER_SESSION_HOURS = parseInt(process.env.SHOPKEEPER_SESSION_HOURS) || 24;
+const ADMIN_SESSION_HOURS = parseInt(process.env.ADMIN_SESSION_HOURS) || 8;
 const sessionExpiryHours = parseInt(process.env.SESSION_EXPIRY_HOURS) || 8;
+
+const maxAgeUser = USER_SESSION_HOURS * 60 * 60 * 1000;
+const maxAgeShopkeeper = SHOPKEEPER_SESSION_HOURS * 60 * 60 * 1000;
+const maxAgeAdmin = ADMIN_SESSION_HOURS * 60 * 60 * 1000;
 
 const hashBrowserKey = (browserKey) => {
   return crypto.createHash('sha256').update(browserKey + (process.env.BROWSER_SECRET || 'default_secret')).digest('hex');
@@ -269,11 +276,11 @@ const UserController = {
                 role: 'user',
               },
               process.env.JWT_SECRET,
-              { expiresIn: maxAge },
+              { expiresIn: maxAgeUser },
             )
 
             res.clearCookie(process.env.COOKIE_NAME);
-            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
+            res.cookie(process.env.COOKIE_NAME, token, { maxAge: maxAgeUser, httpOnly: true, signed: true, encode: String, path: '/' });
 
             const allService = await UserModels.getaService()
             const userData = await UserModels.getUser(userMail)
@@ -318,6 +325,32 @@ const UserController = {
               if (login[i].status == 1) {
                 const userMail = login[i].email;
                 const shopName = login[i].shopname;
+                const phone = login[i].phone;
+
+                const verification = await UserModels.checkShopkeeperVerification(email);
+                if (!verification) {
+                  res.send('Account verification issue. Please contact support.');
+                  return;
+                }
+
+                if (!verification.email_verified || !verification.phone_verified) {
+                  // Sequential OTP: send only email first
+                  const result = await OTPService.sendEmailOTPOnly(email, phone, 'Login');
+                  if (!result.success) {
+                    res.send('Failed to send OTP. Please try again.');
+                    return;
+                  }
+
+                  await UserModels.createShopkeeperOTP(email, result.hashedOTP, result.expiresAt, 'login');
+
+                  return res.render('pages/shopkeeper-otp-verify', {
+                    email,
+                    purpose: 'login',
+                    message: `OTP sent to ${email}. You will verify phone after email.`,
+                    step: 'email',
+                    emailVerified: false,
+                  });
+                }
 
                 if (browserKey) {
                   const hashedBrowserKey = hashBrowserKey(browserKey);
@@ -348,11 +381,11 @@ const UserController = {
                     role: 'shopkeeper',
                   },
                   process.env.JWT_SECRET,
-                  { expiresIn: maxAge },
+                  { expiresIn: maxAgeShopkeeper },
                 )
 
                 res.clearCookie(process.env.COOKIE_NAME);
-                res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
+                res.cookie(process.env.COOKIE_NAME, token, { maxAge: maxAgeShopkeeper, httpOnly: true, signed: true, encode: String, path: '/' });
 
                 res.redirect('/shopkeeperdesh');
                 return;
@@ -373,6 +406,226 @@ const UserController = {
     } catch (e) {
       res.send('Wrong')
     }
+  },
+
+  verifyShopkeeperOTPC: async (req, res) => {
+    try {
+      const { email, otp, purpose } = req.body;
+
+      if (!email || !otp) {
+        return res.render('pages/shopkeeper-otp-verify', {
+          email,
+          purpose,
+          error: 'Please enter the OTP.',
+        });
+      }
+
+      const otpRecord = await UserModels.getShopkeeperOTP(email);
+      if (!otpRecord) {
+        return res.render('pages/shopkeeper-otp-verify', {
+          email,
+          purpose,
+          error: 'OTP expired or not found. Please request a new OTP.',
+        });
+      }
+
+      const attempts = await UserModels.getOTPAttempts(email);
+      if (attempts >= OTPService.maxAttempts) {
+        await UserModels.deleteShopkeeperOTP(email);
+        return res.render('pages/shopkeeper-otp-verify', {
+          email,
+          purpose,
+          error: 'Too many attempts. Please request a new OTP.',
+        });
+      }
+
+      const isValid = OTPService.verify(otp, otpRecord.otp_hash);
+      if (!isValid) {
+        await UserModels.incrementOTPAttempts(email);
+        return res.render('pages/shopkeeper-otp-verify', {
+          email,
+          purpose,
+          error: `Invalid OTP. ${OTPService.maxAttempts - attempts - 1} attempts remaining.`,
+        });
+      }
+
+      await UserModels.deleteShopkeeperOTP(email);
+
+      // Sequential OTP verification: email first, then phone
+      if (purpose === 'signup' || purpose === 'login') {
+        // First step: verify email OTP
+        await UserModels.updateShopkeeperVerification(email, 'email', true);
+
+        // Get phone number for next step
+        const login = await UserModels.workermailCatchM(email);
+        if (!login || login.length === 0) {
+          return res.render('pages/shopkeeper-otp-verify', {
+            email,
+            purpose: 'signup',
+            error: 'User not found.',
+          });
+        }
+
+        const phone = login[0].phone;
+
+        if (purpose === 'signup') {
+          // For signup: send phone OTP now
+          const phoneResult = await OTPService.sendPhoneOTPOnly(email, phone, 'Sign Up');
+          if (!phoneResult.success) {
+            // If SMS fails, skip phone verification for signup (email only)
+            return res.redirect('/shopkeeperlogin?verified=true');
+          }
+
+          await UserModels.createShopkeeperOTP(email, phoneResult.hashedOTP, phoneResult.expiresAt, 'signup_phone');
+
+          return res.render('pages/shopkeeper-otp-verify', {
+            email,
+            purpose: 'signup_phone',
+            message: `Email OTP verified! Phone OTP sent to ${phone}.`,
+            step: 'phone',
+            emailVerified: true,
+          });
+        }
+
+        if (purpose === 'login') {
+          // For login: send phone OTP now
+          const phoneResult = await OTPService.sendPhoneOTPOnly(email, phone, 'Login');
+          if (!phoneResult.success) {
+            return res.render('pages/shopkeeper-otp-verify', {
+              email,
+              purpose: 'login',
+              error: 'Email verified, but failed to send phone OTP.',
+            });
+          }
+
+          await UserModels.createShopkeeperOTP(email, phoneResult.hashedOTP, phoneResult.expiresAt, 'login_phone');
+
+          return res.render('pages/shopkeeper-otp-verify', {
+            email,
+            purpose: 'login_phone',
+            message: `Email verified! Phone OTP sent to ${phone}.`,
+            step: 'phone',
+            emailVerified: true,
+          });
+        }
+      }
+
+      if (purpose === 'signup_phone') {
+        await UserModels.updateShopkeeperVerification(email, 'phone', true);
+        return res.redirect('/shopkeeperlogin?verified=true');
+      }
+
+      if (purpose === 'login_phone') {
+        await UserModels.updateShopkeeperVerification(email, 'phone', true);
+
+        const login = await UserModels.workermailCatchM(email);
+        if (!login || login.length === 0) {
+          return res.redirect('/shopkeeperlogin');
+        }
+
+        const userMail = login[0].email;
+        const shopName = login[0].shopname;
+        const browserKey = req.body.browserKey;
+
+        if (browserKey) {
+          const hashedBrowserKey = hashBrowserKey(browserKey);
+          const existingSession = await UserModels.getActiveSession(userMail, 'shopkeeper');
+
+          if (existingSession) {
+            if (existingSession.browser_key !== hashedBrowserKey) {
+              return res.send('You are already logged in on another browser. Please logout from that browser first.');
+            } else {
+              await UserModels.deleteSession(userMail, 'shopkeeper');
+            }
+          }
+
+          await UserModels.createSession(
+            userMail,
+            'shopkeeper',
+            hashedBrowserKey,
+            getDeviceInfo(req),
+            getClientIP(req),
+            getExpiryTime()
+          );
+        }
+
+        const token = jwt.sign(
+          {
+            name: shopName,
+            mail: userMail,
+            role: 'shopkeeper',
+          },
+          process.env.JWT_SECRET,
+          { expiresIn: maxAgeShopkeeper },
+        );
+
+        res.clearCookie(process.env.COOKIE_NAME);
+        res.cookie(process.env.COOKIE_NAME, token, { maxAge: maxAgeShopkeeper, httpOnly: true, signed: true, encode: String, path: '/' });
+
+        return res.redirect('/shopkeeperdesh');
+      }
+
+      res.redirect('/shopkeeperlogin');
+    } catch (err) {
+      console.error('OTP verify error:', err);
+      res.render('pages/shopkeeper-otp-verify', {
+        email: req.body.email,
+        purpose: req.body.purpose,
+        error: 'Verification failed. Please try again.',
+      });
+    }
+  },
+
+  resendShopkeeperOTPC: async (req, res) => {
+    try {
+      const { email, purpose } = req.body;
+
+      if (!email) {
+        return res.redirect('/shopkeeperlogin');
+      }
+
+      const login = await UserModels.workermailCatchM(email);
+      if (!login || login.length === 0) {
+        return res.redirect('/shopkeeperlogin');
+      }
+
+      const phone = login[0].phone;
+      const purposeType = purpose === 'signup' || purpose === 'login' ? 'email' : 'phone';
+      const result = purposeType === 'email'
+        ? await OTPService.sendEmailOTPOnly(email, phone, purpose === 'signup' ? 'Sign Up' : 'Login')
+        : await OTPService.sendPhoneOTPOnly(email, phone, purpose === 'signup' ? 'Sign Up' : 'Login');
+
+      if (!result.success) {
+        return res.render('pages/shopkeeper-otp-verify', {
+          email,
+          purpose,
+          error: 'Failed to send OTP. Please try again.',
+        });
+      }
+
+      await UserModels.createShopkeeperOTP(email, result.hashedOTP, result.expiresAt, purpose);
+
+      return res.render('pages/shopkeeper-otp-verify', {
+        email,
+        purpose,
+        message: purposeType === 'email'
+          ? `New OTP sent to ${email}.`
+          : `New OTP sent to ${phone}.`,
+        step: purposeType,
+        emailVerified: purposeType === 'phone',
+      });
+    } catch (err) {
+      console.error('Resend OTP error:', err);
+      res.redirect('/shopkeeperlogin');
+    }
+  },
+
+  getShopkeeperOTPVerify: async (req, res) => {
+    const { email, purpose } = req.query;
+    if (!email || !purpose) {
+      return res.redirect('/shopkeeperlogin');
+    }
+    res.render('pages/shopkeeper-otp-verify', { email, purpose, error: null, message: null });
   },
 
   /* ====== New User register  Controller  ====== */
@@ -473,11 +726,11 @@ const UserController = {
                 role: 'admin',
               },
               process.env.JWT_SECRET,
-              { expiresIn: maxAge },
+              { expiresIn: maxAgeAdmin },
             )
 
             res.clearCookie(process.env.COOKIE_NAME);
-            res.cookie(process.env.COOKIE_NAME, token, { maxAge, httpOnly: true, signed: true, encode: String, path: '/' });
+            res.cookie(process.env.COOKIE_NAME, token, { maxAge: maxAgeAdmin, httpOnly: true, signed: true, encode: String, path: '/' });
 
             res.redirect('/admin');
             return;
@@ -597,7 +850,25 @@ const UserController = {
       const registerData = await UserModels.insertWorkerRegisterM(
         firstName, lastName, gender, shopname, email, phone, propicFilename, nid1Filename, nid2Filename, house, road, division, zila, upazila, lat, lng, hashPassword,
       );
-      res.redirect('/shopkeeperlogin')
+
+      // Send only email OTP first (sequential verification: email -> phone)
+      const result = await OTPService.sendEmailOTPOnly(email, phone, 'Sign Up');
+      if (!result.success) {
+        return res.render('pages/shopkeepersignup', {
+          error: { common: 'Registration succeeded but failed to send OTP. Please try resend OTP after login.' },
+          value: { firstName, lastName, gender, shopname, email, phone, house, road, division, zila, upazila },
+        });
+      }
+
+      await UserModels.createShopkeeperOTP(email, result.hashedOTP, result.expiresAt, 'signup');
+
+      return res.render('pages/shopkeeper-otp-verify', {
+        email,
+        purpose: 'signup',
+        message: `Registration successful! OTP sent to ${email}. You will verify phone after email.`,
+        step: 'email',
+        emailVerified: false,
+      });
     } catch (err) {
       return res.render('pages/shopkeepersignup', { registerFail: true });
     }

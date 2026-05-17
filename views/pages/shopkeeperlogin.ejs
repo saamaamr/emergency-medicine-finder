@@ -47,4 +47,13 @@
       browserKeyInput.value = window.emfBrowserKey;
     }
   });
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('verified') === 'true') {
+    Swal.fire({
+      icon: 'success',
+      title: 'Account Verified!',
+      text: 'Your email and phone have been verified. Please login.',
+    });
+  }
 </script>

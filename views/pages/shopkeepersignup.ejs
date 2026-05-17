@@ -2,13 +2,20 @@
 <div class="container mt-5">
   <div class="row justify-content-center">
     <div class="col-lg-8">
+      <% if (typeof error !== 'undefined' && error && Object.keys(error).length > 0) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <% if (error.email) { %><%= error.email %><% } %>
+          <% if (error.common) { %><%= error.common %><% } %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% } %>
       <div class="card shadow-sm border-0">
         <div class="card-body p-4">
           <div class="text-center mb-4">
             <h3 class="contact_heading">Shopkeeper <span>Register</span></h3>
             <p class="text-muted">Register your pharmacy to receive medicine requests</p>
           </div>
-          <form action="/shopkeepersignup" method="post" enctype="multipart/form-data">
+          <form action="/shopkeepersignup" method="post" enctype="multipart/form-data" id="shopkeeperSignupForm">
             <div class="row g-3">
               <div class="col-md-6">
                 <div class="form-floating mb-3">
@@ -36,8 +43,8 @@
               </div>
               <div class="col-md-6">
                 <div class="form-floating mb-3">
-                  <input type="text" class="form-control" name="phone" placeholder="Phone" required>
-                  <label><i class="ri-phone-line me-1"></i>Phone</label>
+                  <input type="tel" class="form-control" name="phone" placeholder="Phone" pattern="01[0-9]{9}" required>
+                  <label><i class="ri-phone-line me-1"></i>Phone (01XXXXXXXXX)</label>
                 </div>
               </div>
               <div class="col-md-6">
@@ -81,6 +88,12 @@
                   <label><i class="ri-map-pin-line me-1"></i>Upazila</label>
                 </div>
               </div>
+              <div class="col-12">
+                <div class="form-floating mb-3">
+                  <input type="password" class="form-control" name="pass" placeholder="Password" minlength="6" required>
+                  <label><i class="ri-lock-line me-1"></i>Password (min 6 characters)</label>
+                </div>
+              </div>
             </div>
             <div class="row g-3">
               <div class="col-md-4">
@@ -104,7 +117,7 @@
             </div>
             <div class="d-grid gap-3 mt-3">
               <button type="submit" class="btn btn-primary btn-lg rounded-3 w-100">
-                <i class="ri-user-add-line me-1"></i>Register Pharmacy
+                <i class="ri-user-add-line me-1"></i>Register & Send OTP
               </button>
               <a href="/shopkeeperlogin" class="btn btn-outline-secondary rounded-3">
                 <i class="ri-login-circle-line me-1"></i>Already registered? Login
@@ -126,5 +139,14 @@
       title: 'Registration Failed',
       text: 'Something went wrong. Please try again.',
     })
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('verified') === 'true') {
+    Swal.fire({
+      icon: 'success',
+      title: 'Email & Phone Verified!',
+      text: 'Your account has been verified. Please login.',
+    });
   }
 </script>

@@ -54,17 +54,22 @@ Returns the shopkeeper login page.
 
 `POST /shopkeeperlogin`
 
-Authenticates a shopkeeper.
+Authenticates a shopkeeper. If email/phone not verified via OTP, sends OTP and redirects to verification page.
 
 **Request Body:**
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `email` | string | Yes | Shopkeeper email |
 | `pass` | string | Yes | Shopkeeper password |
+| `browserKey` | string | No | Browser UUID for session enforcement |
 
-**Response (success):** Redirects to `/shopkeeperdesh`
+**Response (success, verified):** Redirects to `/shopkeeperdesh`
+
+**Response (success, not verified):** Renders OTP verification page
 
 **Response (error):** Shows error message
+
+**Side Effect:** If `email_verified=0` or `phone_verified=0`, sends OTP to email and phone, then redirects to `/shopkeeper-otp-verify`
 
 ---
 
@@ -210,7 +215,7 @@ Returns the shopkeeper registration page.
 
 `POST /shopkeepersignup`
 
-Registers a new shopkeeper/pharmacy.
+Registers a new shopkeeper/pharmacy and sends OTP for verification.
 
 **Request (multipart/form-data):**
 | Field | Type | Required | Description |
@@ -220,8 +225,8 @@ Registers a new shopkeeper/pharmacy.
 | `gender` | string | Yes | Gender |
 | `shopname` | string | Yes | Shop name |
 | `email` | string | Yes | Shop email |
-| `phone` | string | Yes | Phone number |
-| `pass` | string | Yes | Password |
+| `phone` | string | Yes | Phone number (01XXXXXXXXX) |
+| `pass` | string | Yes | Password (min 6 chars) |
 | `lat` | string | No | Latitude |
 | `lng` | string | No | Longitude |
 | `house` | string | No | Address |
@@ -233,7 +238,74 @@ Registers a new shopkeeper/pharmacy.
 | `nid1` | file | No | NID front image |
 | `nid2` | file | No | NID back image |
 
-**Response:** Redirects to `/shopkeeperlogin`
+**Response (success):** Renders OTP verification page with success message
+
+**Response (error):** Re-renders form with validation errors or registerFail
+
+**Side Effects:**
+- Creates worker record with `status=0`, `email_verified=0`, `phone_verified=0`
+- Sends OTP to email and phone via Nodemailer and SMS API
+- Stores hashed OTP in `shopkeeper_otp` table
+
+---
+
+### OTP Verification
+
+`GET /shopkeeper-otp-verify`
+
+Returns the OTP verification page.
+
+**Query Parameters:**
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | Yes | Shopkeeper email |
+| `purpose` | string | Yes | `signup` or `login` |
+
+**Response:** HTML page with 6-digit OTP input
+
+---
+
+`POST /shopkeeper-verify-otp`
+
+Verifies the OTP entered by the shopkeeper.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | Yes | Shopkeeper email |
+| `otp` | string | Yes | 6-digit OTP code |
+| `purpose` | string | Yes | `signup` or `login` |
+
+**Response (success, signup):** Redirects to `/shopkeeperlogin?verified=true`
+
+**Response (success, login):** Redirects to `/shopkeeperdesh`
+
+**Response (error):** Re-renders OTP page with error message
+
+**Validation:**
+- OTP expires after 10 minutes
+- Max 3 attempts before requiring resend
+- Verifies hash of entered OTP against stored hash
+
+**Side Effects:**
+- Sets `email_verified=1` and `phone_verified=1` for the shopkeeper
+- Deletes used OTP from `shopkeeper_otp` table
+
+---
+
+`POST /shopkeeper-resend-otp`
+
+Resends a new OTP to the shopkeeper's email and phone.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | Yes | Shopkeeper email |
+| `purpose` | string | Yes | `signup` or `login` |
+
+**Response:** Renders OTP page with new OTP sent confirmation
+
+**Side Effects:** Deletes old OTP and creates new one in `shopkeeper_otp` table
 
 ---
 

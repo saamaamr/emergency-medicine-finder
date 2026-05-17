@@ -117,9 +117,19 @@ Pharmacy owners manage their shop's medicine inventory, set prices and stock lev
 1. Shopkeeper visits `/shopkeepersignup`
 2. Fills form: name, shop name, email, phone, NID front/back, address, location (lat/lng), password
 3. Profile photo upload optional
-4. Submit creates worker record with `status = 0`
-5. Admin verifies and sets `status = 1` (or `status = 2` for hold)
-6. Shopkeeper logs in after activation
+4. Submit creates worker record with `status = 0`, `email_verified = 0`, `phone_verified = 0`
+5. OTP sent to email (via Nodemailer) and SMS (via SMS API)
+6. Shopkeeper enters 6-digit OTP on `/shopkeeper-otp-verify` page
+7. On successful verification: `email_verified = 1`, `phone_verified = 1`
+8. Redirect to `/shopkeeperlogin?verified=true`
+9. Admin verifies and sets `status = 1` (or `status = 2` for hold)
+10. Shopkeeper logs in after admin activation
+
+**OTP Rules:**
+- 6-digit numeric code
+- Valid for 10 minutes
+- Max 3 attempts before requiring resend
+- Must verify both email and phone on same OTP
 
 ---
 
@@ -213,6 +223,20 @@ The token is stored in a signed HTTP-only cookie named by `COOKIE_NAME` env vari
 - `encode: String` — no special encoding
 - `path: /` — applies to entire site
 
+### Login Flow (Shopkeeper)
+
+1. Shopkeeper enters email and password at `/shopkeeperlogin`
+2. Server validates credentials
+3. If `email_verified = 0` OR `phone_verified = 0`:
+   - OTP is sent to email and phone
+   - Shopkeeper redirected to `/shopkeeper-otp-verify?email=...&purpose=login`
+   - After OTP verification: both flags set to `1`
+4. If already verified, proceeds to dashboard
+5. JWT cookie set with role-based expiry:
+   - **User**: 3 hours (`USER_SESSION_HOURS`)
+   - **Shopkeeper**: 24 hours (`SHOPKEEPER_SESSION_HOURS`)
+   - **Admin**: 8 hours (`ADMIN_SESSION_HOURS`)
+
 ### Single-Session-Per-Browser Enforcement
 
 The app prevents the same account from being used on multiple browsers simultaneously:
@@ -252,9 +276,13 @@ Each logout controller:
 |-------|--------|---------|
 | User | `0` | Inactive (email not verified) |
 | User | `1` | Active |
-| Shopkeeper | `0` | Pending admin verification |
-| Shopkeeper | `1` | Active |
-| Shopkeeper | `2` | On hold / Blocked |
+| Shopkeeper | `status` | `0` | Pending OTP verification |
+| Shopkeeper | `status` | `1` | Active (OTP verified + admin approved) |
+| Shopkeeper | `status` | `2` | On hold / Blocked |
+| Shopkeeper | `email_verified` | `0` | Email not verified via OTP |
+| Shopkeeper | `email_verified` | `1` | Email verified |
+| Shopkeeper | `phone_verified` | `0` | Phone not verified via OTP |
+| Shopkeeper | `phone_verified` | `1` | Phone verified |
 | Admin | N/A | Single admin account, no status field |
 | Medicine Request | `0` | Pending |
 | Medicine Request | `1` | Approved |

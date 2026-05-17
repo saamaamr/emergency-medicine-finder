@@ -1,0 +1,170 @@
+<%- include("../template/lheader") -%>
+<link href="/css/components.css" rel="stylesheet" />
+<div class="container">
+  <div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-md-5 col-lg-4">
+      <div class="card-custom animate-fade-in-up">
+        <div class="card-body-custom">
+          <div class="text-center mb-4">
+            <img src="images/logo.svg" alt="EMF" width="80" class="mb-3">
+            <h4 class="mb-1">
+              <%= (purpose === 'signup' || purpose === 'signup_phone') ? 'Verify Your Account' : 'OTP Verification' %>
+            </h4>
+            <p class="text-muted small">
+              <% if (purpose === 'signup') { %>
+                Step 1 of 2: Enter the OTP sent to <strong><%= email %></strong>
+              <% } else if (purpose === 'signup_phone') { %>
+                Step 2 of 2: Enter the OTP sent to your phone
+              <% } else if (purpose === 'login') { %>
+                Step 1 of 2: Enter the OTP sent to <strong><%= email %></strong>
+              <% } else if (purpose === 'login_phone') { %>
+                Step 2 of 2: Enter the OTP sent to your phone
+              <% } else { %>
+                Enter the OTP sent to your email
+              <% } %>
+            </p>
+          </div>
+
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <%= error %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% } %>
+
+          <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <%= message %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% } %>
+
+          <div class="progress mb-4">
+            <div class="progress-bar" role="progressbar" style="width: <%= (purpose === 'signup' || purpose === 'login') ? '50%' : '100%' %>"></div>
+          </div>
+
+          <form action="/shopkeeper-verify-otp" method="POST" id="otpVerifyForm">
+            <input type="hidden" name="email" value="<%= email %>">
+            <input type="hidden" name="purpose" value="<%= purpose %>">
+            <input type="hidden" name="browserKey" id="otpBrowserKey" value="">
+
+            <div class="mb-3">
+              <label class="form-label">Email Address</label>
+              <div class="form-control bg-light">
+                <i class="ri-mail-line me-1"></i> <%= email %>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label">Enter 6-digit OTP</label>
+              <div class="d-flex gap-2 otp-inputs">
+                <input type="text" class="form-control text-center otp-digit" maxlength="1" data-index="0" required>
+                <input type="text" class="form-control text-center otp-digit" maxlength="1" data-index="1" required>
+                <input type="text" class="form-control text-center otp-digit" maxlength="1" data-index="2" required>
+                <input type="text" class="form-control text-center otp-digit" maxlength="1" data-index="3" required>
+                <input type="text" class="form-control text-center otp-digit" maxlength="1" data-index="4" required>
+                <input type="text" class="form-control text-center otp-digit" maxlength="1" data-index="5" required>
+              </div>
+              <input type="hidden" name="otp" id="otpValue" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2.5">
+              <i class="ri-shield-check-line me-1"></i><%= (purpose === 'signup' || purpose === 'signup_phone') ? 'Verify & Continue' : 'Verify OTP' %>
+            </button>
+
+            <div class="text-center mt-4">
+              <p class="text-muted small mb-2">Didn't receive the code?</p>
+              <button type="submit" formaction="/shopkeeper-resend-otp" formmethod="POST" class="btn btn-link btn-sm p-0" id="resendBtn">
+                Resend OTP
+              </button>
+              <span class="text-muted small" id="countdown"></span>
+            </div>
+          </form>
+
+          <div class="text-center mt-4">
+            <% if (purpose === 'signup' || purpose === 'signup_phone') { %>
+              <a href="/shopkeeperlogin" class="text-muted small">
+                <i class="ri-arrow-left-line me-1"></i>Back to Login
+              </a>
+            <% } else { %>
+              <a href="/shopkeeperlogout" class="text-muted small">
+                <i class="ri-arrow-left-line me-1"></i>Cancel Login
+              </a>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include("../template/lfooter") -%>
+
+<script>
+  document.getElementById('otpVerifyForm')?.addEventListener('submit', function(e) {
+    // If submitting to resend, don't process OTP
+    if (e.submitter && e.submitter.formAction.includes('/shopkeeper-resend-otp')) {
+      return;
+    }
+
+    const browserKeyInput = document.getElementById('otpBrowserKey');
+    if (browserKeyInput && window.emfBrowserKey) {
+      browserKeyInput.value = window.emfBrowserKey;
+    }
+
+    const digits = document.querySelectorAll('.otp-digit');
+    let otpValue = '';
+    digits.forEach(digit => {
+      otpValue += digit.value;
+    });
+    document.getElementById('otpValue').value = otpValue;
+  });
+
+  const otpInputs = document.querySelectorAll('.otp-digit');
+  otpInputs.forEach((input, index) => {
+    input.addEventListener('input', function() {
+      if (this.value.length === 1 && index < otpInputs.length - 1) {
+        otpInputs[index + 1].focus();
+      }
+    });
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && this.value === '' && index > 0) {
+        otpInputs[index - 1].focus();
+      }
+    });
+
+    input.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const pastedData = e.clipboardData.getData('text').slice(0, 6);
+      pastedData.split('').forEach((char, i) => {
+        if (otpInputs[i]) {
+          otpInputs[i].value = char;
+        }
+      });
+      if (pastedData.length > 0) {
+        document.getElementById('otpValue').value = pastedData;
+      }
+    });
+  });
+
+  let countdown = 60;
+  const countdownEl = document.getElementById('countdown');
+  const resendBtn = document.getElementById('resendBtn');
+
+  if (resendBtn && countdownEl) {
+    resendBtn.disabled = true;
+
+    function updateCountdown() {
+      if (countdown > 0) {
+        countdownEl.textContent = `Resend available in ${countdown}s`;
+        countdown--;
+        setTimeout(updateCountdown, 1000);
+      } else {
+        countdownEl.textContent = '';
+        resendBtn.disabled = false;
+      }
+    }
+
+    updateCountdown();
+  }
+</script>

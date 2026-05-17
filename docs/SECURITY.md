@@ -16,6 +16,7 @@ The application uses a **cookie-based JWT authentication** system with three rol
 | Password hashing | bcryptjs | One-way hash, salt rounds |
 | Browser identification | SHA256-hashed localStorage UUID | Single-session-per-browser enforcement |
 | Session storage | MySQL `active_sessions` table | Active session tracking |
+| OTP storage | MySQL `shopkeeper_otp` table (SHA256-hashed OTPs) | Shopkeeper OTP verification |
 | Session cleanup | `setInterval` (10 min) | Auto-expire stale sessions |
 
 ### Auth Flow
@@ -24,10 +25,35 @@ The application uses a **cookie-based JWT authentication** system with three rol
 Browser login form
     │
     ▼
-POST /login  (or /shopkeeperlogin, /alogin)
+POST /shopkeepersignup  (signup)
+    │
+    ├─ bcrypt.hash(password, 10)
+    ├─ INSERT INTO worker (status=0, email_verified=0, phone_verified=0)
+    ├─ Generate 6-digit OTP via crypto.randomInt(100000, 999999)
+    ├─ Hash OTP: SHA256(otp + OTP_SECRET)
+    ├─ INSERT INTO shopkeeper_otp (email, otp_hash, purpose, expires_at)
+    ├─ Send OTP email via Nodemailer
+    ├─ Send OTP SMS via SMS API (if configured)
+    └─ Render /shopkeeper-otp-verify page
+            │
+            ▼
+        POST /shopkeeper-verify-otp
+            │
+            ├─ Lookup shopkeeper_otp by email, check expiry, check attempts < 3
+            ├─ Compare SHA256(entered_otp + OTP_SECRET) === stored hash
+            ├─ If valid: UPDATE worker SET email_verified=1, phone_verified=1
+            ├─ DELETE FROM shopkeeper_otp
+            └─ Redirect to /shopkeeperlogin?verified=true
+                    │
+                    ▼
+Browser login form  (POST /shopkeeperlogin)
     │
     ├─ Read email + password + browserKey from body
     ├─ bcrypt.compare(password, hash)
+    ├─ Check email_verified=1 AND phone_verified=1
+    │       │
+    │       ├─ If NOT verified: send OTP → redirect /shopkeeper-otp-verify
+    │       └─ If verified: continue
     ├─ Create/update active_sessions row (browser_key hash = SHA256(uuid + BROWSER_SECRET))
     ├─ If same email+role already logged in from DIFFERENT browser → reject
     ├─ If same email+role from SAME browser → delete old session, allow re-login
@@ -102,15 +128,34 @@ Browser B tries to log in as shop@test.com  →  active_sessions: (shop@test.com
 
 ```sql
 CREATE TABLE active_sessions (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(100) NOT NULL,
-  role ENUM('user','shopkeeper','admin') NOT NULL,
-  browser_key VARCHAR(64) NOT NULL,
-  device_info VARCHAR(255),
+  session_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_email VARCHAR(255) NOT NULL,
+  user_role ENUM('user','shopkeeper','admin') NOT NULL,
+  browser_key VARCHAR(255) NOT NULL,
+  device_info VARCHAR(500),
   ip_address VARCHAR(45),
-  expires_at DATETIME NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY unique_email_role (email, role)
+  expires_at TIMESTAMP NOT NULL,
+  last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_email_role (user_email, user_role),
+  INDEX idx_browser_key (browser_key),
+  INDEX idx_expires (expires_at)
+);
+```
+
+### OTP Table Schema
+
+```sql
+CREATE TABLE shopkeeper_otp (
+  otp_id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  otp_hash VARCHAR(255) NOT NULL,      -- SHA256(otp + OTP_SECRET)
+  purpose ENUM('signup', 'login') NOT NULL,
+  attempts INT DEFAULT 0,              -- Track failed attempts (max 3)
+  expires_at TIMESTAMP NOT NULL,        -- 10 minutes from creation
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_email (email),
+  INDEX idx_expires (expires_at)
 );
 ```
 
@@ -118,7 +163,9 @@ CREATE TABLE active_sessions (
 
 | Setting | Default | Config Variable |
 |---------|---------|----------------|
-| JWT token cookie | 3 days | `maxAge` in `UserController.js` |
+| JWT token cookie (user) | 3 hours | `USER_SESSION_HOURS` env var |
+| JWT token cookie (shopkeeper) | 24 hours | `SHOPKEEPER_SESSION_HOURS` env var |
+| JWT token cookie (admin) | 8 hours | `ADMIN_SESSION_HOURS` env var |
 | DB session row | 8 hours | `SESSION_EXPIRY_HOURS` env var |
 | Session cleanup interval | 10 minutes | `setInterval(10 * 60 * 1000)` in `app.js` |
 
@@ -234,6 +281,8 @@ All secrets are managed via `.env`. The `.env` file is **gitignored** and must n
 | `BROWSER_SECRET` | Hashed with browser UUID | `emf_browser_secret_key_2024_change_me_very_long_string_for_security` | **REQUIRED** |
 | `DB_PASS` | MySQL password | _(empty)_ | **REQUIRED** |
 | `SMTP_PASS` | Email service password | _(empty)_ | If email is used |
+| `OTP_SECRET` | Hashes OTP codes before DB storage | _(empty)_ | **REQUIRED** — must be set |
+| `SMS_API_KEY` | SMS OTP API authentication | _(empty)_ | If SMS OTP is used |
 | `SESSION_EXPIRY_HOURS` | Session lifetime | `8` | Optional |
 | `BACKUP_DIR` | Backup storage path | `./backups` | Optional |
 | `BACKUP_SCHEDULE` | Cron schedule | `0 2 * * *` | Optional |
@@ -255,7 +304,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | # | Vulnerability | Impact | Status |
 |---|--------------|--------|--------|
 | K1 | **No CSRF protection** — No anti-CSRF tokens on any POST form | Authenticated users can be tricked into performing actions (add supplier, expense, sale, stock transfer) via malicious site | ⚠ Unmitigated — all POST routes are vulnerable |
-| K2 | **No rate limiting on auth endpoints** — `POST /login`, `POST /shopkeeperlogin`, `POST /alogin` allow unlimited attempts | Brute force password cracking possible | ⚠ Unmitigated |
+| K2 | **No rate limiting on auth endpoints** — `POST /login`, `POST /shopkeeperlogin`, `POST /alogin`, `POST /shopkeeper-verify-otp` allow unlimited attempts | Brute force password cracking and OTP guessing possible | ⚠ Unmitigated |
 
 ### High
 
@@ -272,6 +321,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | K6 | **No input validation on many POST routes** — `update-stock`, `contact`, `create-stock-transfer`, `shopprofile` accept raw body data | Invalid or malicious data can enter the database | ⚠ Unmitigated — only `login` and `signup` use `express-validator` |
 | K7 | **Verbose error messages in production logs** — `console.error(err.stack)` in error handler | Internal stack traces visible in server logs | ⚠ Unmitigated |
 | K8 | **Potential command injection in backup script** — `cron/backup.js` uses `exec()` with string interpolation for `mysqldump` command | If any env variable (`DB_PASS`, `DB_USER`) contains shell metacharacters, command injection is possible | ⚠ Low risk (env vars are admin-controlled) |
+| K14 | **OTP sent via email only (no SMS API)** — If SMS credentials not configured, phone verification is not enforced | Phone number not actually verified until SMS is configured | ⚠ Unmitigated — `sendSMSOTP()` returns true when SMS is not configured |
 
 ### Low
 
@@ -296,7 +346,7 @@ The following were confirmed safe during the security audit (2026-05-11):
 | Path Traversal | Backup download uses `path.basename()` + `path.resolve()` boundary check | `controllers/BackupController.js` |
 | Password Storage | `bcryptjs.compare()` for verification | `controllers/UserController.js` |
 | Cookie Flags | `httpOnly: true, signed: true` on JWT cookie | `controllers/UserController.js` |
-| Access Control | All 82 routes use appropriate role middleware | `routers/routes.js` |
+| Access Control | All 88 routes use appropriate role middleware | `routers/routes.js` |
 | Cross-Role Email | `checkEmailAcrossRoles()` in both user and shopkeeper registration | `models/UserModels.js` |
 | Shop Data Isolation | All pharmacy queries scoped by `shop_email` | `models/UserModels.js` |
 | Sensitive Logging | No password, JWT, or secret logging found | `grep` of `controllers/` |
@@ -308,7 +358,7 @@ The following were confirmed safe during the security audit (2026-05-11):
 
 Before deploying to production, complete all items marked **REQUIRED**:
 
-- [ ] **REQUIRED** — Generate and set strong values for `JWT_SECRET`, `COOKIE_SECRET`, `BROWSER_SECRET`
+- [ ] **REQUIRED** — Generate and set strong values for `JWT_SECRET`, `COOKIE_SECRET`, `BROWSER_SECRET`, `OTP_SECRET`
 - [ ] **REQUIRED** — Set `DB_PASS` for MySQL
 - [ ] **REQUIRED** — Add CSRF protection (anti-csrf package or custom token middleware)
 - [ ] **REQUIRED** — Install and configure `helmet` middleware in `app.js`
@@ -350,10 +400,10 @@ Before deploying to production, complete all items marked **REQUIRED**:
                          │                    │                    │
                          ▼                    ▼                    ▼
               ┌──────────────────┐  ┌───────────────┐  ┌──────────────────┐
-              │     MySQL        │  │   Node.js     │  │   Cron Jobs      │
-              │                  │  │   (JWT sign)  │  │                  │
-              │ active_sessions │  │  (bcryptjs)   │  │ backup.js        │
-              │  (per-role row)  │  │  (SHA256)     │  │ (mysqldump+gzip) │
+│     MySQL        │  │   Node.js     │  │   Cron Jobs      │
+               │                  │  │   (JWT sign)  │  │                  │
+               │ active_sessions │  │  (bcryptjs)   │  │ backup.js        │
+               │ shopkeeper_otp │  │  (SHA256)     │  │ (mysqldump+gzip) │
               │                  │  │               │  │                  │
               │ shop_email scope │  │               │  │                  │
               └──────────────────┘  └───────────────┘  └──────────────────┘
