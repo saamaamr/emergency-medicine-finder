@@ -1,3 +1,22 @@
+/**
+ * =============================================================================
+ *                      EMERGENCY MEDICINE FINDER
+ * =============================================================================
+ * 
+ * Project: Emergency Medicine Finder
+ * Developer: Abdullah Al Mamun
+ * Copyright (c) 2026 Abdullah Al Mamun. All rights reserved.
+ * 
+ * TERMS OF USE:
+ * - This project is the intellectual property of Abdullah Al Mamun
+ * - You must give appropriate credit when using this code
+ * - You must include this copyright notice in any copy or derivative work
+ * - Selling or claiming as your own is prohibited
+ * 
+ * For permissions, contact: [Your contact info]
+ * =============================================================================
+ */
+
 // MapLibre GL JS Implementation for Emergency Medicine Finder
 
 const markers = []
